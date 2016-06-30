@@ -81,18 +81,18 @@ public class FileEventAdapterFactory extends OutputEventAdapterFactory {
     public List<Property> getDynamicPropertyList() {
         List<Property> dynamicProperties = new ArrayList<>();
 
-        Property bufferSize = new Property(FileEventAdapterConstants.ADAPTER_BUFFER_SIZE);
-        bufferSize.setDisplayName(resourceBundle
-                .getString(FileEventAdapterConstants.ADAPTER_BUFFER_SIZE));
-        bufferSize.setHint(resourceBundle.getString(FileEventAdapterConstants.ADAPTER_BUFFER_HINT));
-        bufferSize.setDefaultValue(FileEventAdapterConstants.ADAPTER_BUFFER_SIZE_DEFAULT);
-        dynamicProperties.add(bufferSize);
-
         Property fileName = new Property(FileEventAdapterConstants.ADAPTER_FILE_NAME);
         fileName.setDisplayName(resourceBundle
                 .getString(FileEventAdapterConstants.ADAPTER_FILE_NAME));
         fileName.setHint(resourceBundle.getString(FileEventAdapterConstants.ADAPTER_FILE_NAME_HINT));
         dynamicProperties.add(fileName);
+
+        Property bufferSize = new Property(FileEventAdapterConstants.ADAPTER_BUFFER_SIZE);
+        bufferSize.setDisplayName(resourceBundle
+                .getString(FileEventAdapterConstants.ADAPTER_BUFFER_SIZE));
+        bufferSize.setHint(resourceBundle.getString(FileEventAdapterConstants.ADAPTER_BUFFER_HINT));
+        bufferSize.setDefaultValue(FileEventAdapterConstants.ADAPTER_FILE_BUFFER_SIZE_DEFAULT);
+        dynamicProperties.add(bufferSize);
 
         return dynamicProperties;
     }

@@ -33,11 +33,6 @@
             <version>${version.org.wso2.carbon}</version>
         </dependency>
         <dependency>
-            <groupId>org.wso2.carbon</groupId>
-            <artifactId>org.wso2.carbon.ui</artifactId>
-            <version>${version.org.wso2.carbon}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.log4j.wso2</groupId>
             <artifactId>log4j</artifactId>
             <version>${version.org.apache.log4j.wso2}</version>
