@@ -15,13 +15,11 @@
  ~ limitations under the License.
 -->
 
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.wso2.carbon.extension.analytics</groupId>
     <artifactId>org.wso2.carbon.extension.analytics.publisher.file</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <packaging>bundle</packaging>
     <name>WSO2 Carbon - Analytics Publisher Library For File</name>
@@ -48,6 +46,14 @@
             <version>${version.org.wso2.carbon.analytics-common}</version>
         </dependency>
     </dependencies>
+    <scm>
+        <connection>scm:git:https://github.com/wso2-extensions/analytics-publisher-file.git</connection>
+        <url>https://github.com/wso2-extensions/analytics-publisher-file.git</url>
+        <developerConnection>
+            scm:git:https://github.com/wso2-extensions/analytics-publisher-file
+        </developerConnection>
+        <tag>HEAD</tag>
+    </scm>
     <properties>
         <version.org.wso2.carbon>4.4.3</version.org.wso2.carbon>
         <version.org.apache.log4j.wso2>1.2.17.wso2v1</version.org.apache.log4j.wso2>
