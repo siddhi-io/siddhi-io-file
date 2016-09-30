@@ -18,20 +18,16 @@
 
 package org.wso2.carbon.extension.analytics.publisher.file;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.output.adapter.core.*;
 import org.wso2.carbon.extension.analytics.publisher.file.internal.util.FileEventAdapterConstants;
 
 import java.util.*;
 
 /**
- * The File event adapter factory class to create
- * an File output adapter
+ * The File event adapter factory class to create an File output adapter
  */
 public class FileEventAdapterFactory extends OutputEventAdapterFactory {
-    private static final Log log = LogFactory.getLog(FileEventAdapterFactory.class);
-    private ResourceBundle resourceBundle = ResourceBundle.getBundle("Resources", Locale.getDefault());
+    private ResourceBundle resourceBundle = ResourceBundle.getBundle(FileEventAdapterConstants.RESOURCES, Locale.getDefault());
 
     /**
      * This string will be displayed in the publisher interface in the adapter type drop down list.
@@ -81,18 +77,18 @@ public class FileEventAdapterFactory extends OutputEventAdapterFactory {
     public List<Property> getDynamicPropertyList() {
         List<Property> dynamicProperties = new ArrayList<>();
 
+        Property bufferSize = new Property(FileEventAdapterConstants.ADAPTER_BUFFER_SIZE);
+        bufferSize.setDisplayName(resourceBundle
+                .getString(FileEventAdapterConstants.ADAPTER_BUFFER_SIZE));
+        bufferSize.setHint(resourceBundle.getString(FileEventAdapterConstants.ADAPTER_BUFFER_HINT));
+        bufferSize.setDefaultValue(FileEventAdapterConstants.ADAPTER_BUFFER_SIZE_DEFAULT);
+        dynamicProperties.add(bufferSize);
+
         Property fileName = new Property(FileEventAdapterConstants.ADAPTER_FILE_NAME);
         fileName.setDisplayName(resourceBundle
                 .getString(FileEventAdapterConstants.ADAPTER_FILE_NAME));
         fileName.setHint(resourceBundle.getString(FileEventAdapterConstants.ADAPTER_FILE_NAME_HINT));
         dynamicProperties.add(fileName);
-
-        Property bufferSize = new Property(FileEventAdapterConstants.ADAPTER_BUFFER_SIZE);
-        bufferSize.setDisplayName(resourceBundle
-                .getString(FileEventAdapterConstants.ADAPTER_BUFFER_SIZE));
-        bufferSize.setHint(resourceBundle.getString(FileEventAdapterConstants.ADAPTER_BUFFER_HINT));
-        bufferSize.setDefaultValue(FileEventAdapterConstants.ADAPTER_FILE_BUFFER_SIZE_DEFAULT);
-        dynamicProperties.add(bufferSize);
 
         return dynamicProperties;
     }

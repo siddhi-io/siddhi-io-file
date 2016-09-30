@@ -104,12 +104,12 @@ public class FileEventAdapter implements OutputEventAdapter {
      * Will be called after publishing is done, or when ConnectionUnavailableException is thrown.
      */
     public void disconnect() {
-        for (String keyList : fileChannelMap.keySet()) {
-            try {
+        try {
+            for (String keyList : fileChannelMap.keySet()) {
                 fileChannelMap.get(keyList).close();
-            } catch (IOException e) {
-                log.error("Error occurred while close the FileChannel", e);
             }
+        } catch (IOException e) {
+            throw new RuntimeException("Error occurred while close the FileChannel", e);
         }
     }
 

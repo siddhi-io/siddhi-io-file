@@ -20,16 +20,14 @@ package org.wso2.carbon.extension.analytics.publisher.file.internal.util;
 
 public class FileEventAdapterConstants {
 
-    private FileEventAdapterConstants() {
-    }
-
-    public static final String ADAPTER_TYPE = "file";
-
+    public static final String ADAPTER_TYPE = "File";
     public static final String ADAPTER_FILE_NAME = "filename";
     public static final String ADAPTER_FILE_NAME_HINT = "filename.hint";
-
     public static final String ADAPTER_BUFFER_SIZE = "buffersize";
     public static final String ADAPTER_BUFFER_HINT = "buffersize.hint";
+    public static final String ADAPTER_BUFFER_SIZE_DEFAULT = "1024";
+    public static final String RESOURCES = "Resources";
 
-    public static final String ADAPTER_FILE_BUFFER_SIZE_DEFAULT = "1024";
+    private FileEventAdapterConstants() {
+    }
 }
