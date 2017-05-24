@@ -103,6 +103,7 @@ public class FileSink extends Sink{
         try {
             bufferedWriter = new BufferedWriter(new FileWriter(new File(fileURI)));
         } catch (IOException e) {
+            // todo : handle exception
             e.printStackTrace();
         }
     }
@@ -140,15 +141,5 @@ public class FileSink extends Sink{
 
     public void restoreState(Map<String, Object> map) {
 
-    }
-
-    private void publishToFile(CarbonMessage carbonMessage){
-        try {
-            ByteBuffer byteBuffer = carbonMessage.getMessageBody();
-            String s = new String(byteBuffer.array());
-            bufferedWriter.write(carbonMessage.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
