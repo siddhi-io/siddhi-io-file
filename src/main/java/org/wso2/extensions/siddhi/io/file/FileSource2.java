@@ -15,8 +15,6 @@ import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 
-
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,7 +22,7 @@ import java.util.Map;
  * Created by minudika on 18/5/17.
  */
 @Extension(
-        name = "file2",
+        name = "file",
         namespace = "source",
         description = "File Source",
         parameters = {
@@ -81,18 +79,23 @@ import java.util.Map;
                                 + "}")
         }
 )
-public class FileSource extends Source{
-    private static final Logger log = Logger.getLogger(FileSource.class);
+public class FileSource2 extends Source{
+    private static final Logger log = Logger.getLogger(FileSource2.class);
 
     private SourceEventListener sourceEventListener;
     private static String URI_IDENTIFIER = "uri";
+    private static String TAILING_ENABLED_INDENTIFIER = "tail.file";
     private String fileURI = null;
+    private Boolean fileTailingEnabled = false;
     private FileServerConnector fileServerConnector = null;
     private FileMessageProcessor fileMessageProcessor = null;
 
-    public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader, ExecutionPlanContext executionPlanContext) {
+    public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader,
+                     ExecutionPlanContext executionPlanContext) {
         this.sourceEventListener = sourceEventListener;
         fileURI = optionHolder.validateAndGetStaticValue(URI_IDENTIFIER,null);
+        fileTailingEnabled = Boolean.parseBoolean(
+                optionHolder.validateAndGetStaticValue(TAILING_ENABLED_INDENTIFIER,"false"));
     }
 
     public void connect() throws ConnectionUnavailableException {
