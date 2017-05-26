@@ -1,5 +1,12 @@
 package org.wso2.extensions.siddhi.io.file;
 
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.FileSystemManager;
+import org.apache.commons.vfs2.FileType;
+import org.apache.commons.vfs2.RandomAccessContent;
+import org.apache.commons.vfs2.VFS;
+import org.apache.commons.vfs2.util.RandomAccessMode;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
@@ -86,35 +93,50 @@ public class FileSource2 extends Source{
     private static String URI_IDENTIFIER = "uri";
     private static String TAILING_ENABLED_INDENTIFIER = "tail.file";
     private String fileURI = null;
-    private Boolean fileTailingEnabled = false;
+    private Boolean isFileTailingEnabled = false;
     private FileServerConnector fileServerConnector = null;
     private FileMessageProcessor fileMessageProcessor = null;
+    private FileSystemManager fileSystemManager = null;
+    private FileObject fileObject = null;
+    private RandomAccessContent randomAccessContent = null;
 
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader,
                      ExecutionPlanContext executionPlanContext) {
         this.sourceEventListener = sourceEventListener;
         fileURI = optionHolder.validateAndGetStaticValue(URI_IDENTIFIER,null);
-        fileTailingEnabled = Boolean.parseBoolean(
+        isFileTailingEnabled = Boolean.parseBoolean(
                 optionHolder.validateAndGetStaticValue(TAILING_ENABLED_INDENTIFIER,"false"));
     }
 
     public void connect() throws ConnectionUnavailableException {
-        Map<String, String> parameters = new HashMap<String,String>();
-        parameters.put(Constants.TRANSPORT_FILE_FILE_URI, fileURI);
-        parameters.put(org.wso2.carbon.connector.framework.server.polling.Constants.POLLING_INTERVAL, "1000");
-        fileServerConnector = new FileServerConnector("siddhi.io.file",parameters);
-       // fileMessageProcessor = new FileMessageProcessor();
-        fileServerConnector.setMessageProcessor(fileMessageProcessor);
-        try{
-            fileServerConnector.start();
-            fileMessageProcessor.waitTillDone();
-        } catch (ServerConnectorException e) {
-            log.error("Exception in starting the JMS receiver for stream: "
-                    + sourceEventListener.getStreamDefinition().getId(), e);
-        } catch (InterruptedException e) {
+        try {
+            fileSystemManager = VFS.getManager();
+
+            if (fileSystemManager != null) {
+                fileObject = fileSystemManager.resolveFile(fileURI);
+            }
+
+            if (fileObject != null && isFileTailingEnabled) {
+                try {
+                    randomAccessContent = fileObject.getContent().getRandomAccessContent(RandomAccessMode.READ);
+                } catch (FileSystemException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            FileType fileType = fileObject.getType();
+            if(fileType == FileType.FILE){
+                new Thread(new FileProcessor(sourceEventListener, fileObject, isFileTailingEnabled)).start();
+            }else if(fileType == FileType.FOLDER){
+                FileObject []fileObjects = fileObject.getChildren();
+                for(FileObject file : fileObjects){
+                    new Thread(new FileProcessor(sourceEventListener, file, isFileTailingEnabled)).start();
+                }
+            }
+
+        } catch (FileSystemException e) {
             e.printStackTrace();
         }
-        fileMessageProcessor.getFileContent();
     }
 
     public void disconnect() {

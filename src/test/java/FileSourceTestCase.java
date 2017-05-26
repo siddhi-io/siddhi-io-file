@@ -36,7 +36,8 @@ public class FileSourceTestCase {
         log.info("test FileSourceMapper 1");
         String streams = "" +
                 "@Plan:name('TestExecutionPlan')" +
-                "@source(type='file',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/input.json')" +
+                "@source(type='file',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/input.json'," +
+                "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
@@ -53,41 +54,12 @@ public class FileSourceTestCase {
             @Override
             public void receive(Event[] events) {
                 EventPrinter.print(events);
-
             }
         });
 
         executionPlanRuntime.start();
 
-        InMemoryBroker.publish("stock", " {\n" +
-                "      \"event\":{\n" +
-                "         \"symbol\":\"WSO2\",\n" +
-                "         \"price\":55.6,\n" +
-                "         \"volume\":100\n" +
-                "      }\n" +
-                " }");
-        InMemoryBroker.publish("stock", " {\n" +
-                "      \"event\":{\n" +
-                "         \"symbol\":\"WSO2\",\n" +
-                "         \"price\":55.678,\n" +
-                "         \"volume\":100\n" +
-                "      }\n" +
-                " }");
-        InMemoryBroker.publish("stock", " {\n" +
-                "      \"event\":{\n" +
-                "         \"symbol\":\"WSO2\",\n" +
-                "         \"price\":55,\n" +
-                "         \"volume\":100\n" +
-                "      }\n" +
-                " }");
-        InMemoryBroker.publish("stock", " {\n" +
-                "      \"event\":{\n" +
-                "         \"symbol\":\"WSO2@#$%^*\",\n" +
-                "         \"price\":55,\n" +
-                "         \"volume\":100\n" +
-                "      }\n" +
-                " }");
-        Thread.sleep(100);
+        Thread.sleep(1000);
 
         //assert event count
        // Assert.assertEquals("Number of events", 4, count.get());
@@ -99,8 +71,8 @@ public class FileSourceTestCase {
         log.info("test FileSourceMapper 2");
         String streams = "" +
                 "@Plan:name('TestExecutionPlan')" +
-                "@source(type='file',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/input.json'," +
-                "tail.file='true')" +
+                "@source(type='file',uri='/home/minudika/Projects/WSO2/LogWriterForTests/logs/tmp.txt'," +
+                "tail.file='true', @map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
@@ -123,35 +95,8 @@ public class FileSourceTestCase {
 
         executionPlanRuntime.start();
 
-        InMemoryBroker.publish("stock", " {\n" +
-                "      \"event\":{\n" +
-                "         \"symbol\":\"WSO2\",\n" +
-                "         \"price\":55.6,\n" +
-                "         \"volume\":100\n" +
-                "      }\n" +
-                " }");
-        InMemoryBroker.publish("stock", " {\n" +
-                "      \"event\":{\n" +
-                "         \"symbol\":\"WSO2\",\n" +
-                "         \"price\":55.678,\n" +
-                "         \"volume\":100\n" +
-                "      }\n" +
-                " }");
-        InMemoryBroker.publish("stock", " {\n" +
-                "      \"event\":{\n" +
-                "         \"symbol\":\"WSO2\",\n" +
-                "         \"price\":55,\n" +
-                "         \"volume\":100\n" +
-                "      }\n" +
-                " }");
-        InMemoryBroker.publish("stock", " {\n" +
-                "      \"event\":{\n" +
-                "         \"symbol\":\"WSO2@#$%^*\",\n" +
-                "         \"price\":55,\n" +
-                "         \"volume\":100\n" +
-                "      }\n" +
-                " }");
-        Thread.sleep(100);
+
+        Thread.sleep(100000);
 
         //assert event count
         // Assert.assertEquals("Number of events", 4, count.get());
