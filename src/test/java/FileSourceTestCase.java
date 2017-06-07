@@ -94,12 +94,19 @@ public class FileSourceTestCase {
         });
 
         executionPlanRuntime.start();
+        System.out.println("started ");
 
-
-        Thread.sleep(100000);
+        Thread.sleep(1000);
 
         //assert event count
         // Assert.assertEquals("Number of events", 4, count.get());
         executionPlanRuntime.shutdown();
+        System.out.println("Stopped : 1");
+        Thread.sleep(1000);
+        executionPlanRuntime.start();
+        System.out.println("Restarted : 1");
+        Thread.sleep(1000);
+        executionPlanRuntime.shutdown();
+        System.out.println("Stopped : 2");
     }
 }

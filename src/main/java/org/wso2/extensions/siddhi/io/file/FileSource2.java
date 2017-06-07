@@ -99,10 +99,14 @@ public class FileSource2 extends Source{
     private FileSystemManager fileSystemManager = null;
     private FileObject fileObject = null;
     private RandomAccessContent randomAccessContent = null;
+    private ExecutionPlanContext executionPlanContext = null;
+    private Map<String,FileProcessor> fileProcessorMap;
 
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader,
                      ExecutionPlanContext executionPlanContext) {
         this.sourceEventListener = sourceEventListener;
+        this.executionPlanContext = executionPlanContext;
+        this.fileProcessorMap = new HashMap<String,FileProcessor>();
         fileURI = optionHolder.validateAndGetStaticValue(URI_IDENTIFIER,null);
         isFileTailingEnabled = Boolean.parseBoolean(
                 optionHolder.validateAndGetStaticValue(TAILING_ENABLED_INDENTIFIER,"false"));
@@ -126,11 +130,17 @@ public class FileSource2 extends Source{
 
             FileType fileType = fileObject.getType();
             if(fileType == FileType.FILE){
-                new Thread(new FileProcessor(sourceEventListener, fileObject, isFileTailingEnabled)).start();
+                FileProcessor fileProcessor = new FileProcessor(
+                        executionPlanContext,sourceEventListener, fileObject, isFileTailingEnabled);
+                fileProcessorMap.put(fileURI,fileProcessor);
+                fileProcessor.run();
             }else if(fileType == FileType.FOLDER){
                 FileObject []fileObjects = fileObject.getChildren();
                 for(FileObject file : fileObjects){
-                    new Thread(new FileProcessor(sourceEventListener, file, isFileTailingEnabled)).start();
+                    FileProcessor fileProcessor = new FileProcessor(
+                            executionPlanContext,sourceEventListener, fileObject, isFileTailingEnabled);
+                    fileProcessorMap.put(fileURI,fileProcessor);
+                    fileProcessor.run();
                 }
             }
 

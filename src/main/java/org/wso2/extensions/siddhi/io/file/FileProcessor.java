@@ -4,27 +4,34 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.RandomAccessContent;
 import org.apache.commons.vfs2.util.RandomAccessMode;
+import org.wso2.siddhi.core.config.ExecutionPlanContext;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
+import org.wso2.siddhi.core.util.snapshot.Snapshotable;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Created by minudika on 25/5/17.
  */
-public class FileProcessor implements Runnable{
+public class FileProcessor {
     FileObject fileObject;
     ArrayList<Object> messageHolder;
     SourceEventListener sourceEventListener;
     boolean isFileTailingEnabled;
     long filePointer = 0;
-    public FileProcessor(SourceEventListener sourceEventListener,FileObject fileObject,boolean isFileTailingEnabled){
+    String fileURI;
+    ExecutionPlanContext executionPlanContext;
+    public FileProcessor(ExecutionPlanContext executionPlanContext, SourceEventListener sourceEventListener,FileObject fileObject,boolean isFileTailingEnabled){
         this.fileObject = fileObject;
         this.sourceEventListener = sourceEventListener;
         this.isFileTailingEnabled = isFileTailingEnabled;
+        this.executionPlanContext = executionPlanContext;
+        fileURI = fileObject.getName().getURI();
         messageHolder = new ArrayList<Object>();
     }
 
@@ -36,11 +43,14 @@ public class FileProcessor implements Runnable{
             while ((line = bufferedReader.readLine()) != null) {
                 System.out.println(line);
                 messageHolder.add(line);
+                Thread.sleep(100);
                 sourceEventListener.onEvent(line);
             }
         } catch (FileSystemException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -52,7 +62,6 @@ public class FileProcessor implements Runnable{
                 Thread.sleep(100);
                 long len = fileObject.getContent().getSize();
                 if (len < filePointer) {
-                    // Log must have been jibbled or deleted.
                     System.out.println("Log file was reset. Restarting logging from start of file.");
                     filePointer = len;
                 }
@@ -66,6 +75,7 @@ public class FileProcessor implements Runnable{
                     while ((line = bufferedReader.readLine()) != null) {
                         //System.out.println(line);
                         sourceEventListener.onEvent(line);
+                        Thread.sleep(100);
                     }
                     filePointer = rac.getFilePointer();
                     rac.close();
@@ -80,7 +90,6 @@ public class FileProcessor implements Runnable{
         }
     }
 
-    @Override
     public void run() {
         if(isFileTailingEnabled) {
             processWithTailing();
