@@ -1,32 +1,40 @@
 package org.wso2.extensions.siddhi.io.file;
 
-import org.apache.log4j.Logger;
-import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
-import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
-import org.wso2.extensions.siddhi.io.file.utils.Constants;
-import org.wso2.extensions.siddhi.io.file.utils.FileSourceConfiguration;
+import org.wso2.carbon.messaging.CarbonMessage;
+import org.wso2.carbon.messaging.MapCarbonMessage;
+import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
-import org.wso2.siddhi.core.stream.input.source.Source;
-import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
+import org.wso2.siddhi.core.stream.output.sink.Sink;
 import org.wso2.siddhi.core.util.config.ConfigReader;
+import org.wso2.siddhi.core.util.transport.DynamicOptions;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
+import org.wso2.siddhi.query.api.definition.StreamDefinition;
 
-
-import java.util.HashMap;
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 /**
  * Created by minudika on 18/5/17.
  */
+
 @Extension(
-        name = "file",
-        namespace = "source",
-        description = "File Source",
+        name = "file3",
+        namespace = "sink",
+        description = "File Sink",
         parameters = {
                 @Parameter(name = "enclosing.element",
                         description =
@@ -81,72 +89,53 @@ import java.util.Map;
                                 + "}")
         }
 )
-public class FileSource extends Source{
-    private static final Logger log = Logger.getLogger(FileSource.class);
-
-    private SourceEventListener sourceEventListener;
-    private FileSourceConfiguration fileSinkConfiguration;
+public class FileSink2 extends Sink{
     private static String URI_IDENTIFIER = "uri";
     private String fileURI = null;
-    private FileServerConnector fileServerConnector = null;
-    private FileMessageProcessor fileMessageProcessor = null;
-    private String mode = null;
-    private String moveAfterAction = null;
-    private String actionAfterProcess = null;
+    private File file;
+    private BufferedWriter bufferedWriter = null;
+    public String[] getSupportedDynamicOptions() {
+        return new String[0];
+    }
 
-    private boolean isDirectory = false;
+   
 
-    public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader,
-                     SiddhiAppContext siddhiAppContext) {
-        this.sourceEventListener = sourceEventListener;
-        fileSinkConfiguration = new FileSourceConfiguration();
-        fileSinkConfiguration.setUri(optionHolder.validateAndGetStaticValue(Constants.URI, null));
-        String mode = optionHolder.validateAndGetStaticValue(Constants.MODE, null);
-        fileSinkConfiguration.setMode(optionHolder.validateAndGetStaticValue(Constants.MODE, null));
-        fileSinkConfiguration.setActionAfterProcess(optionHolder.validateAndGetStaticValue(
-                Constants.ACTION_AFTER_PROCESS, null));
-        fileSinkConfiguration.setMoveAfterProcessUri(optionHolder.validateAndGetStaticValue(
-                Constants.MOVE_AFTER_PROCESS, null));
-        String isTailingEnabled = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
-        fileSinkConfiguration.setTailingEnabled(Constants.TRUE.equalsIgnoreCase(isTailingEnabled));
-        fileSinkConfiguration.setBeginRegex(optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null));
-        fileSinkConfiguration.setEndRegex(optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null));
+    protected void init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
+        fileURI = optionHolder.validateAndGetStaticValue(URI_IDENTIFIER, null);
+        file = new File(fileURI);
+        try {
+            bufferedWriter = new BufferedWriter(new FileWriter(new File(fileURI)));
+        } catch (IOException e) {
+            // todo : handle exception
+            e.printStackTrace();
+        }
     }
 
     public void connect() throws ConnectionUnavailableException {
-        Map<String, String> parameters = new HashMap<String,String>();
-        parameters.put(Constants.TRANSPORT_FILE_FILE_URI, fileURI);
-        parameters.put(Constants.POLLING_INTERVAL, "1000");
-        parameters.put(Constants.FILE_POINTER,"0");
-        fileServerConnector = new FileServerConnector("siddhi.io.file",parameters);
-        fileMessageProcessor = new FileMessageProcessor(sourceEventListener, fileSinkConfiguration);
-        fileServerConnector.setMessageProcessor(fileMessageProcessor);
-        try{
-            fileServerConnector.start();
-            fileMessageProcessor.waitTillDone();
-        } catch (ServerConnectorException e) {
-            log.error("Exception in starting the JMS receiver for stream: "
-                    + sourceEventListener.getStreamDefinition().getId(), e);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        fileMessageProcessor.getFileContent();
+
     }
 
     public void disconnect() {
+        try {
+            bufferedWriter.flush();
+            bufferedWriter.close();
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void destroy() {
 
     }
 
-    public void pause() {
-
-    }
-
-    public void resume() {
-
+    public void publish(Object payload, DynamicOptions dynamicOptions) throws ConnectionUnavailableException {
+        try {
+            bufferedWriter.write(payload.toString());
+            bufferedWriter.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public Map<String, Object> currentState() {

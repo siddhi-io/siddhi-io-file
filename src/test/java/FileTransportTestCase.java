@@ -18,7 +18,7 @@
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
-import org.wso2.siddhi.core.ExecutionPlanRuntime;
+import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.stream.input.InputHandler;
@@ -36,8 +36,8 @@ public class FileTransportTestCase {
     public void fileSourceMapperTest1() throws InterruptedException {
         log.info("test FileSourceMapper 1");
         String streams = "" +
-                "@Plan:name('TestExecutionPlan')" +
-                "@source(type='file',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/input.json')" +
+                "@Plan:name('TestSiddhiApp')" +
+                "@source(type='file',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/input2.txt')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
@@ -47,9 +47,9 @@ public class FileTransportTestCase {
                 "insert into BarStream; ";
 
         SiddhiManager siddhiManager = new SiddhiManager();
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(streams + query);
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
 
-        executionPlanRuntime.addCallback("BarStream", new StreamCallback() {
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
             public void receive(Event[] events) {
@@ -58,7 +58,7 @@ public class FileTransportTestCase {
             }
         });
 
-        executionPlanRuntime.start();
+        siddhiAppRuntime.start();
 
         InMemoryBroker.publish("stock", " {\n" +
                 "      \"event\":{\n" +
@@ -92,7 +92,7 @@ public class FileTransportTestCase {
 
         //assert event count
        // Assert.assertEquals("Number of events", 4, count.get());
-        executionPlanRuntime.shutdown();
+        siddhiAppRuntime.shutdown();
     }
 
     @Test
@@ -100,7 +100,7 @@ public class FileTransportTestCase {
         log.info("test FileSinkMapper 1");
 
         String streams = "" +
-                "@Plan:name('TestExecutionPlan')" +
+                "@Plan:name('TestSiddhiApp')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "@sink(type='file', @map(type='text'),  uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/input.json') " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -111,10 +111,10 @@ public class FileTransportTestCase {
                 "insert into BarStream; ";
 
         SiddhiManager siddhiManager = new SiddhiManager();
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(streams + query);
-        InputHandler stockStream = executionPlanRuntime.getInputHandler("FooStream");
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
 
-        executionPlanRuntime.start();
+        siddhiAppRuntime.start();
         Event wso2Event = new Event();
         Event ibmEvent = new Event();
         Object[] wso2Data = {"WSO2", 55.6f, 100L};
@@ -130,7 +130,7 @@ public class FileTransportTestCase {
 
         //assert event count
        // Assert.assertEquals(5, wso2Count.get());
-        executionPlanRuntime.shutdown();
+        siddhiAppRuntime.shutdown();
 
         //unsubscribe from "inMemory" broker per topic
         //InMemoryBroker.unsubscribe(subscriberWSO2);

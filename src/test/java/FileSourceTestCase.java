@@ -17,7 +17,7 @@
  */
 import org.apache.log4j.Logger;
 import org.junit.Test;
-import org.wso2.siddhi.core.ExecutionPlanRuntime;
+import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.stream.input.InputHandler;
@@ -35,9 +35,9 @@ public class FileSourceTestCase {
     public void fileSourceMapperTest1() throws InterruptedException {
         log.info("test FileSourceMapper 1");
         String streams = "" +
-                "@Plan:name('TestExecutionPlan')" +
-                "@source(type='file',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/input.json'," +
-                "@map(type='json'))" +
+                "@Plan:name('TestSiddhiApp')" +
+                "@source(type='file',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/input.json'" +
+                ")" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
@@ -47,9 +47,9 @@ public class FileSourceTestCase {
                 "insert into BarStream; ";
 
         SiddhiManager siddhiManager = new SiddhiManager();
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(streams + query);
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
 
-        executionPlanRuntime.addCallback("BarStream", new StreamCallback() {
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
             public void receive(Event[] events) {
@@ -57,20 +57,20 @@ public class FileSourceTestCase {
             }
         });
 
-        executionPlanRuntime.start();
+        siddhiAppRuntime.start();
 
         Thread.sleep(1000);
 
         //assert event count
        // Assert.assertEquals("Number of events", 4, count.get());
-        executionPlanRuntime.shutdown();
+        siddhiAppRuntime.shutdown();
     }
 
     @Test
     public void fileSourceMapperTest2() throws InterruptedException {
         log.info("test FileSourceMapper 2");
         String streams = "" +
-                "@Plan:name('TestExecutionPlan')" +
+                "@Plan:name('TestSiddhiApp')" +
                 "@source(type='file',uri='/home/minudika/Projects/WSO2/LogWriterForTests/logs/tmp.txt'," +
                 "tail.file='true', @map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -82,9 +82,9 @@ public class FileSourceTestCase {
                 "insert into BarStream; ";
 
         SiddhiManager siddhiManager = new SiddhiManager();
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(streams + query);
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
 
-        executionPlanRuntime.addCallback("BarStream", new StreamCallback() {
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
             public void receive(Event[] events) {
@@ -93,20 +93,20 @@ public class FileSourceTestCase {
             }
         });
 
-        executionPlanRuntime.start();
+        siddhiAppRuntime.start();
         System.out.println("started ");
 
         Thread.sleep(1000);
 
         //assert event count
         // Assert.assertEquals("Number of events", 4, count.get());
-        executionPlanRuntime.shutdown();
+        siddhiAppRuntime.shutdown();
         System.out.println("Stopped : 1");
         Thread.sleep(1000);
-        executionPlanRuntime.start();
+        siddhiAppRuntime.start();
         System.out.println("Restarted : 1");
         Thread.sleep(1000);
-        executionPlanRuntime.shutdown();
+        siddhiAppRuntime.shutdown();
         System.out.println("Stopped : 2");
     }
 }

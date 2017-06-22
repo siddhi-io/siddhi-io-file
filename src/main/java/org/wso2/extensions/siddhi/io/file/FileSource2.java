@@ -15,7 +15,7 @@ import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.util.DataType;
-import org.wso2.siddhi.core.config.ExecutionPlanContext;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
 import org.wso2.siddhi.core.stream.input.source.Source;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
@@ -29,7 +29,7 @@ import java.util.Map;
  * Created by minudika on 18/5/17.
  */
 @Extension(
-        name = "file",
+        name = "file2",
         namespace = "source",
         description = "File Source",
         parameters = {
@@ -99,13 +99,13 @@ public class FileSource2 extends Source{
     private FileSystemManager fileSystemManager = null;
     private FileObject fileObject = null;
     private RandomAccessContent randomAccessContent = null;
-    private ExecutionPlanContext executionPlanContext = null;
+    private SiddhiAppContext siddhiAppContext = null;
     private Map<String,FileProcessor> fileProcessorMap;
 
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader,
-                     ExecutionPlanContext executionPlanContext) {
+                     SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
-        this.executionPlanContext = executionPlanContext;
+        this.siddhiAppContext = siddhiAppContext;
         this.fileProcessorMap = new HashMap<String,FileProcessor>();
         fileURI = optionHolder.validateAndGetStaticValue(URI_IDENTIFIER,null);
         isFileTailingEnabled = Boolean.parseBoolean(
@@ -131,14 +131,14 @@ public class FileSource2 extends Source{
             FileType fileType = fileObject.getType();
             if(fileType == FileType.FILE){
                 FileProcessor fileProcessor = new FileProcessor(
-                        executionPlanContext,sourceEventListener, fileObject, isFileTailingEnabled);
+                        siddhiAppContext,sourceEventListener, fileObject, isFileTailingEnabled);
                 fileProcessorMap.put(fileURI,fileProcessor);
                 fileProcessor.run();
             }else if(fileType == FileType.FOLDER){
                 FileObject []fileObjects = fileObject.getChildren();
                 for(FileObject file : fileObjects){
                     FileProcessor fileProcessor = new FileProcessor(
-                            executionPlanContext,sourceEventListener, fileObject, isFileTailingEnabled);
+                            siddhiAppContext,sourceEventListener, fileObject, isFileTailingEnabled);
                     fileProcessorMap.put(fileURI,fileProcessor);
                     fileProcessor.run();
                 }

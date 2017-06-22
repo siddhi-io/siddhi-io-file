@@ -17,7 +17,7 @@
  */
 import org.apache.log4j.Logger;
 import org.junit.Test;
-import org.wso2.siddhi.core.ExecutionPlanRuntime;
+import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.stream.input.InputHandler;
@@ -36,9 +36,9 @@ public class FileSinkTestCase {
         log.info("test FileSinkMapper 1");
 
         String streams = "" +
-                "@Plan:name('TestExecutionPlan')" +
+                "@App:name('TestSiddhiApp')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='text'),  uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/out_test1.txt') " +
+                "@sink(type='file', @map(type='text'), append='false', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/out_test1.txt') " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
         String query = "" +
@@ -47,10 +47,10 @@ public class FileSinkTestCase {
                 "insert into BarStream; ";
 
         SiddhiManager siddhiManager = new SiddhiManager();
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(streams + query);
-        InputHandler stockStream = executionPlanRuntime.getInputHandler("FooStream");
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
 
-        executionPlanRuntime.start();
+        siddhiAppRuntime.start();
         Event wso2Event = new Event();
         Event ibmEvent = new Event();
         Object[] wso2Data = {"WSO2", 55.6f, 100L};
@@ -66,7 +66,7 @@ public class FileSinkTestCase {
 
         //assert event count
        // Assert.assertEquals(5, wso2Count.get());
-        executionPlanRuntime.shutdown();
+        siddhiAppRuntime.shutdown();
 
         //unsubscribe from "inMemory" broker per topic
         //InMemoryBroker.unsubscribe(subscriberWSO2);
@@ -77,9 +77,9 @@ public class FileSinkTestCase {
         log.info("test FileSinkMapper 2");
 
         String streams = "" +
-                "@Plan:name('TestExecutionPlan')" +
+                "@App:name('TestSiddhiApp')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='json'),  uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/out_test2.txt') " +
+                "@sink(type='file', @map(type='text'), append='true', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/out_test1.txt') " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
         String query = "" +
@@ -88,10 +88,10 @@ public class FileSinkTestCase {
                 "insert into BarStream; ";
 
         SiddhiManager siddhiManager = new SiddhiManager();
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(streams + query);
-        InputHandler stockStream = executionPlanRuntime.getInputHandler("FooStream");
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
 
-        executionPlanRuntime.start();
+        siddhiAppRuntime.start();
         Event wso2Event = new Event();
         Event ibmEvent = new Event();
         Object[] wso2Data = {"WSO2", 55.6f, 100L};
@@ -107,7 +107,7 @@ public class FileSinkTestCase {
 
         //assert event count
         // Assert.assertEquals(5, wso2Count.get());
-        executionPlanRuntime.shutdown();
+        siddhiAppRuntime.shutdown();
 
         //unsubscribe from "inMemory" broker per topic
         //InMemoryBroker.unsubscribe(subscriberWSO2);
@@ -118,9 +118,9 @@ public class FileSinkTestCase {
         log.info("test FileSinkMapper 3");
 
         String streams = "" +
-                "@Plan:name('TestExecutionPlan')" +
+                "@App:name('TestSiddhiApp')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='xml'),  uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/out_test3.txt') " +
+                "@sink(type='file', @map(type='json'), append='true', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/{{symbol}}.txt', dynamic='{{symbol}}')" +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
         String query = "" +
@@ -129,10 +129,10 @@ public class FileSinkTestCase {
                 "insert into BarStream; ";
 
         SiddhiManager siddhiManager = new SiddhiManager();
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(streams + query);
-        InputHandler stockStream = executionPlanRuntime.getInputHandler("FooStream");
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
 
-        executionPlanRuntime.start();
+        siddhiAppRuntime.start();
         Event wso2Event = new Event();
         Event ibmEvent = new Event();
         Object[] wso2Data = {"WSO2", 55.6f, 100L};
@@ -140,15 +140,15 @@ public class FileSinkTestCase {
 
         wso2Event.setData(wso2Data);
         ibmEvent.setData(ibmData);
-        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
-        stockStream.send(new Object[]{"WSO2", 57.678f, 100L});
-        stockStream.send(new Object[]{"WSO2", 50f, 100L});
-        stockStream.send(new Object[]{"WSO2#$%", 50f, 100L});
+        stockStream.send(new Object[]{"wso2", 55.6f, 100L});
+        stockStream.send(new Object[]{"ibm", 57.678f, 100L});
+        stockStream.send(new Object[]{"google", 50f, 100L});
+        stockStream.send(new Object[]{"microsoft", 50f, 100L});
         Thread.sleep(100);
 
         //assert event count
         // Assert.assertEquals(5, wso2Count.get());
-        executionPlanRuntime.shutdown();
+        siddhiAppRuntime.shutdown();
 
         //unsubscribe from "inMemory" broker per topic
         //InMemoryBroker.unsubscribe(subscriberWSO2);

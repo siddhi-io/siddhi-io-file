@@ -25,25 +25,50 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.MapCarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.TransportSender;
+import org.wso2.extensions.siddhi.io.file.utils.Constants;
+import org.wso2.extensions.siddhi.io.file.utils.FileSourceConfiguration;
+import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class FileMessageProcessor implements CarbonMessageProcessor {
     private CountDownLatch latch = new CountDownLatch(1);
     private String fileContent;
     private SourceEventListener sourceEventListener;
+    private FileSourceConfiguration fileSourceConfiguration;
+    private Pattern defaultPattern;
+    private Pattern endRegexPattern;
+    private Matcher matcher;
 
-    public FileMessageProcessor(SourceEventListener sourceEventListener) {
+    public FileMessageProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSinkConfiguration) {
         this.sourceEventListener = sourceEventListener;
+        this.fileSourceConfiguration = fileSinkConfiguration;
+    }
+
+    private void configureFileMessageProcessor(){
+        String beginRegex = fileSourceConfiguration.getBeginRegex();
+        String endRegex = fileSourceConfiguration.getEndRegex();
+        if(beginRegex != null && endRegex != null){
+            //pattern = Pattern.compile("<tag>(.+?)</tag>");
+            defaultPattern = Pattern.compile(beginRegex + "(.+?)" + endRegex);
+        } else if (beginRegex != null && endRegex == null){
+            defaultPattern = Pattern.compile(beginRegex + "(.+?)" + beginRegex);
+        } else if (beginRegex == null && endRegex != null) {
+            defaultPattern = Pattern.compile(".+?" + endRegex);
+            endRegexPattern = Pattern.compile(endRegex + "(.+?)" + endRegex);
+        }
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
@@ -93,6 +118,7 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
         StringBuilder sb = new StringBuilder(4096);
         InputStreamReader reader = new InputStreamReader(in);
         BufferedReader bufferedReader = new BufferedReader(reader);
+        int x = 10;
         try {
             String str;
             while ((str = bufferedReader.readLine()) != null) {
@@ -143,4 +169,38 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
             sourceEventListener.onEvent(event);
         }
     }
+
+    private String readFile(CarbonMessage carbonMessage){
+        String mode = fileSourceConfiguration.getMode();
+        InputStream inputStream = carbonMessage.getInputStream();
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+        String content = null;
+        if(Constants.TEXT_FULL.equalsIgnoreCase(mode)){
+            readFileLineByLine(bufferedReader);
+        } else if(Constants.BINARY_FULL.equalsIgnoreCase(mode)){
+
+        } else if(Constants.REGEX.equalsIgnoreCase(mode)){
+
+        } else if(Constants.LINE.equalsIgnoreCase(mode)){
+
+        }
+        return content;
+    }
+
+    private void readFileLineByLine(BufferedReader reader){
+        String line;
+        try {
+            while((line = reader.readLine()) != null) {
+                sourceEventListener.onEvent(line);
+            }
+        } catch (IOException e) {
+            throw new SiddhiAppRuntimeException("Failed to read line."+e.getMessage());
+        }
+    }
+
+    private void readFileUsingRegex(BufferedReader reader){
+
+    }
+
 }

@@ -4,7 +4,7 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.RandomAccessContent;
 import org.apache.commons.vfs2.util.RandomAccessMode;
-import org.wso2.siddhi.core.config.ExecutionPlanContext;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.siddhi.core.util.snapshot.Snapshotable;
 
@@ -25,12 +25,12 @@ public class FileProcessor {
     boolean isFileTailingEnabled;
     long filePointer = 0;
     String fileURI;
-    ExecutionPlanContext executionPlanContext;
-    public FileProcessor(ExecutionPlanContext executionPlanContext, SourceEventListener sourceEventListener,FileObject fileObject,boolean isFileTailingEnabled){
+    SiddhiAppContext siddhiAppContext;
+    public FileProcessor(SiddhiAppContext siddhiAppContext, SourceEventListener sourceEventListener,FileObject fileObject,boolean isFileTailingEnabled){
         this.fileObject = fileObject;
         this.sourceEventListener = sourceEventListener;
         this.isFileTailingEnabled = isFileTailingEnabled;
-        this.executionPlanContext = executionPlanContext;
+        this.siddhiAppContext = siddhiAppContext;
         fileURI = fileObject.getName().getURI();
         messageHolder = new ArrayList<Object>();
     }

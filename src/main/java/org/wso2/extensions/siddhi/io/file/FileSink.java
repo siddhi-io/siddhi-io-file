@@ -1,29 +1,28 @@
 package org.wso2.extensions.siddhi.io.file;
 
-import org.wso2.carbon.messaging.CarbonMessage;
-import org.wso2.carbon.messaging.MapCarbonMessage;
-import org.wso2.carbon.messaging.TextCarbonMessage;
+import org.apache.log4j.Logger;
+import org.wso2.carbon.messaging.BinaryCarbonMessage;
+import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
+import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
+import org.wso2.extensions.siddhi.io.file.utils.Constants;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.util.DataType;
-import org.wso2.siddhi.core.config.ExecutionPlanContext;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.output.sink.Sink;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.transport.DynamicOptions;
+import org.wso2.siddhi.core.util.transport.Option;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 import org.wso2.siddhi.query.api.definition.StreamDefinition;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -37,14 +36,7 @@ import java.util.Map;
         parameters = {
                 @Parameter(name = "enclosing.element",
                         description =
-                                "Used to specify the enclosing element in case of sending multiple events in same "
-                                        + "JSON message. WSO2 DAS will treat the child element of given enclosing "
-                                        + "element as events"
-                                        + " and execute json path expressions on child elements. If enclosing.element "
-                                        + "is not provided "
-                                        + "multiple event scenario is disregarded and json path will be evaluated "
-                                        + "with respect to "
-                                        + "root element.",
+                                "TBD",
                         type = {DataType.STRING}),
                 @Parameter(name = "fail.on.missing.attribute",
                         description = "This can either have value true or false. By default it will be true. This "
@@ -89,37 +81,42 @@ import java.util.Map;
         }
 )
 public class FileSink extends Sink{
-    private static String URI_IDENTIFIER = "uri";
+    private static final Logger log = Logger.getLogger(FileSink.class);
+
     private String fileURI = null;
+    private String mode = null;
+    private boolean isAppendEnabled = false;
+    private String actionAfterProcess = null;
+    private String moveAfterProcess = null;
+
     private File file;
     private BufferedWriter bufferedWriter = null;
+    private VFSClientConnector vfsClientConnector = null;
+    private Map<String,String> properties = null;
+    private OptionHolder optionHolder = null;
+    private Option uriOption;
+
     public String[] getSupportedDynamicOptions() {
-        return new String[0];
+        return new String[]{"uri"};
     }
 
-    protected void init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader, ExecutionPlanContext executionPlanContext) {
-        fileURI = optionHolder.validateAndGetStaticValue(URI_IDENTIFIER, null);
-        file = new File(fileURI);
-        try {
-            bufferedWriter = new BufferedWriter(new FileWriter(new File(fileURI)));
-        } catch (IOException e) {
-            // todo : handle exception
-            e.printStackTrace();
+    protected void init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
+        this.optionHolder = optionHolder;
+        uriOption= optionHolder.validateAndGetOption(Constants.URI);
+        String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
+        properties = new HashMap<>();
+        properties.put(Constants.ACTION, Constants.WRITE);
+        if(Constants.TRUE.equalsIgnoreCase(append)){
+            properties.put(Constants.APPEND, append);
         }
     }
 
     public void connect() throws ConnectionUnavailableException {
-
+        vfsClientConnector = new VFSClientConnector();
     }
 
     public void disconnect() {
-        try {
-            bufferedWriter.flush();
-            bufferedWriter.close();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void destroy() {
@@ -127,11 +124,16 @@ public class FileSink extends Sink{
     }
 
     public void publish(Object payload, DynamicOptions dynamicOptions) throws ConnectionUnavailableException {
+        byte[] byteArray = payload.toString().getBytes();
+        String uri = uriOption.getValue(dynamicOptions);
+        properties.put(Constants.URI, uri);
+        FileSinkMessageProcessor fileSinkMessageProcessor = new FileSinkMessageProcessor();
+        BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(byteArray),true);
+        vfsClientConnector.setMessageProcessor(fileSinkMessageProcessor);
         try {
-            bufferedWriter.write(payload.toString());
-            bufferedWriter.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
+            vfsClientConnector.send(binaryCarbonMessage, null, properties);
+        } catch (ClientConnectorException e) {
+            log.error("Writing data into the file " + fileURI + "failed.\n" + e.getMessage());
         }
     }
 

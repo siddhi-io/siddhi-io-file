@@ -1,8 +1,8 @@
-{"event":{"symbol":"wso2","price":56.6,"volume":100}}
-{"event":{"symbol":"wso2","price":56.6,"volume":200}}
-{"event":{"symbol":"wso2","price":56.6,"volume":300}}
-{"event":{"symbol":"wso2","price":56.6,"volume":400}}
-{"event":{"symbol":"wso2","price":56.6,"volume":500}}
-{"event":{"symbol":"wso2","price":56.6,"volume":600}}
-{"event":{"symbol":"wso2","price":56.6,"volume":700}}
-{"event":{"symbol":"wso2","price":56.6,"volume":800}}
+siddhiEventId:-9223372036854775807
+WSO2,55.6,100
+siddhiEventId:-9223372036854775806
+WSO2,57.678,100
+siddhiEventId:-9223372036854775805
+WSO2,50.0,100
+siddhiEventId:-9223372036854775804
+WSO2#$%,50.0,100
