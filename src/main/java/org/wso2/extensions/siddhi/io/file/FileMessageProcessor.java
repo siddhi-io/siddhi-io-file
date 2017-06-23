@@ -210,7 +210,7 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
     }
 
     private String readFullFile(BufferedReader reader){
-        char[] buf = new char[4096];
+        char[] buf = new char[2048];
         StringBuilder sb = new StringBuilder();
         try {
             while(reader.read(buf) != -1){
@@ -229,14 +229,12 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
         try {
             while(reader.read(buf) != -1){
                 sb.append(new String(buf));
-                if(regexType != 1){
-                    Matcher matcher = defaultPattern.matcher(sb.toString().trim());
-                    while(matcher.find()){
-                        eventStringBuilder.append(matcher.group(0));
-                        String tmp = sb.substring(matcher.end() + 1);
-                        sb.setLength(0);
-                        sb.append(tmp);
-                    }
+                Matcher matcher = defaultPattern.matcher(sb.toString().trim());
+                while(matcher.find()){
+                    eventStringBuilder.append(matcher.group(0));
+                    String tmp = sb.substring(matcher.end() + 1);
+                    sb.setLength(0);
+                    sb.append(tmp);
                 }
             }
         } catch (IOException e) {
