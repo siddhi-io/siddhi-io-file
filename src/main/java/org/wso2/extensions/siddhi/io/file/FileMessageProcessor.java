@@ -186,14 +186,13 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
         String content = null;
         if(Constants.TEXT_FULL.equalsIgnoreCase(mode)){
-            //readFileLineByLine(bufferedReader);
-            content = readFullFile(bufferedReader);
+            readFullFile(bufferedReader);
         } else if(Constants.BINARY_FULL.equalsIgnoreCase(mode)){
 
         } else if(Constants.REGEX.equalsIgnoreCase(mode)){
-
+            readFileUsingRegex(bufferedReader);
         } else if(Constants.LINE.equalsIgnoreCase(mode)){
-
+            readFileLineByLine(bufferedReader);
         }
         return content;
     }
@@ -202,39 +201,40 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
         String line;
         try {
             while((line = reader.readLine()) != null) {
-                sourceEventListener.onEvent(line);
+                sourceEventListener.onEvent(line.trim());
             }
         } catch (IOException e) {
             throw new SiddhiAppRuntimeException("Failed to read line."+e.getMessage());
         }
     }
 
-    private String readFullFile(BufferedReader reader){
+    private void readFullFile(BufferedReader reader){
         char[] buf = new char[2048];
         StringBuilder sb = new StringBuilder();
         try {
             while(reader.read(buf) != -1){
-                sb.append(new String(buf));
+                sb.append(new String(buf).trim());
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new String(buf);
+        sourceEventListener.onEvent(sb.toString());
     }
 
     private void readFileUsingRegex(BufferedReader reader){
         char[] buf = new char[10];
         StringBuilder sb = new StringBuilder();
-        StringBuilder eventStringBuilder = new StringBuilder();
+        String eventString;
         try {
             while(reader.read(buf) != -1){
-                sb.append(new String(buf));
-                Matcher matcher = defaultPattern.matcher(sb.toString().trim());
+                sb.append(new String(buf).trim());
+                Matcher matcher = defaultPattern.matcher(sb.toString());
                 while(matcher.find()){
-                    eventStringBuilder.append(matcher.group(0));
+                    eventString = matcher.group(0);
                     String tmp = sb.substring(matcher.end() + 1);
                     sb.setLength(0);
                     sb.append(tmp);
+                    sourceEventListener.onEvent(eventString);
                 }
             }
         } catch (IOException e) {
