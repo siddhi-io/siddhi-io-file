@@ -85,8 +85,9 @@ public class FileSource extends Source{
     private static final Logger log = Logger.getLogger(FileSource.class);
 
     private SourceEventListener sourceEventListener;
-    private FileSourceConfiguration fileSinkConfiguration;
+    private FileSourceConfiguration fileSourceConfiguration;
     private static String URI_IDENTIFIER = "uri";
+    private static String FILE_SERVER_CONNECTOR_ID = "siddhi.io.file";
     private String fileURI = null;
     private FileServerConnector fileServerConnector = null;
     private FileMessageProcessor fileMessageProcessor = null;
@@ -99,33 +100,33 @@ public class FileSource extends Source{
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader,
                      SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
-        fileSinkConfiguration = new FileSourceConfiguration();
-        fileSinkConfiguration.setUri(optionHolder.validateAndGetStaticValue(Constants.URI, null));
-        String mode = optionHolder.validateAndGetStaticValue(Constants.MODE, null);
-        fileSinkConfiguration.setMode(optionHolder.validateAndGetStaticValue(Constants.MODE, null));
-        fileSinkConfiguration.setActionAfterProcess(optionHolder.validateAndGetStaticValue(
+        fileSourceConfiguration = new FileSourceConfiguration();
+        fileSourceConfiguration.setUri(optionHolder.validateAndGetStaticValue(Constants.URI, null));
+        fileSourceConfiguration.setMode(optionHolder.validateAndGetStaticValue(Constants.MODE, null));
+        fileSourceConfiguration.setActionAfterProcess(optionHolder.validateAndGetStaticValue(
                 Constants.ACTION_AFTER_PROCESS, null));
-        fileSinkConfiguration.setMoveAfterProcessUri(optionHolder.validateAndGetStaticValue(
+        fileSourceConfiguration.setMoveAfterProcessUri(optionHolder.validateAndGetStaticValue(
                 Constants.MOVE_AFTER_PROCESS, null));
         String isTailingEnabled = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
-        fileSinkConfiguration.setTailingEnabled(Constants.TRUE.equalsIgnoreCase(isTailingEnabled));
-        fileSinkConfiguration.setBeginRegex(optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null));
-        fileSinkConfiguration.setEndRegex(optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null));
+        fileSourceConfiguration.setTailingEnabled(Constants.TRUE.equalsIgnoreCase(isTailingEnabled));
+        fileSourceConfiguration.setBeginRegex(optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null));
+        fileSourceConfiguration.setEndRegex(optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null));
     }
 
     public void connect() throws ConnectionUnavailableException {
         Map<String, String> parameters = new HashMap<String,String>();
-        parameters.put(Constants.TRANSPORT_FILE_FILE_URI, fileURI);
+        parameters.put(Constants.TRANSPORT_FILE_FILE_URI, fileSourceConfiguration.getUri());
         parameters.put(Constants.POLLING_INTERVAL, "1000");
         parameters.put(Constants.FILE_POINTER,"0");
-        fileServerConnector = new FileServerConnector("siddhi.io.file",parameters);
-        fileMessageProcessor = new FileMessageProcessor(sourceEventListener, fileSinkConfiguration);
+        fileServerConnector = new FileServerConnector(FILE_SERVER_CONNECTOR_ID,parameters);
+        fileMessageProcessor = new FileMessageProcessor(sourceEventListener, fileSourceConfiguration);
+        //fileMessageProcessor = new FileMessageProcessor();
         fileServerConnector.setMessageProcessor(fileMessageProcessor);
         try{
             fileServerConnector.start();
             fileMessageProcessor.waitTillDone();
         } catch (ServerConnectorException e) {
-            log.error("Exception in starting the JMS receiver for stream: "
+            log.error("Exception in establishing a connection with file server for stream: "
                     + sourceEventListener.getStreamDefinition().getId(), e);
         } catch (InterruptedException e) {
             e.printStackTrace();

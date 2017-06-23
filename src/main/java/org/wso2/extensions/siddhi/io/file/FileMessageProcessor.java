@@ -51,10 +51,15 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
     private Pattern defaultPattern;
     private Pattern endRegexPattern;
     private Matcher matcher;
+    private int regexType = -1;
 
     public FileMessageProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSinkConfiguration) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSinkConfiguration;
+    }
+
+    public FileMessageProcessor(){
+        int x = 10;
     }
 
     private void configureFileMessageProcessor(){
@@ -63,17 +68,21 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
         if(beginRegex != null && endRegex != null){
             //pattern = Pattern.compile("<tag>(.+?)</tag>");
             defaultPattern = Pattern.compile(beginRegex + "(.+?)" + endRegex);
+            regexType = 2;
         } else if (beginRegex != null && endRegex == null){
             defaultPattern = Pattern.compile(beginRegex + "(.+?)" + beginRegex);
+            regexType = 0;
         } else if (beginRegex == null && endRegex != null) {
             defaultPattern = Pattern.compile(".+?" + endRegex);
             endRegexPattern = Pattern.compile(endRegex + "(.+?)" + endRegex);
+            regexType = 1;
         }
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-        fileContent = getStringFromInputStream(carbonMessage.getInputStream());
-        System.out.println(fileContent);
+        //fileContent = getStringFromInputStream(carbonMessage.getInputStream());
+        fileContent = readFile(carbonMessage);
+        System.err.println(fileContent);
         carbonCallback.done(carbonMessage);
         done();
         return false;
@@ -177,7 +186,8 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
         String content = null;
         if(Constants.TEXT_FULL.equalsIgnoreCase(mode)){
-            readFileLineByLine(bufferedReader);
+            //readFileLineByLine(bufferedReader);
+            content = readFullFile(bufferedReader);
         } else if(Constants.BINARY_FULL.equalsIgnoreCase(mode)){
 
         } else if(Constants.REGEX.equalsIgnoreCase(mode)){
@@ -199,8 +209,39 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
         }
     }
 
-    private void readFileUsingRegex(BufferedReader reader){
+    private String readFullFile(BufferedReader reader){
+        char[] buf = new char[4096];
+        StringBuilder sb = new StringBuilder();
+        try {
+            while(reader.read(buf) != -1){
+                sb.append(new String(buf));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new String(buf);
+    }
 
+    private void readFileUsingRegex(BufferedReader reader){
+        char[] buf = new char[10];
+        StringBuilder sb = new StringBuilder();
+        StringBuilder eventStringBuilder = new StringBuilder();
+        try {
+            while(reader.read(buf) != -1){
+                sb.append(new String(buf));
+                if(regexType != 1){
+                    Matcher matcher = defaultPattern.matcher(sb.toString().trim());
+                    while(matcher.find()){
+                        eventStringBuilder.append(matcher.group(0));
+                        String tmp = sb.substring(matcher.end() + 1);
+                        sb.setLength(0);
+                        sb.append(tmp);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

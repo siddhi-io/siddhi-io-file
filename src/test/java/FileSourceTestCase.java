@@ -35,8 +35,8 @@ public class FileSourceTestCase {
     public void fileSourceMapperTest1() throws InterruptedException {
         log.info("test FileSourceMapper 1");
         String streams = "" +
-                "@Plan:name('TestSiddhiApp')" +
-                "@source(type='file',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/input.json'" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file',mode='text.full',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/input.json'" +
                 ")" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -70,9 +70,9 @@ public class FileSourceTestCase {
     public void fileSourceMapperTest2() throws InterruptedException {
         log.info("test FileSourceMapper 2");
         String streams = "" +
-                "@Plan:name('TestSiddhiApp')" +
+                "@App:name('TestSiddhiApp')" +
                 "@source(type='file',uri='/home/minudika/Projects/WSO2/LogWriterForTests/logs/tmp.txt'," +
-                "tail.file='true', @map(type='json'))" +
+                "tail.file='false', @map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
