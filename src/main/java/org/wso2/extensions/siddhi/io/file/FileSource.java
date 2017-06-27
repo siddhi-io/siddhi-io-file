@@ -94,6 +94,8 @@ public class FileSource extends Source{
     private String mode = null;
     private String moveAfterAction = null;
     private String actionAfterProcess = null;
+    private Map<String,Object> currentState;
+    private long filePointer = 0;
 
     private boolean isDirectory = false;
 
@@ -117,10 +119,11 @@ public class FileSource extends Source{
         Map<String, String> parameters = new HashMap<String,String>();
         parameters.put(Constants.TRANSPORT_FILE_FILE_URI, fileSourceConfiguration.getUri());
         parameters.put(Constants.POLLING_INTERVAL, "1000");
-        parameters.put(Constants.FILE_POINTER,"0");
+        parameters.put(Constants.FILE_POINTER, Long.toString(filePointer));
+        parameters.put(Constants.READ_FILE_FROM_BEGINNING,Constants.TRUE);
         fileServerConnector = new FileServerConnector(FILE_SERVER_CONNECTOR_ID,parameters);
         fileMessageProcessor = new FileMessageProcessor(sourceEventListener, fileSourceConfiguration);
-        //fileMessageProcessor = new FileMessageProcessor();
+        fileMessageProcessor = new FileMessageProcessor(sourceEventListener, fileSourceConfiguration);
         fileServerConnector.setMessageProcessor(fileMessageProcessor);
         try{
             fileServerConnector.start();
@@ -151,10 +154,12 @@ public class FileSource extends Source{
     }
 
     public Map<String, Object> currentState() {
-        return null;
+        currentState.put(Constants.FILE_POINTER, fileMessageProcessor);
+        return currentState;
     }
 
     public void restoreState(Map<String, Object> map) {
-
+        filePointer = (long) map.get(Constants.FILE_POINTER);
+        fileMessageProcessor.setFilePointer(filePointer);
     }
 }

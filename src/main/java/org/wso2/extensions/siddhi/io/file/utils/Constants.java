@@ -30,6 +30,8 @@ public class Constants {
     public final static String FILE_POINTER = "filePointer";
     public static final String TRANSPORT_FILE_FILE_URI = "fileURI";
     public static final String POLLING_INTERVAL = "pollingInterval";
+    public static final String READ_FILE_FROM_BEGINNING = "readFromBeginning";
+
 
 
     /*property values*/

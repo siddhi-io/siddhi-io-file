@@ -34,7 +34,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +44,8 @@ import java.util.regex.Pattern;
 
 public class FileMessageProcessor implements CarbonMessageProcessor {
     private CountDownLatch latch = new CountDownLatch(1);
+    private int bufferSizeForFullReading = 2048;
+    private int bufferSizeForRegexReading = 10;
     private String fileContent;
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
@@ -52,14 +53,12 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
     private Pattern endRegexPattern;
     private Matcher matcher;
     private int regexType = -1;
+    private long filePointer;
 
     public FileMessageProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSinkConfiguration) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSinkConfiguration;
-    }
-
-    public FileMessageProcessor(){
-        int x = 10;
+        configureFileMessageProcessor();
     }
 
     private void configureFileMessageProcessor(){
@@ -80,7 +79,6 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-        //fileContent = getStringFromInputStream(carbonMessage.getInputStream());
         fileContent = readFile(carbonMessage);
         System.err.println(fileContent);
         carbonCallback.done(carbonMessage);
@@ -163,7 +161,6 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
     }
 
     private void processMessage(CarbonMessage carbonMessage) {
-
         if (carbonMessage.getClass() == TextCarbonMessage.class) {
             String event = ((TextCarbonMessage) carbonMessage).getText();
             sourceEventListener.onEvent(event);
@@ -201,6 +198,8 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
         String line;
         try {
             while((line = reader.readLine()) != null) {
+                System.err.println(line);
+                setFilePointer(getFilePointer() + line.getBytes().length);
                 sourceEventListener.onEvent(line.trim());
             }
         } catch (IOException e) {
@@ -209,11 +208,12 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
     }
 
     private void readFullFile(BufferedReader reader){
-        char[] buf = new char[2048];
+        char[] buf = new char[bufferSizeForFullReading];
         StringBuilder sb = new StringBuilder();
         try {
             while(reader.read(buf) != -1){
                 sb.append(new String(buf).trim());
+                filePointer += bufferSizeForFullReading;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -222,12 +222,13 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
     }
 
     private void readFileUsingRegex(BufferedReader reader){
-        char[] buf = new char[10];
+        char[] buf = new char[bufferSizeForRegexReading];
         StringBuilder sb = new StringBuilder();
         String eventString;
         try {
             while(reader.read(buf) != -1){
                 sb.append(new String(buf).trim());
+                filePointer += bufferSizeForRegexReading;
                 Matcher matcher = defaultPattern.matcher(sb.toString());
                 while(matcher.find()){
                     eventString = matcher.group(0);
@@ -242,4 +243,11 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
         }
     }
 
+    public long getFilePointer() {
+        return filePointer;
+    }
+
+    public void setFilePointer(long filePointer) {
+        this.filePointer = filePointer;
+    }
 }
