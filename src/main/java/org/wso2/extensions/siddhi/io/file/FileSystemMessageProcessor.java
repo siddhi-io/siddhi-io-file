@@ -27,6 +27,8 @@ import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.TransportSender;
 import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
+import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
+import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
 import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
 import org.wso2.extensions.siddhi.io.file.utils.Constants;
 import org.wso2.extensions.siddhi.io.file.utils.FileSourceConfiguration;
@@ -60,7 +62,10 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
     private VFSClientConnector vfsClientConnector;
     private FileProcessor fileProcessor;
     private FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
-    ServerConnector serverConnector;
+    private FileServerConnectorProvider fileServerConnectorProvider;
+    private ServerConnector serverConnector;
+    private FileServerConnector fileServerConnector;
+
 
     public FileSystemMessageProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
         this.sourceEventListener = sourceEventListener;
@@ -88,13 +93,12 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         String mode = fileSourceConfiguration.getMode();
+        String uri = ((TextCarbonMessage) carbonMessage).getText();
+        fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
 
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
             vfsClientConnector = new VFSClientConnector();
-            fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
             vfsClientConnector.setMessageProcessor(fileProcessor);
-
-            String uri = ((TextCarbonMessage) carbonMessage).getText();
 
             Map<String, String> properties = new HashMap<>();
             properties.put(Constants.URI, uri);
@@ -107,6 +111,23 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             done();
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
 
+        } else {
+            Map<String, String> properties = new HashMap<>();
+            properties.put(Constants.PATH, uri);
+            properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
+            properties.put(Constants.ACTION, Constants.READ);
+            properties.put(Constants.POLLING_INTERVAL, "1000");
+
+            fileServerConnectorProvider = new FileServerConnectorProvider();
+            ServerConnector fileServerConnector = fileServerConnectorProvider.createConnector("siddhi-io-line",
+                    properties);
+            fileServerConnector.setMessageProcessor(fileProcessor);
+            fileServerConnector.start();
+
+            fileProcessor.waitTillDone();
+            System.err.println("**************************"+ uri);
+            carbonCallback.done(carbonMessage);
+            done();
         }
         return false;
     }

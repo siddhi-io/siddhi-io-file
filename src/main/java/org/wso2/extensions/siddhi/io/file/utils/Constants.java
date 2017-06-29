@@ -6,6 +6,7 @@ package org.wso2.extensions.siddhi.io.file.utils;
 public class Constants {
     /* configuration parameters*/
     public final static String URI = "uri";
+    public final static String PATH = "path";
     public final static String MODE = "mode";
     public final static String ACTION_AFTER_PROCESS = "action.after.process";
     public final static String MOVE_AFTER_PROCESS = "move.after.process";
@@ -34,6 +35,9 @@ public class Constants {
     public static final String POLLING_INTERVAL = "pollingInterval";
     public static final String READ_FILE_FROM_BEGINNING = "readFromBeginning";
     public static final String ACTION_AFTER_PROCESS_KEY = "actionAfterProcess";
+    public static final String START_POSITION = "startPosition";
+    public static final String MAX_LINES_PER_POLL = "maxLinesPerPoll";
+
 
 
 

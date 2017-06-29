@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
+import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
 import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
 import org.wso2.extensions.siddhi.io.file.utils.Constants;
 import org.wso2.extensions.siddhi.io.file.utils.FileSourceConfiguration;
@@ -127,7 +128,7 @@ public class FileSource extends Source{
         } else{
             parameters.put(Constants.READ_FILE_FROM_BEGINNING,Constants.FALSE);
         }
-        parameters.put(Constants.ACTION_AFTER_PROCESS_KEY, fileSourceConfiguration.getActionAfterProcess());
+        parameters.put(Constants.ACTION_AFTER_PROCESS_KEY, "NONE");
 
         serverConnector = fileSystemServerConnectorProvider.createConnector(FILE_SYSTEM_SERVER_CONNECTOR_ID,
                 parameters);
@@ -169,5 +170,30 @@ public class FileSource extends Source{
     public void restoreState(Map<String, Object> map) {
         filePointer = (long) map.get(Constants.FILE_POINTER);
         fileSourceConfiguration.setFilePointer(filePointer);
+    }
+
+    public void tmpFileServerRun(){
+        Map<String, String> properties = new HashMap<>();
+        properties.put(Constants.PATH, "/home/minudika/Projects/WSO2/siddhi-io-file/testDir/test2.txt");
+        properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
+        properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
+        properties.put(Constants.ACTION, Constants.READ);
+        properties.put(Constants.POLLING_INTERVAL, "1000");
+
+        FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+        FileServerConnectorProvider fileServerConnectorProvider;
+        fileServerConnectorProvider = new FileServerConnectorProvider();
+        ServerConnector fileServerConnector = fileServerConnectorProvider.createConnector("siddhi-io-line",
+                properties);
+        fileServerConnector.setMessageProcessor(fileProcessor);
+        try {
+            fileServerConnector.start();
+            fileProcessor.waitTillDone();
+        } catch (ServerConnectorException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 }

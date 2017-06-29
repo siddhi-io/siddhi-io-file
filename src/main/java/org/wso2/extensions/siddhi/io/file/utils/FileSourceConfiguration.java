@@ -20,8 +20,8 @@ public class FileSourceConfiguration {
         this.endRegex = endRegex;
     }
 
-    public long getFilePointer() {
-        return filePointer;
+    public String getFilePointer() {
+        return Long.toString(filePointer);
     }
 
     public void setFilePointer(long filePointer) {
