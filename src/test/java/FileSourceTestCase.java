@@ -36,8 +36,8 @@ public class FileSourceTestCase {
         log.info("test FileSourceMapper 1");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='text.full',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/input.json'" +
-                ")" +
+                "@source(type='file',mode='text.full',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/'," +
+                "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 

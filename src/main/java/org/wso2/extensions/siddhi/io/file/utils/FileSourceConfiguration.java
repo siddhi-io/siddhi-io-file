@@ -20,6 +20,14 @@ public class FileSourceConfiguration {
         this.endRegex = endRegex;
     }
 
+    public long getFilePointer() {
+        return filePointer;
+    }
+
+    public void setFilePointer(long filePointer) {
+        this.filePointer = filePointer;
+    }
+
     private enum MODE {
         TEXT_FULL,
         BINARY_FULL,
@@ -33,6 +41,7 @@ public class FileSourceConfiguration {
     private String mode;
     private String beginRegex = null;
     private String endRegex = null;
+    private long filePointer = 0;
 
     public String getMode() {
         return mode;

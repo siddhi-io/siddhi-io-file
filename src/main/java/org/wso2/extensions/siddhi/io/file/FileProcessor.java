@@ -1,100 +1,67 @@
 package org.wso2.extensions.siddhi.io.file;
 
-import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.RandomAccessContent;
-import org.apache.commons.vfs2.util.RandomAccessMode;
-import org.wso2.siddhi.core.config.SiddhiAppContext;
+import org.wso2.carbon.messaging.BinaryCarbonMessage;
+import org.wso2.carbon.messaging.CarbonCallback;
+import org.wso2.carbon.messaging.CarbonMessage;
+import org.wso2.carbon.messaging.CarbonMessageProcessor;
+import org.wso2.carbon.messaging.ClientConnector;
+import org.wso2.carbon.messaging.TextCarbonMessage;
+import org.wso2.carbon.messaging.TransportSender;
+import org.wso2.extensions.siddhi.io.file.utils.FileSourceConfiguration;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
-import org.wso2.siddhi.core.util.snapshot.Snapshotable;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 /**
- * Created by minudika on 25/5/17.
+ * Created by minudika on 28/6/17.
  */
-public class FileProcessor {
-    FileObject fileObject;
-    ArrayList<Object> messageHolder;
+public class FileProcessor implements CarbonMessageProcessor {
+    private CountDownLatch latch = new CountDownLatch(1);
     SourceEventListener sourceEventListener;
-    boolean isFileTailingEnabled;
-    long filePointer = 0;
-    String fileURI;
-    SiddhiAppContext siddhiAppContext;
-    public FileProcessor(SiddhiAppContext siddhiAppContext, SourceEventListener sourceEventListener,FileObject fileObject,boolean isFileTailingEnabled){
-        this.fileObject = fileObject;
+    FileSourceConfiguration fileSourceConfiguration;
+
+
+    public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSinkConfiguration) {
         this.sourceEventListener = sourceEventListener;
-        this.isFileTailingEnabled = isFileTailingEnabled;
-        this.siddhiAppContext = siddhiAppContext;
-        fileURI = fileObject.getName().getURI();
-        messageHolder = new ArrayList<Object>();
+        this.fileSourceConfiguration = fileSinkConfiguration;
     }
 
-    public void process(){
-        try {
-            InputStream inputStream = fileObject.getContent().getInputStream();
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-            String line = null;
-            while ((line = bufferedReader.readLine()) != null) {
-                System.out.println(line);
-                messageHolder.add(line);
-                Thread.sleep(100);
-                sourceEventListener.onEvent(line);
-            }
-        } catch (FileSystemException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    @Override
+    public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
+        byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
+        sourceEventListener.onEvent(new String(content));
+        done();
+        return false;
     }
 
-    private void processWithTailing(){
-        RandomAccessContent rac = null;
-        try {
-            while(true){
-                Thread.sleep(100);
-                long len = fileObject.getContent().getSize();
-                if (len < filePointer) {
-                    System.out.println("Log file was reset. Restarting logging from start of file.");
-                    filePointer = len;
-                }
-                else if (len > filePointer) {
-                    // File must have had something added to it!
-                    rac = fileObject.getContent().getRandomAccessContent(RandomAccessMode.READ);
-                    rac.seek(filePointer);
-                    InputStream inputStream = rac.getInputStream();
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-                    String line = null;
-                    while ((line = bufferedReader.readLine()) != null) {
-                        //System.out.println(line);
-                        sourceEventListener.onEvent(line);
-                        Thread.sleep(100);
-                    }
-                    filePointer = rac.getFilePointer();
-                    rac.close();
-                }
-            }
-        } catch (FileSystemException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    @Override
+    public void setTransportSender(TransportSender transportSender) {
+
     }
 
-    public void run() {
-        if(isFileTailingEnabled) {
-            processWithTailing();
-        }else{
-            process();
-        }
+    @Override
+    public void setClientConnector(ClientConnector clientConnector) {
+
+    }
+
+    @Override
+    public String getId() {
+        return null;
+    }
+
+    /**
+     * To wait till file reading operation is finished.
+     *
+     * @throws InterruptedException Interrupted Exception.
+     */
+    public void waitTillDone() throws InterruptedException {
+        latch.await();
+    }
+
+    /**
+     * To make sure the reading the file content is done.
+     */
+    private void done() {
+        latch.countDown();
     }
 }

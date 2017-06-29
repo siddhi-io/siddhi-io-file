@@ -120,7 +120,7 @@ public class FileSinkTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='json'), append='true', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/{{symbol}}.txt', dynamic='{{symbol}}')" +
+                "@sink(type='file', @map(type='json'), append='true', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/{{symbol}}.json')" +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
         String query = "" +
@@ -144,6 +144,10 @@ public class FileSinkTestCase {
         stockStream.send(new Object[]{"ibm", 57.678f, 100L});
         stockStream.send(new Object[]{"google", 50f, 100L});
         stockStream.send(new Object[]{"microsoft", 50f, 100L});
+        stockStream.send(new Object[]{"intel", 75.6f, 100L});
+        stockStream.send(new Object[]{"redhat", 57.678f, 100L});
+        stockStream.send(new Object[]{"cloudbees", 54.4f, 100L});
+        stockStream.send(new Object[]{"apache", 80f, 100L});
         Thread.sleep(100);
 
         //assert event count

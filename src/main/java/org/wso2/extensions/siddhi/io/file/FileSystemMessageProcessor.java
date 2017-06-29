@@ -23,8 +23,11 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.MapCarbonMessage;
+import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.TransportSender;
+import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
+import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
 import org.wso2.extensions.siddhi.io.file.utils.Constants;
 import org.wso2.extensions.siddhi.io.file.utils.FileSourceConfiguration;
 import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
@@ -42,7 +45,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class FileMessageProcessor implements CarbonMessageProcessor {
+public class FileSystemMessageProcessor implements CarbonMessageProcessor {
     private CountDownLatch latch = new CountDownLatch(1);
     private int bufferSizeForFullReading = 2048;
     private int bufferSizeForRegexReading = 10;
@@ -54,21 +57,26 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
     private Matcher matcher;
     private int regexType = -1;
     private long filePointer;
+    private VFSClientConnector vfsClientConnector;
+    private FileProcessor fileProcessor;
+    private FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
+    ServerConnector serverConnector;
 
-    public FileMessageProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSinkConfiguration) {
+    public FileSystemMessageProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
         this.sourceEventListener = sourceEventListener;
-        this.fileSourceConfiguration = fileSinkConfiguration;
+        this.fileSourceConfiguration = fileSourceConfiguration;
+
         configureFileMessageProcessor();
     }
 
-    private void configureFileMessageProcessor(){
+    private void configureFileMessageProcessor() {
         String beginRegex = fileSourceConfiguration.getBeginRegex();
         String endRegex = fileSourceConfiguration.getEndRegex();
-        if(beginRegex != null && endRegex != null){
+        if (beginRegex != null && endRegex != null) {
             //pattern = Pattern.compile("<tag>(.+?)</tag>");
             defaultPattern = Pattern.compile(beginRegex + "(.+?)" + endRegex);
             regexType = 2;
-        } else if (beginRegex != null && endRegex == null){
+        } else if (beginRegex != null && endRegex == null) {
             defaultPattern = Pattern.compile(beginRegex + "(.+?)" + beginRegex);
             regexType = 0;
         } else if (beginRegex == null && endRegex != null) {
@@ -79,10 +87,27 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-        fileContent = readFile(carbonMessage);
-        System.err.println(fileContent);
-        carbonCallback.done(carbonMessage);
-        done();
+        String mode = fileSourceConfiguration.getMode();
+
+        if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
+            vfsClientConnector = new VFSClientConnector();
+            fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+            vfsClientConnector.setMessageProcessor(fileProcessor);
+
+            String uri = ((TextCarbonMessage) carbonMessage).getText();
+
+            Map<String, String> properties = new HashMap<>();
+            properties.put(Constants.URI, uri);
+            properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
+            properties.put(Constants.ACTION, Constants.READ);
+
+            vfsClientConnector.send(carbonMessage, null, properties);
+            fileProcessor.waitTillDone();
+            carbonCallback.done(carbonMessage);
+            done();
+        } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+
+        }
         return false;
     }
 
@@ -176,42 +201,42 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
         }
     }
 
-    private String readFile(CarbonMessage carbonMessage){
+    private String readFile(CarbonMessage carbonMessage) {
         String mode = fileSourceConfiguration.getMode();
         InputStream inputStream = carbonMessage.getInputStream();
         InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
         String content = null;
-        if(Constants.TEXT_FULL.equalsIgnoreCase(mode)){
+        if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
             readFullFile(bufferedReader);
-        } else if(Constants.BINARY_FULL.equalsIgnoreCase(mode)){
+        } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
 
-        } else if(Constants.REGEX.equalsIgnoreCase(mode)){
+        } else if (Constants.REGEX.equalsIgnoreCase(mode)) {
             readFileUsingRegex(bufferedReader);
-        } else if(Constants.LINE.equalsIgnoreCase(mode)){
+        } else if (Constants.LINE.equalsIgnoreCase(mode)) {
             readFileLineByLine(bufferedReader);
         }
         return content;
     }
 
-    private void readFileLineByLine(BufferedReader reader){
+    private void readFileLineByLine(BufferedReader reader) {
         String line;
         try {
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 System.err.println(line);
                 setFilePointer(getFilePointer() + line.getBytes().length);
                 sourceEventListener.onEvent(line.trim());
             }
         } catch (IOException e) {
-            throw new SiddhiAppRuntimeException("Failed to read line."+e.getMessage());
+            throw new SiddhiAppRuntimeException("Failed to read line." + e.getMessage());
         }
     }
 
-    private void readFullFile(BufferedReader reader){
+    private void readFullFile(BufferedReader reader) {
         char[] buf = new char[bufferSizeForFullReading];
         StringBuilder sb = new StringBuilder();
         try {
-            while(reader.read(buf) != -1){
+            while (reader.read(buf) != -1) {
                 sb.append(new String(buf).trim());
                 filePointer += bufferSizeForFullReading;
             }
@@ -221,16 +246,16 @@ public class FileMessageProcessor implements CarbonMessageProcessor {
         sourceEventListener.onEvent(sb.toString());
     }
 
-    private void readFileUsingRegex(BufferedReader reader){
+    private void readFileUsingRegex(BufferedReader reader) {
         char[] buf = new char[bufferSizeForRegexReading];
         StringBuilder sb = new StringBuilder();
         String eventString;
         try {
-            while(reader.read(buf) != -1){
+            while (reader.read(buf) != -1) {
                 sb.append(new String(buf).trim());
                 filePointer += bufferSizeForRegexReading;
                 Matcher matcher = defaultPattern.matcher(sb.toString());
-                while(matcher.find()){
+                while (matcher.find()) {
                     eventString = matcher.group(0);
                     String tmp = sb.substring(matcher.end() + 1);
                     sb.setLength(0);

@@ -8,9 +8,7 @@ import org.apache.commons.vfs2.RandomAccessContent;
 import org.apache.commons.vfs2.VFS;
 import org.apache.commons.vfs2.util.RandomAccessMode;
 import org.apache.log4j.Logger;
-import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
-import org.wso2.carbon.transport.file.connector.server.util.Constants;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
@@ -95,18 +93,18 @@ public class FileSource2 extends Source{
     private String fileURI = null;
     private Boolean isFileTailingEnabled = false;
     private FileServerConnector fileServerConnector = null;
-    private FileMessageProcessor fileMessageProcessor = null;
+    private FileSystemMessageProcessor fileSystemMessageProcessor = null;
     private FileSystemManager fileSystemManager = null;
     private FileObject fileObject = null;
     private RandomAccessContent randomAccessContent = null;
     private SiddhiAppContext siddhiAppContext = null;
-    private Map<String,FileProcessor> fileProcessorMap;
+    private Map<String,FileProcessor_test> fileProcessorMap;
 
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader,
                      SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
         this.siddhiAppContext = siddhiAppContext;
-        this.fileProcessorMap = new HashMap<String,FileProcessor>();
+        this.fileProcessorMap = new HashMap<String,FileProcessor_test>();
         fileURI = optionHolder.validateAndGetStaticValue(URI_IDENTIFIER,null);
         isFileTailingEnabled = Boolean.parseBoolean(
                 optionHolder.validateAndGetStaticValue(TAILING_ENABLED_INDENTIFIER,"false"));
@@ -130,17 +128,17 @@ public class FileSource2 extends Source{
 
             FileType fileType = fileObject.getType();
             if(fileType == FileType.FILE){
-                FileProcessor fileProcessor = new FileProcessor(
+                FileProcessor_test fileProcessorTest = new FileProcessor_test(
                         siddhiAppContext,sourceEventListener, fileObject, isFileTailingEnabled);
-                fileProcessorMap.put(fileURI,fileProcessor);
-                fileProcessor.run();
+                fileProcessorMap.put(fileURI, fileProcessorTest);
+                fileProcessorTest.run();
             }else if(fileType == FileType.FOLDER){
                 FileObject []fileObjects = fileObject.getChildren();
                 for(FileObject file : fileObjects){
-                    FileProcessor fileProcessor = new FileProcessor(
+                    FileProcessor_test fileProcessorTest = new FileProcessor_test(
                             siddhiAppContext,sourceEventListener, fileObject, isFileTailingEnabled);
-                    fileProcessorMap.put(fileURI,fileProcessor);
-                    fileProcessor.run();
+                    fileProcessorMap.put(fileURI, fileProcessorTest);
+                    fileProcessorTest.run();
                 }
             }
 

@@ -1,8 +1,10 @@
 package org.wso2.extensions.siddhi.io.file;
 
 import org.apache.log4j.Logger;
+import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
+import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
 import org.wso2.extensions.siddhi.io.file.utils.Constants;
 import org.wso2.extensions.siddhi.io.file.utils.FileSourceConfiguration;
 import org.wso2.siddhi.annotation.Example;
@@ -86,14 +88,12 @@ public class FileSource extends Source{
 
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
-    private static String URI_IDENTIFIER = "uri";
-    private static String FILE_SERVER_CONNECTOR_ID = "siddhi.io.file";
-    private String fileURI = null;
+    private FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
+    private final static String FILE_SYSTEM_SERVER_CONNECTOR_ID = "siddhi.io.file";
     private FileServerConnector fileServerConnector = null;
-    private FileMessageProcessor fileMessageProcessor = null;
-    private String mode = null;
-    private String moveAfterAction = null;
-    private String actionAfterProcess = null;
+    private ServerConnector serverConnector;
+    private FileSystemMessageProcessor fileSystemMessageProcessor = null;
+    private final String POLLING_INTERVAL = "1000";
     private Map<String,Object> currentState;
     private long filePointer = 0;
 
@@ -102,11 +102,12 @@ public class FileSource extends Source{
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader,
                      SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
+        fileSystemServerConnectorProvider = new FileSystemServerConnectorProvider();
         fileSourceConfiguration = new FileSourceConfiguration();
         fileSourceConfiguration.setUri(optionHolder.validateAndGetStaticValue(Constants.URI, null));
         fileSourceConfiguration.setMode(optionHolder.validateAndGetStaticValue(Constants.MODE, null));
         fileSourceConfiguration.setActionAfterProcess(optionHolder.validateAndGetStaticValue(
-                Constants.ACTION_AFTER_PROCESS, null));
+                Constants.ACTION_AFTER_PROCESS.toUpperCase(), null));
         fileSourceConfiguration.setMoveAfterProcessUri(optionHolder.validateAndGetStaticValue(
                 Constants.MOVE_AFTER_PROCESS, null));
         String isTailingEnabled = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
@@ -117,24 +118,31 @@ public class FileSource extends Source{
 
     public void connect() throws ConnectionUnavailableException {
         Map<String, String> parameters = new HashMap<String,String>();
-        parameters.put(Constants.TRANSPORT_FILE_FILE_URI, fileSourceConfiguration.getUri());
-        parameters.put(Constants.POLLING_INTERVAL, "1000");
-        parameters.put(Constants.FILE_POINTER, Long.toString(filePointer));
-        parameters.put(Constants.READ_FILE_FROM_BEGINNING,Constants.TRUE);
-        fileServerConnector = new FileServerConnector(FILE_SERVER_CONNECTOR_ID,parameters);
-        fileMessageProcessor = new FileMessageProcessor(sourceEventListener, fileSourceConfiguration);
-        fileMessageProcessor = new FileMessageProcessor(sourceEventListener, fileSourceConfiguration);
-        fileServerConnector.setMessageProcessor(fileMessageProcessor);
+
+        parameters.put(Constants.TRANSPORT_FILE_DIR_URI, fileSourceConfiguration.getUri());
+        parameters.put(Constants.POLLING_INTERVAL, POLLING_INTERVAL);
+        if(Constants.BINARY_FULL.equalsIgnoreCase(fileSourceConfiguration.getMode()) ||
+                Constants.TEXT_FULL.equalsIgnoreCase(fileSourceConfiguration.getMode())){
+            parameters.put(Constants.READ_FILE_FROM_BEGINNING,Constants.TRUE);
+        } else{
+            parameters.put(Constants.READ_FILE_FROM_BEGINNING,Constants.FALSE);
+        }
+        parameters.put(Constants.ACTION_AFTER_PROCESS_KEY, fileSourceConfiguration.getActionAfterProcess());
+
+        serverConnector = fileSystemServerConnectorProvider.createConnector(FILE_SYSTEM_SERVER_CONNECTOR_ID,
+                parameters);
+        fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener, fileSourceConfiguration);
+        serverConnector.setMessageProcessor(fileSystemMessageProcessor);
+
         try{
-            fileServerConnector.start();
-            fileMessageProcessor.waitTillDone();
+            serverConnector.start();
+            fileSystemMessageProcessor.waitTillDone();
         } catch (ServerConnectorException e) {
             log.error("Exception in establishing a connection with file server for stream: "
                     + sourceEventListener.getStreamDefinition().getId(), e);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        fileMessageProcessor.getFileContent();
     }
 
     public void disconnect() {
@@ -154,12 +162,12 @@ public class FileSource extends Source{
     }
 
     public Map<String, Object> currentState() {
-        currentState.put(Constants.FILE_POINTER, fileMessageProcessor);
+        currentState.put(Constants.FILE_POINTER, fileSystemMessageProcessor);
         return currentState;
     }
 
     public void restoreState(Map<String, Object> map) {
         filePointer = (long) map.get(Constants.FILE_POINTER);
-        fileMessageProcessor.setFilePointer(filePointer);
+        fileSourceConfiguration.setFilePointer(filePointer);
     }
 }
