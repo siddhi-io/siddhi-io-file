@@ -23,6 +23,7 @@ import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.stream.output.StreamCallback;
 import org.wso2.siddhi.core.util.EventPrinter;
+import org.wso2.siddhi.core.util.snapshot.PersistenceReference;
 import org.wso2.siddhi.core.util.transport.InMemoryBroker;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -148,7 +149,10 @@ public class FileSinkTestCase {
         stockStream.send(new Object[]{"redhat", 57.678f, 100L});
         stockStream.send(new Object[]{"cloudbees", 54.4f, 100L});
         stockStream.send(new Object[]{"apache", 80f, 100L});
+
+        PersistenceReference str = siddhiAppRuntime.persist();
         Thread.sleep(100);
+        siddhiAppRuntime.restoreRevision(str.getRevision());
 
         //assert event count
         // Assert.assertEquals(5, wso2Count.get());

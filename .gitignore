@@ -2,6 +2,7 @@ target/
 .idea
 siddhi-io-file.iml
 /testDir
+/read
 *.iml
 pom.xml.tag
 pom.xml.releaseBackup

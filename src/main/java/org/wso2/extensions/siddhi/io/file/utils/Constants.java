@@ -1,8 +1,23 @@
+/*
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.extensions.siddhi.io.file.utils;
 
-/**
- * Created by minudika on 19/6/17.
- */
 public class Constants {
     /* configuration parameters*/
     public final static String URI = "uri";
@@ -35,15 +50,20 @@ public class Constants {
     public static final String POLLING_INTERVAL = "pollingInterval";
     public static final String READ_FILE_FROM_BEGINNING = "readFromBeginning";
     public static final String ACTION_AFTER_PROCESS_KEY = "actionAfterProcess";
+    public static final String MOVE_AFTER_PROCESS_KEY = "moveAfterProcess";
     public static final String START_POSITION = "startPosition";
     public static final String MAX_LINES_PER_POLL = "maxLinesPerPoll";
-
-
-
+    public static final String FILE_SORT_ATTRIBUTE = "fileSortAttribute";
+    public static final String FILE_SORT_ASCENDING = "fileSortAscending";
+    public static final String CREATE_MOVE_DIR = "createMoveDir";
 
     /*property values*/
     public static final String ACTION_AFTER_PROCESS_DELETE = "DELETE";
     public static final String ACTION_AFTER_PROCESS_MOVE = "MOVE";
+    public static final String NAME = "name";
+    public static final String SIZE = "size";
+    public static final String LAST_MODIFIED_TIMESTAMP = "lastModifiedTimestamp";
+
     private static enum MODE {
         TEXT_FULL,
         BINARY_FULL,

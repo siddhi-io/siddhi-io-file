@@ -51,6 +51,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
     private CountDownLatch latch = new CountDownLatch(1);
     private int bufferSizeForFullReading = 2048;
     private int bufferSizeForRegexReading = 10;
+    private String maxLinesPerPoll = "10";
     private String fileContent;
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
@@ -94,6 +95,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         String mode = fileSourceConfiguration.getMode();
         String uri = ((TextCarbonMessage) carbonMessage).getText();
+        System.err.println(">>>>>>>>>>>>>>>>>" + uri);
         fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
 
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
@@ -104,31 +106,56 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             properties.put(Constants.URI, uri);
             properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
             properties.put(Constants.ACTION, Constants.READ);
+            properties.put(Constants.POLLING_INTERVAL, "1000");
 
             vfsClientConnector.send(carbonMessage, null, properties);
             fileProcessor.waitTillDone();
             carbonCallback.done(carbonMessage);
             done();
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+            vfsClientConnector = new VFSClientConnector();
+            vfsClientConnector.setMessageProcessor(fileProcessor);
 
-        } else {
             Map<String, String> properties = new HashMap<>();
-            properties.put(Constants.PATH, uri);
-            properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
+            properties.put(Constants.URI, uri);
+            properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
-            fileServerConnectorProvider = new FileServerConnectorProvider();
-            ServerConnector fileServerConnector = fileServerConnectorProvider.createConnector("siddhi-io-line",
-                    properties);
-            fileServerConnector.setMessageProcessor(fileProcessor);
-            fileServerConnector.start();
-
+            vfsClientConnector.send(carbonMessage, null, properties);
             fileProcessor.waitTillDone();
-            System.err.println("**************************"+ uri);
             carbonCallback.done(carbonMessage);
             done();
+        } else if(Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)){
+            Map<String, String> properties = new HashMap<>();
+            properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
+            properties.put(Constants.ACTION, Constants.READ);
+            properties.put(Constants.MAX_LINES_PER_POLL, "1");
+            properties.put(Constants.POLLING_INTERVAL, "1000");
+
+            if (fileSourceConfiguration.isTailingEnabled()) {
+                properties.put(Constants.PATH, uri);
+                fileServerConnectorProvider = new FileServerConnectorProvider();
+                ServerConnector fileServerConnector = fileServerConnectorProvider.createConnector("siddhi-io-line",
+                        properties);
+                fileServerConnector.setMessageProcessor(fileProcessor);
+                fileServerConnector.start();
+
+                fileProcessor.waitTillDone();
+                carbonCallback.done(carbonMessage);
+                done();
+            } else {
+                properties.put(Constants.URI, uri);
+                vfsClientConnector = new VFSClientConnector();
+                vfsClientConnector.setMessageProcessor(fileProcessor);
+
+                vfsClientConnector.send(carbonMessage, null, properties);
+                fileProcessor.waitTillDone();
+                carbonCallback.done(carbonMessage);
+                done();
+            }
         }
+
         return false;
     }
 

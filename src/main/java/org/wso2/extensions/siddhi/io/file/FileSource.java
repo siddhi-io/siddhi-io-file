@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.extensions.siddhi.io.file;
 
 import org.apache.log4j.Logger;
@@ -14,12 +32,15 @@ import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.Source;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -98,40 +119,36 @@ public class FileSource extends Source{
     private Map<String,Object> currentState;
     private long filePointer = 0;
 
+    private String uri;
+    private String mode;
+    private String actionAfterProcess;
+    private String moveAfterProcess;
+    private String tailing;
+    private String beginRegex;
+    private String endRegex;
+
     private boolean isDirectory = false;
 
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader,
                      SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
         fileSystemServerConnectorProvider = new FileSystemServerConnectorProvider();
-        fileSourceConfiguration = new FileSourceConfiguration();
-        fileSourceConfiguration.setUri(optionHolder.validateAndGetStaticValue(Constants.URI, null));
-        fileSourceConfiguration.setMode(optionHolder.validateAndGetStaticValue(Constants.MODE, null));
-        fileSourceConfiguration.setActionAfterProcess(optionHolder.validateAndGetStaticValue(
-                Constants.ACTION_AFTER_PROCESS.toUpperCase(), null));
-        fileSourceConfiguration.setMoveAfterProcessUri(optionHolder.validateAndGetStaticValue(
-                Constants.MOVE_AFTER_PROCESS, null));
-        String isTailingEnabled = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
-        fileSourceConfiguration.setTailingEnabled(Constants.TRUE.equalsIgnoreCase(isTailingEnabled));
-        fileSourceConfiguration.setBeginRegex(optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null));
-        fileSourceConfiguration.setEndRegex(optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null));
+
+        uri = optionHolder.validateAndGetStaticValue(Constants.URI, null);
+        mode = optionHolder.validateAndGetStaticValue(Constants.MODE, null);
+        actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS, Constants.MOVE);
+        moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS, generateDefaultFileMoveLocation());
+        tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
+        beginRegex = optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null);
+        endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
+
+        fileSourceConfiguration = createSourceConf();
     }
 
     public void connect() throws ConnectionUnavailableException {
-        Map<String, String> parameters = new HashMap<String,String>();
-
-        parameters.put(Constants.TRANSPORT_FILE_DIR_URI, fileSourceConfiguration.getUri());
-        parameters.put(Constants.POLLING_INTERVAL, POLLING_INTERVAL);
-        if(Constants.BINARY_FULL.equalsIgnoreCase(fileSourceConfiguration.getMode()) ||
-                Constants.TEXT_FULL.equalsIgnoreCase(fileSourceConfiguration.getMode())){
-            parameters.put(Constants.READ_FILE_FROM_BEGINNING,Constants.TRUE);
-        } else{
-            parameters.put(Constants.READ_FILE_FROM_BEGINNING,Constants.FALSE);
-        }
-        parameters.put(Constants.ACTION_AFTER_PROCESS_KEY, "NONE");
-
+        Map<String, String> properties = getFileSystemServerProperties();
         serverConnector = fileSystemServerConnectorProvider.createConnector(FILE_SYSTEM_SERVER_CONNECTOR_ID,
-                parameters);
+                properties);
         fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener, fileSourceConfiguration);
         serverConnector.setMessageProcessor(fileSystemMessageProcessor);
 
@@ -139,10 +156,10 @@ public class FileSource extends Source{
             serverConnector.start();
             fileSystemMessageProcessor.waitTillDone();
         } catch (ServerConnectorException e) {
-            log.error("Exception in establishing a connection with file server for stream: "
-                    + sourceEventListener.getStreamDefinition().getId(), e);
+            throw new SiddhiAppRuntimeException("Error when establishing a connection with file-system-server for stream: "
+                    + sourceEventListener.getStreamDefinition().getId() + " due to "+ e.getMessage());
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            throw new SiddhiAppRuntimeException("Error occurred while processing directory : "+ e.getMessage());
         }
     }
 
@@ -195,5 +212,51 @@ public class FileSource extends Source{
             e.printStackTrace();
         }
 
+    }
+
+    private String generateDefaultFileMoveLocation(){
+        StringBuilder sb = new StringBuilder();
+        URI uri = null;
+        URI parent = null;
+        try {
+            uri = new URI(this.uri);
+            parent = uri.getPath().endsWith("/") ? uri.resolve("..") : uri.resolve(".");
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        return sb.append(parent.toString()).append("read").toString();
+    }
+
+    private FileSourceConfiguration createSourceConf(){
+        FileSourceConfiguration conf = new FileSourceConfiguration();
+        conf.setUri(uri);
+        conf.setMoveAfterProcessUri(moveAfterProcess);
+        conf.setBeginRegex(beginRegex);
+        conf.setEndRegex(endRegex);
+        conf.setMode(mode);
+        conf.setActionAfterProcess(actionAfterProcess);
+        conf.setTailingEnabled(Boolean.parseBoolean(tailing));
+        return conf;
+    }
+
+    private HashMap<String,String> getFileSystemServerProperties(){
+        HashMap<String,String> map = new HashMap<>();
+
+        map.put(Constants.TRANSPORT_FILE_DIR_URI, uri);
+        map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase());
+        map.put(Constants.MOVE_AFTER_PROCESS_KEY, moveAfterProcess);
+        map.put(Constants.POLLING_INTERVAL, POLLING_INTERVAL);
+        map.put(Constants.FILE_SORT_ATTRIBUTE, Constants.NAME);
+        map.put(Constants.FILE_SORT_ASCENDING, Constants.TRUE);
+        map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE);
+
+        if(Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
+                Constants.TEXT_FULL.equalsIgnoreCase(mode)){
+            map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
+        } else{
+            map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.FALSE);
+        }
+
+        return map;
     }
 }
