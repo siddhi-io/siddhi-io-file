@@ -25,6 +25,10 @@ import org.wso2.siddhi.core.stream.output.StreamCallback;
 import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.transport.InMemoryBroker;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FileSourceTestCase {
@@ -161,7 +165,7 @@ public class FileSourceTestCase {
 
             @Override
             public void receive(Event[] events) {
-                EventPrinter.print(events);
+               EventPrinter.print(events);
             }
         });
 
@@ -252,6 +256,68 @@ public class FileSourceTestCase {
         System.out.println("started ");
 
         Thread.sleep(1000);
+
+        //assert event count
+        // Assert.assertEquals("Number of events", 4, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void fileSourceMapperTest7() throws InterruptedException {
+        log.info("test FileSourceMapper 7");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file',mode='line', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot'," +
+                "move.after.process='/home/minudika/Projects/WSO2/siddhi-io-file/read/line'," +
+                "@map(type='json'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+
+            }
+        });
+
+        siddhiAppRuntime.start();
+        Thread.sleep(1000);
+
+
+        System.err.println("############## shutting down");
+
+        siddhiAppRuntime.snapshot();
+        //siddhiAppRuntime.();
+
+        Thread.sleep(5000);
+
+        File file = new File("/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot/logs.txt");
+        try {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
+            bufferedWriter.append("{\"event\":{\"symbol\":\"IBM\",\"price\":2000,\"volume\":30000}\n");
+            bufferedWriter.append("{\"event\":{\"symbol\":\"GOOGLE\",\"price\":3000,\"volume\":40000}\n");
+            System.err.println("############## writing file");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Thread.sleep(5000);
+
+        System.err.println("###################### starting..");
+        siddhiAppRuntime.start();
+
+        Thread.sleep(3000);
+
 
         //assert event count
         // Assert.assertEquals("Number of events", 4, count.get());

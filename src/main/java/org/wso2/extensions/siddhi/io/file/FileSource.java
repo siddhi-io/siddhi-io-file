@@ -129,8 +129,9 @@ public class FileSource extends Source{
 
     private boolean isDirectory = false;
 
-    public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader,
-                     SiddhiAppContext siddhiAppContext) {
+    @Override
+    public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] strings,
+                     ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
         fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         fileSystemServerConnectorProvider = fileSourceServiceProvider.getFileSystemServerConnectorProvider();
@@ -171,6 +172,16 @@ public class FileSource extends Source{
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException("Error occurred while processing directory : "+ e.getMessage());
         }
+    }
+
+    @Override
+    public Class[] getOutputEventClasses() {
+        return new Class[0];
+    }
+
+    @Override
+    public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
+
     }
 
     public void disconnect() {

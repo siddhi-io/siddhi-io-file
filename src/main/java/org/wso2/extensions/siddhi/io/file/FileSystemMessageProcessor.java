@@ -70,7 +70,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
         this.fileSourceConfiguration = fileSourceConfiguration;
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         this.fileServerConnectorList = new ArrayList<>();
-        this.filePointerMap = fileSourceConfiguration.getFilePointerMap();
+        this.filePointerMap = fileSourceServiceProvider.getFilePointerMap();
         configureFileMessageProcessor();
     }
 
@@ -121,7 +121,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             done();
         } else if(Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)){
             Map<String, String> properties = new HashMap<>();
-            properties.put(Constants.START_POSITION, Long.toString(fileSourceConfiguration.getFilePointer(fileURI)));
+            properties.put(Constants.START_POSITION, Long.toString(fileSourceServiceProvider.getFilePointer(fileURI)));
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.MAX_LINES_PER_POLL, "1");
             properties.put(Constants.POLLING_INTERVAL, "1000");
@@ -225,7 +225,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
     private void processMessage(CarbonMessage carbonMessage) {
         if (carbonMessage.getClass() == TextCarbonMessage.class) {
             String event = ((TextCarbonMessage) carbonMessage).getText();
-            sourceEventListener.onEvent(event);
+            sourceEventListener.onEvent(event, null);
         } else if (carbonMessage.getClass() == MapCarbonMessage.class) {
             Map<String, String> event = new HashMap<String, String>();
             MapCarbonMessage mapCarbonMessage = (MapCarbonMessage) carbonMessage;
@@ -234,7 +234,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
                 String key = mapNames.nextElement();
                 event.put(key, mapCarbonMessage.getValue(key));
             }
-            sourceEventListener.onEvent(event);
+            sourceEventListener.onEvent(event, null);
         }
     }
 
@@ -262,7 +262,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             while ((line = reader.readLine()) != null) {
                 System.err.println(line);
                 setFilePointer(getFilePointer() + line.getBytes().length);
-                sourceEventListener.onEvent(line.trim());
+                sourceEventListener.onEvent(line.trim(), null);
             }
         } catch (IOException e) {
             throw new SiddhiAppRuntimeException("Failed to read line." + e.getMessage());
@@ -280,7 +280,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        sourceEventListener.onEvent(sb.toString());
+        sourceEventListener.onEvent(sb.toString(), null);
     }
 
     private void readFileUsingRegex(BufferedReader reader) {
@@ -297,7 +297,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
                     String tmp = sb.substring(matcher.end() + 1);
                     sb.setLength(0);
                     sb.append(tmp);
-                    sourceEventListener.onEvent(eventString);
+                    sourceEventListener.onEvent(eventString, null);
                 }
             }
         } catch (IOException e) {

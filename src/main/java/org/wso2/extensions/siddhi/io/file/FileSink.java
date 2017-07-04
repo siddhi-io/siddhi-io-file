@@ -114,6 +114,11 @@ public class FileSink extends Sink{
     private OptionHolder optionHolder = null;
     private Option uriOption;
 
+    @Override
+    public Class[] getSupportedInputEventClasses() {
+        return new Class[0];
+    }
+
     public String[] getSupportedDynamicOptions() {
         return new String[]{"uri"};
     }

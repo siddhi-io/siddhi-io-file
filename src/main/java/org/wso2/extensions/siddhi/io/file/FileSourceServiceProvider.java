@@ -19,7 +19,7 @@ public class FileSourceServiceProvider {
     private final static String SYSTEM_SERVER_CONNECTOR_ID_PREFEX = "file-system-server-connector-";
     private final static String SERVER_CONNECTOR_ID_PREFEX = "file-server-connector-";
     private final static String VFS_CLIENT_CONNECTOR_ID_PREFEX = "vfs-client-connector-";
-    private static Map<String,Long> filePointerMap;
+    private Map<String,Long> filePointerMap;
 
 
     private FileSourceServiceProvider(){
@@ -66,11 +66,11 @@ public class FileSourceServiceProvider {
         return systemServerConnectorIDs;
     }
 
-    public static Map<String, Long> getFilePointerMap(){
+    public  Map<String, Long> getFilePointerMap(){
         return filePointerMap;
     }
 
-    public static void updateFilePointer(String fileURI, Long filePointer){
+    public  void updateFilePointer(String fileURI, Long filePointer){
         filePointerMap.put(fileURI, filePointer);
     }
 

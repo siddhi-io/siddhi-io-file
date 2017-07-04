@@ -22,6 +22,7 @@ public class  FileProcessor implements CarbonMessageProcessor {
     private CountDownLatch latch = new CountDownLatch(1);
     SourceEventListener sourceEventListener;
     FileSourceConfiguration fileSourceConfiguration;
+    FileSourceServiceProvider fileSourceServiceProvider;
     private String mode;
     private Pattern pattern;
     private Long filePointer;
@@ -36,35 +37,37 @@ public class  FileProcessor implements CarbonMessageProcessor {
         this.fileSourceConfiguration = fileSourceConfiguration;
         this.mode = fileSourceConfiguration.getMode();
         this.fileURI = fileURI;
+        this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         configureFileMessageProcessor();
     }
 
     @Override
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-        filePointer = fileSourceConfiguration.getFilePointer(fileURI);
+        filePointer = fileSourceServiceProvider.getFilePointer(fileURI);
         byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
         String msg = new String(content);
 
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
-            sourceEventListener.onEvent(new String(content));
+            sourceEventListener.onEvent(new String(content), null);
             done();
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             //TODO : implement consuming binary files (file processor)
-            sourceEventListener.onEvent(content);
+            sourceEventListener.onEvent(content, null);
             done();
         } else if (Constants.LINE.equalsIgnoreCase(mode)) {
             filePointer += content.length;
-            fileSourceConfiguration.updateFilePointer(fileURI, filePointer);
+            fileSourceServiceProvider.updateFilePointer(fileURI, filePointer);
+            //System.err.println("################################# File pointer updated : "+filePointer);
             if(!fileSourceConfiguration.isTailingEnabled()) {
                 InputStream is = new ByteArrayInputStream(content);
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
                 String line;
                 while((line = bufferedReader.readLine()) != null){
-                    sourceEventListener.onEvent(line.trim());
+                    sourceEventListener.onEvent(line.trim(), null);
                 }
                 done();
             } else {
-                sourceEventListener.onEvent(msg);
+                sourceEventListener.onEvent(msg, null);
             }
         } else if(Constants.REGEX.equalsIgnoreCase(mode)){
             int  lastMatchIndex = 0;
@@ -79,7 +82,7 @@ public class  FileProcessor implements CarbonMessageProcessor {
                     while (matcher.find()) {
                         String event = matcher.group(0);
                         lastMatchIndex = matcher.end();
-                        sourceEventListener.onEvent(event);
+                        sourceEventListener.onEvent(event, null);
                     }
                     String tmp;
                     tmp = sb.substring(lastMatchIndex);
@@ -94,7 +97,7 @@ public class  FileProcessor implements CarbonMessageProcessor {
                 while (matcher.find()) {
                     String event = matcher.group(0);
                     lastMatchIndex = matcher.end();
-                    sourceEventListener.onEvent(event);
+                    sourceEventListener.onEvent(event, null);
                 }
                 String tmp;
                 tmp = sb.substring(lastMatchIndex);
