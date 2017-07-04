@@ -18,7 +18,14 @@
 
 package org.wso2.extensions.siddhi.io.file.utils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class FileSourceConfiguration {
+    public FileSourceConfiguration(){
+        this.filePointerMap = new HashMap<>();
+    }
+
     public String getBeginRegex() {
         return beginRegex;
     }
@@ -35,12 +42,11 @@ public class FileSourceConfiguration {
         this.endRegex = endRegex;
     }
 
-    public String getFilePointer() {
-        return Long.toString(filePointer);
-    }
-
-    public void setFilePointer(long filePointer) {
-        this.filePointer = filePointer;
+    public Long getFilePointer(String uri) {
+        if(filePointerMap.containsKey(uri)){
+            return filePointerMap.get(uri);
+        }
+        return 0L;
     }
 
     private enum MODE {
@@ -52,11 +58,11 @@ public class FileSourceConfiguration {
     private String actionAfterProcess;
     private String moveAfterProcessUri;
     private boolean isTailingEnabled;
-    private String uri;
+    private String dirURI;
     private String mode;
     private String beginRegex = null;
     private String endRegex = null;
-    private long filePointer = 0;
+    private Map<String,Long> filePointerMap;
 
     public String getMode() {
         return mode;
@@ -90,11 +96,19 @@ public class FileSourceConfiguration {
         isTailingEnabled = tailingEnabled;
     }
 
-    public String getUri() {
-        return uri;
+    public String getDirURI() {
+        return dirURI;
     }
 
-    public void setUri(String uri) {
-        this.uri = uri;
+    public void setDirURI(String dirURI) {
+        this.dirURI = dirURI;
+    }
+
+    public Map<String, Long> getFilePointerMap(){
+        return filePointerMap;
+    }
+
+    public void updateFilePointer(String fileURI, Long filePointer){
+        filePointerMap.put(fileURI, filePointer);
     }
 }

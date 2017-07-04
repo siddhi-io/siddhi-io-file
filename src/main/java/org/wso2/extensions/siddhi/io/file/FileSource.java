@@ -44,9 +44,6 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by minudika on 18/5/17.
- */
 @Extension(
         name = "file",
         namespace = "source",
@@ -110,14 +107,17 @@ public class FileSource extends Source{
 
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
+    private FileSourceServiceProvider fileSourceServiceProvider;
     private FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
+    private FileServerConnectorProvider fileServerConnectorProvider;
     private final static String FILE_SYSTEM_SERVER_CONNECTOR_ID = "siddhi.io.file";
     private FileServerConnector fileServerConnector = null;
-    private ServerConnector serverConnector;
+    private ServerConnector fileSystemServerConnector;
     private FileSystemMessageProcessor fileSystemMessageProcessor = null;
     private final String POLLING_INTERVAL = "1000";
     private Map<String,Object> currentState;
     private long filePointer = 0;
+    private Map<String, Long> filePointerMap;
 
     private String uri;
     private String mode;
@@ -132,31 +132,41 @@ public class FileSource extends Source{
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, ConfigReader configReader,
                      SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
-        fileSystemServerConnectorProvider = new FileSystemServerConnectorProvider();
+        fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
+        fileSystemServerConnectorProvider = fileSourceServiceProvider.getFileSystemServerConnectorProvider();
 
         uri = optionHolder.validateAndGetStaticValue(Constants.URI, null);
         mode = optionHolder.validateAndGetStaticValue(Constants.MODE, null);
-        actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS, Constants.MOVE);
-        moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS, generateDefaultFileMoveLocation());
-        tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
+        actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS, null);
+        moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS,
+                generateDefaultFileMoveLocation());
+        if(Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)){
+            tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.FALSE);
+        }else{
+            tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
+        }
         beginRegex = optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null);
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
 
+        validateParameters();
         fileSourceConfiguration = createSourceConf();
+        filePointerMap = fileSourceConfiguration.getFilePointerMap();
     }
 
     public void connect() throws ConnectionUnavailableException {
         Map<String, String> properties = getFileSystemServerProperties();
-        serverConnector = fileSystemServerConnectorProvider.createConnector(FILE_SYSTEM_SERVER_CONNECTOR_ID,
+        fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector(fileSourceServiceProvider
+                        .getServerConnectorID(),
                 properties);
         fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener, fileSourceConfiguration);
-        serverConnector.setMessageProcessor(fileSystemMessageProcessor);
+        fileSystemServerConnector.setMessageProcessor(fileSystemMessageProcessor);
 
         try{
-            serverConnector.start();
+            fileSystemServerConnector.start();
             fileSystemMessageProcessor.waitTillDone();
         } catch (ServerConnectorException e) {
-            throw new SiddhiAppRuntimeException("Error when establishing a connection with file-system-server for stream: "
+            throw new SiddhiAppRuntimeException("Error when establishing a connection with file-system-server " +
+                    "for stream: "
                     + sourceEventListener.getStreamDefinition().getId() + " due to "+ e.getMessage());
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException("Error occurred while processing directory : "+ e.getMessage());
@@ -164,7 +174,16 @@ public class FileSource extends Source{
     }
 
     public void disconnect() {
-
+        fileServerConnectorProvider = fileSourceServiceProvider.getFileServerConnectorProvider();
+        try {
+            for(ServerConnector serverConnector : fileSystemMessageProcessor.getFileServerConnectorList()){
+                serverConnector.stop();
+            }
+            fileSystemServerConnector.stop();
+        } catch (ServerConnectorException e) {
+            throw new SiddhiAppRuntimeException("Error occurred when trying to stop fileSystemServerConnector : "+
+                    e.getMessage());
+        }
     }
 
     public void destroy() {
@@ -180,39 +199,15 @@ public class FileSource extends Source{
     }
 
     public Map<String, Object> currentState() {
-        currentState.put(Constants.FILE_POINTER, fileSystemMessageProcessor);
+        currentState.put(Constants.FILE_POINTER_MAP, fileSourceConfiguration.getFilePointerMap());
         return currentState;
     }
 
     public void restoreState(Map<String, Object> map) {
-        filePointer = (long) map.get(Constants.FILE_POINTER);
-        fileSourceConfiguration.setFilePointer(filePointer);
+        filePointerMap = (Map<String, Long>) map.get(Constants.FILE_POINTER_MAP);
     }
 
-    public void tmpFileServerRun(){
-        Map<String, String> properties = new HashMap<>();
-        properties.put(Constants.PATH, "/home/minudika/Projects/WSO2/siddhi-io-file/testDir/test2.txt");
-        properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
-        properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
-        properties.put(Constants.ACTION, Constants.READ);
-        properties.put(Constants.POLLING_INTERVAL, "1000");
 
-        FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
-        FileServerConnectorProvider fileServerConnectorProvider;
-        fileServerConnectorProvider = new FileServerConnectorProvider();
-        ServerConnector fileServerConnector = fileServerConnectorProvider.createConnector("siddhi-io-line",
-                properties);
-        fileServerConnector.setMessageProcessor(fileProcessor);
-        try {
-            fileServerConnector.start();
-            fileProcessor.waitTillDone();
-        } catch (ServerConnectorException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-    }
 
     private String generateDefaultFileMoveLocation(){
         StringBuilder sb = new StringBuilder();
@@ -229,7 +224,7 @@ public class FileSource extends Source{
 
     private FileSourceConfiguration createSourceConf(){
         FileSourceConfiguration conf = new FileSourceConfiguration();
-        conf.setUri(uri);
+        conf.setDirURI(uri);
         conf.setMoveAfterProcessUri(moveAfterProcess);
         conf.setBeginRegex(beginRegex);
         conf.setEndRegex(endRegex);
@@ -243,7 +238,9 @@ public class FileSource extends Source{
         HashMap<String,String> map = new HashMap<>();
 
         map.put(Constants.TRANSPORT_FILE_DIR_URI, uri);
-        map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase());
+        if(actionAfterProcess != null) {
+            map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase());
+        }
         map.put(Constants.MOVE_AFTER_PROCESS_KEY, moveAfterProcess);
         map.put(Constants.POLLING_INTERVAL, POLLING_INTERVAL);
         map.put(Constants.FILE_SORT_ATTRIBUTE, Constants.NAME);
@@ -256,7 +253,31 @@ public class FileSource extends Source{
         } else{
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.FALSE);
         }
-
         return map;
+    }
+
+    private void validateParameters(){
+        if(uri == null){
+            throw new SiddhiAppRuntimeException("Uri is a mandatory parameter and has not been provided." +
+                    " Hence stopping the SiddhiApp.");
+        }
+        if(actionAfterProcess == null && !Constants.TRUE.equalsIgnoreCase(tailing)){
+            throw new SiddhiAppRuntimeException("actionAfterProcess is a mandatory parameter and " +
+                    "has not been provided. Hence stopping the SiddhiApp.");
+        }
+        if(Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)){
+            if(Constants.TRUE.equalsIgnoreCase(tailing)){
+                throw new SiddhiAppRuntimeException("Tailing can't be enabled in '"+mode+"' mode.");
+            }
+        }
+        if(Constants.MOVE.equalsIgnoreCase(actionAfterProcess) && (moveAfterProcess == null)){
+            throw new SiddhiAppRuntimeException("'moveAfterProcess' has not been provided where it is mandatory when" +
+                    " 'actoinAfterProcess' is 'move'. Hence stopping the SiddhiApp. ");
+        }
+        if(Constants.REGEX.equalsIgnoreCase(mode)){
+            if(beginRegex == null && endRegex == null){
+                mode = Constants.LINE;
+            }
+        }
     }
 }

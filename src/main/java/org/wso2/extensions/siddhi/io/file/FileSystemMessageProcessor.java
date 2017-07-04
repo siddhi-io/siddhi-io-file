@@ -39,8 +39,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
@@ -49,29 +51,26 @@ import java.util.regex.Pattern;
 
 public class FileSystemMessageProcessor implements CarbonMessageProcessor {
     private CountDownLatch latch = new CountDownLatch(1);
-    private int bufferSizeForFullReading = 2048;
-    private int bufferSizeForRegexReading = 10;
-    private String maxLinesPerPoll = "10";
-    private String fileContent;
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
-    private Pattern defaultPattern;
-    private Pattern endRegexPattern;
-    private Matcher matcher;
-    private int regexType = -1;
+    private int bufferSizeForFullReading = 1024;
+    private int bufferSizeForRegexReading = 10;
+    private Pattern pattern;
     private long filePointer;
     private VFSClientConnector vfsClientConnector;
     private FileProcessor fileProcessor;
-    private FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
     private FileServerConnectorProvider fileServerConnectorProvider;
-    private ServerConnector serverConnector;
-    private FileServerConnector fileServerConnector;
+    private FileSourceServiceProvider fileSourceServiceProvider;
+    private ArrayList<ServerConnector> fileServerConnectorList;
+    private Map<String,Long> filePointerMap;
 
 
     public FileSystemMessageProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSourceConfiguration;
-
+        this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
+        this.fileServerConnectorList = new ArrayList<>();
+        this.filePointerMap = fileSourceConfiguration.getFilePointerMap();
         configureFileMessageProcessor();
     }
 
@@ -79,31 +78,25 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
         String beginRegex = fileSourceConfiguration.getBeginRegex();
         String endRegex = fileSourceConfiguration.getEndRegex();
         if (beginRegex != null && endRegex != null) {
-            //pattern = Pattern.compile("<tag>(.+?)</tag>");
-            defaultPattern = Pattern.compile(beginRegex + "(.+?)" + endRegex);
-            regexType = 2;
+            pattern = Pattern.compile(beginRegex + "(.+?)" + endRegex);
         } else if (beginRegex != null && endRegex == null) {
-            defaultPattern = Pattern.compile(beginRegex + "(.+?)" + beginRegex);
-            regexType = 0;
+            pattern = Pattern.compile(beginRegex + "(.+?)" + beginRegex);
         } else if (beginRegex == null && endRegex != null) {
-            defaultPattern = Pattern.compile(".+?" + endRegex);
-            endRegexPattern = Pattern.compile(endRegex + "(.+?)" + endRegex);
-            regexType = 1;
+            pattern = Pattern.compile(".+?" + endRegex);
         }
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         String mode = fileSourceConfiguration.getMode();
-        String uri = ((TextCarbonMessage) carbonMessage).getText();
-        System.err.println(">>>>>>>>>>>>>>>>>" + uri);
-        fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
-
+        String fileURI = ((TextCarbonMessage) carbonMessage).getText();
+        System.err.println(">>>>>>>>>>>>>>>>>" + fileURI);
+        fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, fileURI);
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
             vfsClientConnector = new VFSClientConnector();
             vfsClientConnector.setMessageProcessor(fileProcessor);
 
             Map<String, String> properties = new HashMap<>();
-            properties.put(Constants.URI, uri);
+            properties.put(Constants.URI, fileURI);
             properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.POLLING_INTERVAL, "1000");
@@ -117,7 +110,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             vfsClientConnector.setMessageProcessor(fileProcessor);
 
             Map<String, String> properties = new HashMap<>();
-            properties.put(Constants.URI, uri);
+            properties.put(Constants.URI, fileURI);
             properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.POLLING_INTERVAL, "1000");
@@ -128,24 +121,24 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             done();
         } else if(Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)){
             Map<String, String> properties = new HashMap<>();
-            properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
+            properties.put(Constants.START_POSITION, Long.toString(fileSourceConfiguration.getFilePointer(fileURI)));
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.MAX_LINES_PER_POLL, "1");
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
             if (fileSourceConfiguration.isTailingEnabled()) {
-                properties.put(Constants.PATH, uri);
-                fileServerConnectorProvider = new FileServerConnectorProvider();
-                ServerConnector fileServerConnector = fileServerConnectorProvider.createConnector("siddhi-io-line",
-                        properties);
+                properties.put(Constants.PATH, fileURI);
+                fileServerConnectorProvider = fileSourceServiceProvider.getFileServerConnectorProvider();
+                ServerConnector fileServerConnector = fileServerConnectorProvider
+                        .createConnector(fileSourceServiceProvider.getServerConnectorID(), properties);
                 fileServerConnector.setMessageProcessor(fileProcessor);
+                fileServerConnectorList.add(fileServerConnector);
                 fileServerConnector.start();
-
                 fileProcessor.waitTillDone();
                 carbonCallback.done(carbonMessage);
                 done();
             } else {
-                properties.put(Constants.URI, uri);
+                properties.put(Constants.URI, fileURI);
                 vfsClientConnector = new VFSClientConnector();
                 vfsClientConnector.setMessageProcessor(fileProcessor);
 
@@ -169,6 +162,10 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
 
     public String getId() {
         return "test-file-message-processor";
+    }
+
+    public List<ServerConnector> getFileServerConnectorList(){
+        return fileServerConnectorList;
     }
 
     /**
@@ -224,14 +221,6 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
         return sb.toString();
     }
 
-    /**
-     * To get the file content of the relevant file.
-     *
-     * @return the file content.
-     */
-    public String getFileContent() {
-        return fileContent;
-    }
 
     private void processMessage(CarbonMessage carbonMessage) {
         if (carbonMessage.getClass() == TextCarbonMessage.class) {
@@ -302,7 +291,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             while (reader.read(buf) != -1) {
                 sb.append(new String(buf).trim());
                 filePointer += bufferSizeForRegexReading;
-                Matcher matcher = defaultPattern.matcher(sb.toString());
+                Matcher matcher = pattern.matcher(sb.toString());
                 while (matcher.find()) {
                     eventString = matcher.group(0);
                     String tmp = sb.substring(matcher.end() + 1);

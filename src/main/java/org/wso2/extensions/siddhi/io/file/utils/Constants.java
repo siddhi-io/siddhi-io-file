@@ -45,6 +45,7 @@ public class Constants {
     /*property keys*/
     public final static String ACTION = "action";
     public final static String FILE_POINTER = "filePointer";
+    public final static String FILE_POINTER_MAP = "filePointerMap";
     public static final String TRANSPORT_FILE_FILE_URI = "fileURI";
     public final static String TRANSPORT_FILE_DIR_URI = "dirURI";
     public static final String POLLING_INTERVAL = "pollingInterval";

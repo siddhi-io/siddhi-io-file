@@ -26,6 +26,8 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.TransportSender;
 
+import java.util.Map;
+
 /**
  * A Message Processor class to be used for File connector pass through scenarios
  */
