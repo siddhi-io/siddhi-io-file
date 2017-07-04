@@ -150,7 +150,7 @@ public class FileSource extends Source{
 
         validateParameters();
         fileSourceConfiguration = createSourceConf();
-        filePointerMap = fileSourceConfiguration.getFilePointerMap();
+        filePointerMap = fileSourceServiceProvider.getFilePointerMap();
     }
 
     public void connect() throws ConnectionUnavailableException {
@@ -166,8 +166,8 @@ public class FileSource extends Source{
             fileSystemMessageProcessor.waitTillDone();
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Error when establishing a connection with file-system-server " +
-                    "for stream: "
-                    + sourceEventListener.getStreamDefinition().getId() + " due to "+ e.getMessage());
+                    "for stream : '"
+                    + sourceEventListener.getStreamDefinition().getId() + "' due to "+ e.getMessage());
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException("Error occurred while processing directory : "+ e.getMessage());
         }
@@ -199,7 +199,7 @@ public class FileSource extends Source{
     }
 
     public Map<String, Object> currentState() {
-        currentState.put(Constants.FILE_POINTER_MAP, fileSourceConfiguration.getFilePointerMap());
+        currentState.put(Constants.FILE_POINTER_MAP, fileSourceServiceProvider.getFilePointerMap());
         return currentState;
     }
 

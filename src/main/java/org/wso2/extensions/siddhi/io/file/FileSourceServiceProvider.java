@@ -4,6 +4,8 @@ import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvid
 import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FileSourceServiceProvider {
     private static FileSourceServiceProvider fileSourceServiceProvider = new FileSourceServiceProvider();
@@ -14,15 +16,18 @@ public class FileSourceServiceProvider {
     private static int vfsClientConnectorCount = 0;
     private static ArrayList<String> serverConnectorIDs;
     private static ArrayList<String> systemServerConnectorIDs;
-    private static String systemServerConnectorIDPrefex = "file-system-server-connector-";
-    private static String serverConnectorIDPrefex = "file-server-connector-";
-    private static String vfsClientConnectorIDPrefex = "vfs-client-connector-";
+    private final static String SYSTEM_SERVER_CONNECTOR_ID_PREFEX = "file-system-server-connector-";
+    private final static String SERVER_CONNECTOR_ID_PREFEX = "file-server-connector-";
+    private final static String VFS_CLIENT_CONNECTOR_ID_PREFEX = "vfs-client-connector-";
+    private static Map<String,Long> filePointerMap;
+
 
     private FileSourceServiceProvider(){
         fileServerConnectorProvider = new FileServerConnectorProvider();
         fileSystemServerConnectorProvider = new FileSystemServerConnectorProvider();
         serverConnectorIDs = new ArrayList<>();
         systemServerConnectorIDs = new ArrayList<>();
+        filePointerMap = new HashMap<>();
     }
 
     public static FileSourceServiceProvider getInstance(){
@@ -38,19 +43,19 @@ public class FileSourceServiceProvider {
     }
 
     public  String getServerConnectorID(){
-        String id = serverConnectorIDPrefex + Integer.toString(serverConnectorCount++);
+        String id = SERVER_CONNECTOR_ID_PREFEX + Integer.toString(serverConnectorCount++);
         serverConnectorIDs.add(id);
         return id;
     }
 
     public String getSystemServerConnectorID(){
-        String id = systemServerConnectorIDPrefex + Integer.toString(systemServerConnectorCount++);
+        String id = SYSTEM_SERVER_CONNECTOR_ID_PREFEX + Integer.toString(systemServerConnectorCount++);
         systemServerConnectorIDs.add(id);
         return id;
     }
 
     public String getVFSClientConnectorID(){
-        return vfsClientConnectorIDPrefex + Integer.toString(vfsClientConnectorCount++);
+        return VFS_CLIENT_CONNECTOR_ID_PREFEX + Integer.toString(vfsClientConnectorCount++);
     }
 
     public ArrayList<String> getServerConnectorIDList(){
@@ -59,6 +64,21 @@ public class FileSourceServiceProvider {
 
     public ArrayList<String>  getSystemServerConnectorIDList(){
         return systemServerConnectorIDs;
+    }
+
+    public static Map<String, Long> getFilePointerMap(){
+        return filePointerMap;
+    }
+
+    public static void updateFilePointer(String fileURI, Long filePointer){
+        filePointerMap.put(fileURI, filePointer);
+    }
+
+    public Long getFilePointer(String uri) {
+        if(filePointerMap.containsKey(uri)){
+            return filePointerMap.get(uri);
+        }
+        return 0L;
     }
 
 

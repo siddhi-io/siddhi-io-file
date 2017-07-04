@@ -22,9 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FileSourceConfiguration {
-    public FileSourceConfiguration(){
-        this.filePointerMap = new HashMap<>();
-    }
 
     public String getBeginRegex() {
         return beginRegex;
@@ -42,12 +39,6 @@ public class FileSourceConfiguration {
         this.endRegex = endRegex;
     }
 
-    public Long getFilePointer(String uri) {
-        if(filePointerMap.containsKey(uri)){
-            return filePointerMap.get(uri);
-        }
-        return 0L;
-    }
 
     private enum MODE {
         TEXT_FULL,
@@ -62,7 +53,6 @@ public class FileSourceConfiguration {
     private String mode;
     private String beginRegex = null;
     private String endRegex = null;
-    private Map<String,Long> filePointerMap;
 
     public String getMode() {
         return mode;
@@ -102,13 +92,5 @@ public class FileSourceConfiguration {
 
     public void setDirURI(String dirURI) {
         this.dirURI = dirURI;
-    }
-
-    public Map<String, Long> getFilePointerMap(){
-        return filePointerMap;
-    }
-
-    public void updateFilePointer(String fileURI, Long filePointer){
-        filePointerMap.put(fileURI, filePointer);
     }
 }
