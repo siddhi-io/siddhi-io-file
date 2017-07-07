@@ -116,8 +116,7 @@ public class FileSource extends Source{
     private FileSystemMessageProcessor fileSystemMessageProcessor = null;
     private final String POLLING_INTERVAL = "1000";
     private Map<String,Object> currentState;
-    private long filePointer = 0;
-    private Map<String, Long> filePointerMap;
+    private String filePointer = "0";
 
     private String uri;
     private String mode;
@@ -133,12 +132,13 @@ public class FileSource extends Source{
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] strings,
                      ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
+        this.currentState = new HashMap<>();
         fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         fileSystemServerConnectorProvider = fileSourceServiceProvider.getFileSystemServerConnectorProvider();
 
         uri = optionHolder.validateAndGetStaticValue(Constants.URI, null);
-        mode = optionHolder.validateAndGetStaticValue(Constants.MODE, null);
         actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS, null);
+        mode = optionHolder.validateAndGetStaticValue(Constants.MODE, null);
         moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS,
                 generateDefaultFileMoveLocation());
         if(Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)){
@@ -150,29 +150,12 @@ public class FileSource extends Source{
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
 
         validateParameters();
-        fileSourceConfiguration = createSourceConf();
-        filePointerMap = fileSourceServiceProvider.getFilePointerMap();
+        fileSourceConfiguration = createInitialSourceConf();
+
+        siddhiAppContext.getSnapshotService().addSnapshotable("file-source",this);
+        //filePointerMap = fileSourceServiceProvider.getFilePointerMap();
     }
 
-    public void connect() throws ConnectionUnavailableException {
-        Map<String, String> properties = getFileSystemServerProperties();
-        fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector(fileSourceServiceProvider
-                        .getServerConnectorID(),
-                properties);
-        fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener, fileSourceConfiguration);
-        fileSystemServerConnector.setMessageProcessor(fileSystemMessageProcessor);
-
-        try{
-            fileSystemServerConnector.start();
-            fileSystemMessageProcessor.waitTillDone();
-        } catch (ServerConnectorException e) {
-            throw new SiddhiAppRuntimeException("Error when establishing a connection with file-system-server " +
-                    "for stream : '"
-                    + sourceEventListener.getStreamDefinition().getId() + "' due to "+ e.getMessage());
-        } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException("Error occurred while processing directory : "+ e.getMessage());
-        }
-    }
 
     @Override
     public Class[] getOutputEventClasses() {
@@ -181,11 +164,31 @@ public class FileSource extends Source{
 
     @Override
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
+        Map<String, String> properties = getFileSystemServerProperties();
+        //fileSourceConfiguration.setFilePointer(filePointer);
+        fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector(fileSourceServiceProvider
+                        .getServerConnectorID(),
+                properties);
+        fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener, fileSourceConfiguration);
+        fileSystemServerConnector.setMessageProcessor(fileSystemMessageProcessor);
+        fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
 
+        try{
+            fileSystemServerConnector.start();
+            //fileSystemMessageProcessor.waitTillDone();
+        } catch (ServerConnectorException e) {
+            throw new SiddhiAppRuntimeException("Error when establishing a connection with file-system-server " +
+                    "for stream : '"
+                    + sourceEventListener.getStreamDefinition().getId() + "' due to "+ e.getMessage());
+        }
     }
 
+    @Override
     public void disconnect() {
-        fileServerConnectorProvider = fileSourceServiceProvider.getFileServerConnectorProvider();
+        /*fileServerConnectorProvider = fileSourceServiceProvider.getFileServerConnectorProvider();
+        for(Thread thread : fileSourceServiceProvider.getServerConnectorList()){
+            thread.stop();
+        }
         try {
             for(ServerConnector serverConnector : fileSystemMessageProcessor.getFileServerConnectorList()){
                 serverConnector.stop();
@@ -194,8 +197,16 @@ public class FileSource extends Source{
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Error occurred when trying to stop fileSystemServerConnector : "+
                     e.getMessage());
+        }*/
+        try {
+            fileSourceConfiguration.getFileServerConnector().stop();
+            fileSystemServerConnector.stop();
+        } catch (ServerConnectorException e) {
+            e.printStackTrace();
         }
+        fileSourceServiceProvider.reset();
     }
+
 
     public void destroy() {
 
@@ -210,15 +221,15 @@ public class FileSource extends Source{
     }
 
     public Map<String, Object> currentState() {
-        currentState.put(Constants.FILE_POINTER_MAP, fileSourceServiceProvider.getFilePointerMap());
+        currentState.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
         return currentState;
     }
 
     public void restoreState(Map<String, Object> map) {
-        filePointerMap = (Map<String, Long>) map.get(Constants.FILE_POINTER_MAP);
+        //filePointerMap = (Map<String, Long>) map.get(Constants.FILE_POINTER_MAP);
+        this.filePointer = map.get(Constants.FILE_POINTER).toString();
+        fileSourceConfiguration.setFilePointer(filePointer);
     }
-
-
 
     private String generateDefaultFileMoveLocation(){
         StringBuilder sb = new StringBuilder();
@@ -233,7 +244,7 @@ public class FileSource extends Source{
         return sb.append(parent.toString()).append("read").toString();
     }
 
-    private FileSourceConfiguration createSourceConf(){
+    private FileSourceConfiguration createInitialSourceConf(){
         FileSourceConfiguration conf = new FileSourceConfiguration();
         conf.setDirURI(uri);
         conf.setMoveAfterProcessUri(moveAfterProcess);
@@ -242,6 +253,7 @@ public class FileSource extends Source{
         conf.setMode(mode);
         conf.setActionAfterProcess(actionAfterProcess);
         conf.setTailingEnabled(Boolean.parseBoolean(tailing));
+        conf.setFilePointer("0");
         return conf;
     }
 

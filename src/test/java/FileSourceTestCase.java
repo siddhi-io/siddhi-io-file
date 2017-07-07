@@ -184,7 +184,7 @@ public class FileSourceTestCase {
         log.info("test FileSourceMapper 5");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='line',tailing='false',action.after.process='move',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line'," +
+                "@source(type='file',mode='line',tailing='true',action.after.process='move',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line'," +
                 "move.after.process='/home/minudika/Projects/WSO2/siddhi-io-file/read/line'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -214,12 +214,6 @@ public class FileSourceTestCase {
 
         //assert event count
         // Assert.assertEquals("Number of events", 4, count.get());
-        siddhiAppRuntime.shutdown();
-        System.err.println("________________________________Stopped");
-        Thread.sleep(10000);
-        siddhiAppRuntime.start();
-        System.err.println("________________________________started ");
-        Thread.sleep(3000);
 
         siddhiAppRuntime.shutdown();
     }
@@ -267,7 +261,7 @@ public class FileSourceTestCase {
         log.info("test FileSourceMapper 7");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='line', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot'," +
+                "@source(type='file',mode='line', tailing='true', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot'," +
                 "move.after.process='/home/minudika/Projects/WSO2/siddhi-io-file/read/line'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -275,38 +269,47 @@ public class FileSourceTestCase {
 
         String query = "" +
                 "from FooStream " +
-                "select * " +
+                "select *  " +
                 "insert into BarStream; ";
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
 
+
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
             public void receive(Event[] events) {
+                int n = count.incrementAndGet();
+                System.err.println("####################### "+n);
                 EventPrinter.print(events);
 
             }
         });
 
         siddhiAppRuntime.start();
-        Thread.sleep(1000);
+
+        System.out.println("test");
+        Thread.sleep(3000);
 
 
         System.err.println("############## shutting down");
 
-        siddhiAppRuntime.snapshot();
-        //siddhiAppRuntime.();
+        byte[] snapshot = siddhiAppRuntime.snapshot();
+        siddhiAppRuntime.shutdown();
 
         Thread.sleep(5000);
 
         File file = new File("/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot/logs.txt");
         try {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
-            bufferedWriter.append("{\"event\":{\"symbol\":\"IBM\",\"price\":2000,\"volume\":30000}\n");
-            bufferedWriter.append("{\"event\":{\"symbol\":\"GOOGLE\",\"price\":3000,\"volume\":40000}\n");
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
+            bufferedWriter.write("{\"event\":{\"symbol\":\"IBM\",\"price\":2000,\"volume\":30000}}");
+            bufferedWriter.newLine();
+            bufferedWriter.write("{\"event\":{\"symbol\":\"GOOGLE\",\"price\":3000,\"volume\":40000}}");
+            bufferedWriter.newLine();
             System.err.println("############## writing file");
+            bufferedWriter.flush();
+            bufferedWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -315,6 +318,7 @@ public class FileSourceTestCase {
 
         System.err.println("###################### starting..");
         siddhiAppRuntime.start();
+        siddhiAppRuntime.restore(snapshot);
 
         Thread.sleep(3000);
 

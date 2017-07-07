@@ -18,10 +18,35 @@
 
 package org.wso2.extensions.siddhi.io.file.utils;
 
+import org.wso2.carbon.messaging.CarbonMessageProcessor;
+import org.wso2.carbon.messaging.ServerConnector;
+import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class FileSourceConfiguration {
+
+    private String actionAfterProcess;
+    private String moveAfterProcessUri;
+    private boolean isTailingEnabled;
+    private String dirURI;
+    private String mode;
+    private String beginRegex = null;
+    private String endRegex = null;
+    private String filePointer = "0" ;
+    private Executor executor;
+    private CarbonMessageProcessor messageProcessor;
+    private FileServerConnector fileServerConnector;
+    private ServerConnector fileSystemServerConnector;
+
+
+    public FileSourceConfiguration(){
+        executor = Executors.newSingleThreadExecutor();
+    }
 
     public String getBeginRegex() {
         return beginRegex;
@@ -38,21 +63,6 @@ public class FileSourceConfiguration {
     public void setEndRegex(String endRegex) {
         this.endRegex = endRegex;
     }
-
-
-    private enum MODE {
-        TEXT_FULL,
-        BINARY_FULL,
-        REGEX,
-        LINE
-    };
-    private String actionAfterProcess;
-    private String moveAfterProcessUri;
-    private boolean isTailingEnabled;
-    private String dirURI;
-    private String mode;
-    private String beginRegex = null;
-    private String endRegex = null;
 
     public String getMode() {
         return mode;
@@ -93,4 +103,57 @@ public class FileSourceConfiguration {
     public void setDirURI(String dirURI) {
         this.dirURI = dirURI;
     }
+
+    public String getFilePointer() {
+        return filePointer;
+    }
+
+    public void setFilePointer(String filePointer) {
+        this.filePointer = filePointer;
+    }
+
+    public void updateFilePointer(int valueToAdd){
+        long filePointer  = Long.parseLong(this.filePointer);
+        filePointer += valueToAdd;
+        this.filePointer = Long.toString(filePointer);
+    }
+
+    public CarbonMessageProcessor getMessageProcessor() {
+        return messageProcessor;
+    }
+
+    public void setMessageProcessor(CarbonMessageProcessor messageProcessor) {
+        this.messageProcessor = messageProcessor;
+    }
+
+    public FileServerConnector getFileServerConnector() {
+        return fileServerConnector;
+    }
+
+    public void setFileServerConnector(FileServerConnector fileServerConnector) {
+        this.fileServerConnector = fileServerConnector;
+    }
+
+    public ServerConnector getFileSystemServerConnector() {
+        return fileSystemServerConnector;
+    }
+
+    public void setFileSystemServerConnector(ServerConnector fileSystemServerConnector) {
+        this.fileSystemServerConnector = fileSystemServerConnector;
+    }
+
+    public Executor getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(Executor executor) {
+        this.executor = executor;
+    }
+
+    class DirectExecutor implements Executor {
+        public void execute(Runnable r) {
+            r.run();
+        }
+    }
+
 }

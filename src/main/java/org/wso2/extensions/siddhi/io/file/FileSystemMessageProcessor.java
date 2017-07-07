@@ -26,6 +26,7 @@ import org.wso2.carbon.messaging.MapCarbonMessage;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.TransportSender;
+import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
@@ -63,7 +64,8 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
     private FileSourceServiceProvider fileSourceServiceProvider;
     private ArrayList<ServerConnector> fileServerConnectorList;
     private Map<String,Long> filePointerMap;
-
+    private String tailingFileURI = null;
+    private boolean isTailingActivated = false;
 
     public FileSystemMessageProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
         this.sourceEventListener = sourceEventListener;
@@ -93,6 +95,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
         fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, fileURI);
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
             vfsClientConnector = new VFSClientConnector();
+            fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, fileURI);
             vfsClientConnector.setMessageProcessor(fileProcessor);
 
             Map<String, String> properties = new HashMap<>();
@@ -102,11 +105,11 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
             vfsClientConnector.send(carbonMessage, null, properties);
-            fileProcessor.waitTillDone();
             carbonCallback.done(carbonMessage);
             done();
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             vfsClientConnector = new VFSClientConnector();
+            fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, fileURI);
             vfsClientConnector.setMessageProcessor(fileProcessor);
 
             Map<String, String> properties = new HashMap<>();
@@ -116,34 +119,60 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
             vfsClientConnector.send(carbonMessage, null, properties);
-            fileProcessor.waitTillDone();
+            //fileProcessor.waitTillDone();
             carbonCallback.done(carbonMessage);
             done();
         } else if(Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)){
             Map<String, String> properties = new HashMap<>();
-            properties.put(Constants.START_POSITION, Long.toString(fileSourceServiceProvider.getFilePointer(fileURI)));
             properties.put(Constants.ACTION, Constants.READ);
-            properties.put(Constants.MAX_LINES_PER_POLL, "1");
+            properties.put(Constants.MAX_LINES_PER_POLL, "1"); //TODO : Change no. of lines
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
             if (fileSourceConfiguration.isTailingEnabled()) {
-                properties.put(Constants.PATH, fileURI);
-                fileServerConnectorProvider = fileSourceServiceProvider.getFileServerConnectorProvider();
-                ServerConnector fileServerConnector = fileServerConnectorProvider
-                        .createConnector(fileSourceServiceProvider.getServerConnectorID(), properties);
-                fileServerConnector.setMessageProcessor(fileProcessor);
-                fileServerConnectorList.add(fileServerConnector);
-                fileServerConnector.start();
-                fileProcessor.waitTillDone();
-                carbonCallback.done(carbonMessage);
-                done();
+                if(tailingFileURI == null) {
+                    tailingFileURI = fileURI;
+                    properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
+                    properties.put(Constants.PATH, fileURI);
+
+                    FileServerConnectorProvider fileServerConnectorProvider =
+                            fileSourceServiceProvider.getFileServerConnectorProvider();
+                    String fileServerConnectorID = fileSourceServiceProvider.getServerConnectorID();
+                    String id = generateID(fileServerConnectorID, fileURI);
+                    FileProcessor fileProcessor = new FileProcessor(sourceEventListener,
+                            fileSourceConfiguration, id);
+                    ServerConnector fileServerConnector = fileServerConnectorProvider
+                            .createConnector(fileServerConnectorID, properties);
+                    fileServerConnector.setMessageProcessor(fileProcessor);
+                    fileServerConnectorList.add(fileServerConnector);
+                    fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
+                    Thread t = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                fileServerConnector.start();
+                            } catch (ServerConnectorException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+
+                    fileSourceConfiguration.getExecutor().execute(t);
+                    //t.start();
+                    fileSourceConfiguration.getFileSystemServerConnector().stop();
+
+                    //carbonCallback.done(carbonMessage);
+
+                    // done();
+
+                }
             } else {
                 properties.put(Constants.URI, fileURI);
                 vfsClientConnector = new VFSClientConnector();
+                fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, fileURI);
                 vfsClientConnector.setMessageProcessor(fileProcessor);
 
                 vfsClientConnector.send(carbonMessage, null, properties);
-                fileProcessor.waitTillDone();
+                //fileProcessor.waitTillDone();
                 carbonCallback.done(carbonMessage);
                 done();
             }
@@ -311,5 +340,12 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
 
     public void setFilePointer(long filePointer) {
         this.filePointer = filePointer;
+    }
+
+    private String generateID(String fileServerConnectorID, String fileURI){
+        StringBuilder sb = new StringBuilder();
+        sb.append(fileServerConnectorID).append("_").append(fileURI);
+
+        return sb.toString();
     }
 }

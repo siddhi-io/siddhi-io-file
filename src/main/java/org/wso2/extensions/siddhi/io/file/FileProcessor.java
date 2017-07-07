@@ -25,49 +25,63 @@ public class  FileProcessor implements CarbonMessageProcessor {
     FileSourceServiceProvider fileSourceServiceProvider;
     private String mode;
     private Pattern pattern;
-    private Long filePointer;
+    private int readBytes;
     private StringBuilder sb = new StringBuilder();
+    private String id;
     private String fileURI;
+    private String fileServerConnectorID;
 
 
 
     public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration,
-                          String fileURI) {
+                          String id) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSourceConfiguration;
         this.mode = fileSourceConfiguration.getMode();
         this.fileURI = fileURI;
+        this.id = id;
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         configureFileMessageProcessor();
     }
 
     @Override
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-        filePointer = fileSourceServiceProvider.getFilePointer(fileURI);
         byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
         String msg = new String(content);
 
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
+            if(msg != null && msg.length() > 0)
             sourceEventListener.onEvent(new String(content), null);
-            done();
+            carbonCallback.done(carbonMessage);;
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             //TODO : implement consuming binary files (file processor)
-            sourceEventListener.onEvent(content, null);
-            done();
+            if(msg != null && msg.length() > 0)
+                sourceEventListener.onEvent(content, null);
+            carbonCallback.done(carbonMessage);;
         } else if (Constants.LINE.equalsIgnoreCase(mode)) {
-            filePointer += content.length;
-            fileSourceServiceProvider.updateFilePointer(fileURI, filePointer);
-            //System.err.println("################################# File pointer updated : "+filePointer);
+            //System.err.println("################################# File pointer updated : "+readBytes);
             if(!fileSourceConfiguration.isTailingEnabled()) {
                 InputStream is = new ByteArrayInputStream(content);
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
                 String line;
                 while((line = bufferedReader.readLine()) != null){
-                    sourceEventListener.onEvent(line.trim(), null);
+                    if(line != null && line.length() > 0) {
+                        readBytes = line.length();
+                        System.err.println("_______ LINE __________ : "+line);
+                        sourceEventListener.onEvent(line.trim(), null);
+                    }
                 }
-                done();
+                carbonCallback.done(carbonMessage);
             } else {
-                sourceEventListener.onEvent(msg, null);
+                if(msg != null && msg.length() > 0) {
+                    readBytes = msg.getBytes().length;
+                    fileSourceConfiguration.updateFilePointer(readBytes);
+                    fileSourceServiceProvider.updateFilePointer(id, readBytes);
+                    System.err.println("___ LINE ___ : "+msg + "___MSG LENGTH__ : "+msg.length()
+                            + "___FILE_POINTER___ :"+ readBytes);
+                    sourceEventListener.onEvent(msg, null);
+                }
+                //carbonCallback.done(carbonMessage);;
             }
         } else if(Constants.REGEX.equalsIgnoreCase(mode)){
             int  lastMatchIndex = 0;
@@ -90,8 +104,11 @@ public class  FileProcessor implements CarbonMessageProcessor {
                     sb.setLength(0);
                     sb.append(tmp);
                 }
-                done();
+                carbonCallback.done(carbonMessage);
             }else{
+                readBytes += content.length;
+                fileSourceServiceProvider.updateFilePointer(id, readBytes);
+                fileSourceConfiguration.updateFilePointer(readBytes);
                 sb.append(new String(content));
                 Matcher matcher = pattern.matcher(sb.toString().trim());
                 while (matcher.find()) {
@@ -123,22 +140,7 @@ public class  FileProcessor implements CarbonMessageProcessor {
     public String getId() {
         return null;
     }
-
-    /**
-     * To wait till file reading operation is finished.
-     *
-     * @throws InterruptedException Interrupted Exception.
-     */
-    public void waitTillDone() throws InterruptedException {
-        latch.await();
-    }
-
-    /**
-     * To make sure the reading the file content is done.
-     */
-    private void done() {
-        latch.countDown();
-    }
+    
 
     private void configureFileMessageProcessor() {
         String beginRegex = fileSourceConfiguration.getBeginRegex();

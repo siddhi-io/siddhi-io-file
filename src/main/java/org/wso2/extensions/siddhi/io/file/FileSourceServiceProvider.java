@@ -1,11 +1,14 @@
 package org.wso2.extensions.siddhi.io.file;
 
+import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
 import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class FileSourceServiceProvider {
     private static FileSourceServiceProvider fileSourceServiceProvider = new FileSourceServiceProvider();
@@ -20,7 +23,7 @@ public class FileSourceServiceProvider {
     private final static String SERVER_CONNECTOR_ID_PREFEX = "file-server-connector-";
     private final static String VFS_CLIENT_CONNECTOR_ID_PREFEX = "vfs-client-connector-";
     private Map<String,Long> filePointerMap;
-
+    private List<Thread> serverConnectors;
 
     private FileSourceServiceProvider(){
         fileServerConnectorProvider = new FileServerConnectorProvider();
@@ -28,6 +31,7 @@ public class FileSourceServiceProvider {
         serverConnectorIDs = new ArrayList<>();
         systemServerConnectorIDs = new ArrayList<>();
         filePointerMap = new HashMap<>();
+        serverConnectors = new ArrayList<>();
     }
 
     public static FileSourceServiceProvider getInstance(){
@@ -70,15 +74,34 @@ public class FileSourceServiceProvider {
         return filePointerMap;
     }
 
-    public  void updateFilePointer(String fileURI, Long filePointer){
-        filePointerMap.put(fileURI, filePointer);
+    public  void updateFilePointer(String id, int readBytes){
+        Long fp = getFilePointer(id);
+        filePointerMap.put(id, fp+ readBytes);
+        System.err.println("*******************************"+(fp+readBytes));
     }
 
-    public Long getFilePointer(String uri) {
-        if(filePointerMap.containsKey(uri)){
-            return filePointerMap.get(uri);
+    public Long getFilePointer(String id) {
+        if(filePointerMap.containsKey(id)){
+            return filePointerMap.get(id);
         }
-        return 0L;
+        return new Long(0);
+    }
+
+    public void addServerConnector(Thread serverConnectorThread){
+        serverConnectors.add(serverConnectorThread);
+    }
+
+    public List<Thread> getServerConnectorList(){
+        return serverConnectors;
+    }
+
+    public void reset(){
+        serverConnectorIDs.clear();
+        systemServerConnectorIDs.clear();
+        serverConnectors.clear();
+        vfsClientConnectorCount = 0;
+        serverConnectorCount = 0;
+        systemServerConnectorCount = 0;
     }
 
 
