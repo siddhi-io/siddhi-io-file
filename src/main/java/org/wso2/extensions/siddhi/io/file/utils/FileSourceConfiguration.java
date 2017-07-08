@@ -22,11 +22,8 @@ import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class FileSourceConfiguration {
 
@@ -42,6 +39,8 @@ public class FileSourceConfiguration {
     private CarbonMessageProcessor messageProcessor;
     private FileServerConnector fileServerConnector;
     private ServerConnector fileSystemServerConnector;
+    private String tailingFileURI = null;
+
 
 
     public FileSourceConfiguration(){
@@ -148,6 +147,14 @@ public class FileSourceConfiguration {
 
     public void setExecutor(Executor executor) {
         this.executor = executor;
+    }
+
+    public String getTailingFileURI() {
+        return tailingFileURI;
+    }
+
+    public void setTailingFileURI(String tailingFileURI) {
+        this.tailingFileURI = tailingFileURI;
     }
 
     class DirectExecutor implements Executor {

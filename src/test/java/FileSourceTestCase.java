@@ -317,14 +317,29 @@ public class FileSourceTestCase {
         Thread.sleep(5000);
 
         System.err.println("###################### starting..");
-        siddhiAppRuntime.start();
         siddhiAppRuntime.restore(snapshot);
 
-        Thread.sleep(3000);
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                int n = count.incrementAndGet();
+                System.err.println("******************* "+n);
+                EventPrinter.print(events);
+
+                if(n==7)
+                    siddhiAppRuntime.shutdown();
+
+            }
+        });
+
+        siddhiAppRuntime.start();
+
+        Thread.sleep(1000000);
 
 
         //assert event count
         // Assert.assertEquals("Number of events", 4, count.get());
-        siddhiAppRuntime.shutdown();
+        //siddhiAppRuntime.shutdown();
     }
 }

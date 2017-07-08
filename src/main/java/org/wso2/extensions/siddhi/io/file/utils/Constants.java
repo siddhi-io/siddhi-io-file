@@ -57,6 +57,7 @@ public class Constants {
     public static final String FILE_SORT_ATTRIBUTE = "fileSortAttribute";
     public static final String FILE_SORT_ASCENDING = "fileSortAscending";
     public static final String CREATE_MOVE_DIR = "createMoveDir";
+    public static final String ACK_TIME_OUT = "ackTimeOut";
 
     /*property values*/
     public static final String ACTION_AFTER_PROCESS_DELETE = "DELETE";

@@ -30,7 +30,6 @@ import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
-import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
 import org.wso2.extensions.siddhi.io.file.utils.Constants;
 import org.wso2.extensions.siddhi.io.file.utils.FileSourceConfiguration;
 import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
@@ -129,7 +128,12 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
             if (fileSourceConfiguration.isTailingEnabled()) {
-                if(tailingFileURI == null) {
+                if(fileSourceConfiguration.getTailingFileURI() == null){
+                    fileSourceConfiguration.setTailingFileURI(fileURI);
+                }
+
+                if(fileSourceConfiguration.getTailingFileURI().equalsIgnoreCase(fileURI)) {
+                    fileSourceConfiguration.getFileSystemServerConnector().stop();
                     tailingFileURI = fileURI;
                     properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
                     properties.put(Constants.PATH, fileURI);
@@ -164,6 +168,8 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
 
                     // done();
 
+                } else{
+                    carbonCallback.done(carbonMessage);
                 }
             } else {
                 properties.put(Constants.URI, fileURI);

@@ -164,6 +164,7 @@ public class FileSource extends Source{
 
     @Override
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
+        fileSourceConfiguration = createInitialSourceConf();
         Map<String, String> properties = getFileSystemServerProperties();
         //fileSourceConfiguration.setFilePointer(filePointer);
         fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector(fileSourceServiceProvider
@@ -175,7 +176,6 @@ public class FileSource extends Source{
 
         try{
             fileSystemServerConnector.start();
-            //fileSystemMessageProcessor.waitTillDone();
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Error when establishing a connection with file-system-server " +
                     "for stream : '"
@@ -199,8 +199,8 @@ public class FileSource extends Source{
                     e.getMessage());
         }*/
         try {
-            fileSourceConfiguration.getFileServerConnector().stop();
             fileSystemServerConnector.stop();
+            fileSourceConfiguration.getFileServerConnector().stop();
         } catch (ServerConnectorException e) {
             e.printStackTrace();
         }
@@ -217,6 +217,7 @@ public class FileSource extends Source{
     }
 
     public void resume() {
+        int x = 10;
 
     }
 
@@ -253,7 +254,7 @@ public class FileSource extends Source{
         conf.setMode(mode);
         conf.setActionAfterProcess(actionAfterProcess);
         conf.setTailingEnabled(Boolean.parseBoolean(tailing));
-        conf.setFilePointer("0");
+        conf.setFilePointer(filePointer);
         return conf;
     }
 
@@ -269,6 +270,7 @@ public class FileSource extends Source{
         map.put(Constants.FILE_SORT_ATTRIBUTE, Constants.NAME);
         map.put(Constants.FILE_SORT_ASCENDING, Constants.TRUE);
         map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE);
+        map.put(Constants.ACK_TIME_OUT, "1000");
 
         if(Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
                 Constants.TEXT_FULL.equalsIgnoreCase(mode)){
