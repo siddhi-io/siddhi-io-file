@@ -89,12 +89,13 @@ public class  FileProcessor implements CarbonMessageProcessor {
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
 
                 while (bufferedReader.read(buf) != -1) {
+                    lastMatchIndex = 0;
                     sb.append(new String(buf));
                     Matcher matcher = pattern.matcher(sb.toString().trim());
                     while (matcher.find()) {
                         String event = matcher.group(0);
                         lastMatchIndex = matcher.end();
-                       // sourceEventListener.onEvent(event, null);
+                        //sourceEventListener.onEvent(event, null);
                     }
                     String tmp;
                     tmp = sb.substring(lastMatchIndex);
@@ -112,7 +113,8 @@ public class  FileProcessor implements CarbonMessageProcessor {
                 while (matcher.find()) {
                     String event = matcher.group(0);
                     lastMatchIndex = matcher.end();
-                    sourceEventListener.onEvent(event, null);
+                    System.err.println("########################"+event);
+                    //sourceEventListener.onEvent(event, null);
                 }
                 String tmp;
                 tmp = sb.substring(lastMatchIndex);
