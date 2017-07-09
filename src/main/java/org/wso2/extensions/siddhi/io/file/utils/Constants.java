@@ -59,6 +59,9 @@ public class Constants {
     public static final String CREATE_MOVE_DIR = "createMoveDir";
     public static final String ACK_TIME_OUT = "ackTimeOut";
 
+    /*source property keys*/
+    public static final String TAILED_FILE = "tailedFile";
+
     /*property values*/
     public static final String ACTION_AFTER_PROCESS_DELETE = "DELETE";
     public static final String ACTION_AFTER_PROCESS_MOVE = "MOVE";

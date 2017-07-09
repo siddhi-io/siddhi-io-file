@@ -36,6 +36,7 @@ import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.Source;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.siddhi.core.util.config.ConfigReader;
+import org.wso2.siddhi.core.util.transport.Option;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 
 
@@ -49,27 +50,47 @@ import java.util.Map;
         namespace = "source",
         description = "File Source",
         parameters = {
-                @Parameter(name = "enclosing.element",
+                @Parameter(
+                        name = "uri",
                         description =
-                                "Used to specify the enclosing element in case of sending multiple events in same "
-                                        + "JSON message. WSO2 DAS will treat the child element of given enclosing "
-                                        + "element as events"
-                                        + " and execute json path expressions on child elements. If enclosing.element "
-                                        + "is not provided "
-                                        + "multiple event scenario is disregarded and json path will be evaluated "
-                                        + "with respect to "
-                                        + "root element.",
-                        type = {DataType.STRING}),
-                @Parameter(name = "fail.on.missing.attribute",
+                                "Used to specify the directory to be processed. " +
+                                        " All the files inside this directory will be processed",
+                        type = {DataType.STRING}
+                        ),
+
+                @Parameter(
+                        name = "mode",
+                        description =
+                                "This parameter is used to specify how files in given directory should",
+                        type = {DataType.STRING}
+                        ),
+
+                @Parameter(
+                        name = "tailing",
                         description = "This can either have value true or false. By default it will be true. This "
-                                + "attribute allows user to handle unknown attributes. By default if an json "
-                                + "execution "
-                                + "fails or returns null DAS will drop that message. However setting this property"
-                                + " to "
-                                + "false will prompt DAS to send and event with null value to Siddhi where user "
-                                + "can handle"
-                                + " it accordingly(ie. Assign a default value)",
-                        type = {DataType.BOOL})
+                                + "attribute allows user to specify whether the file should be tailed or not. " +
+                                "If tailing is enabled, the first file of the directory will be tailed.",
+                        type = {DataType.BOOL},
+                        optional = true,
+                        defaultValue = "true"
+                        ),
+
+                @Parameter(
+                        name = "action.after.process",
+                        description = "This parameter is used to specify the action which should be carried out " +
+                                "after processing a file in the given directory. " +
+                                "It can be either DELETE or MOVE. " +
+                                "If the action.after.process is MOVE, user must specify the location to " +
+                                "move consumed files.",
+                        type = {DataType.STRING}
+                        ),
+
+                @Parameter(
+                        name = "move.after.process",
+                        description = "If action.after.process is MOVE, user must specify the location to " +
+                                "move consumed files using 'move.after.process' parameter.",
+                        type = {DataType.STRING}
+                        )
         },
         examples = {
                 @Example(
@@ -125,6 +146,7 @@ public class FileSource extends Source{
     private String tailing;
     private String beginRegex;
     private String endRegex;
+    private String tailedFileURI;
 
     private boolean isDirectory = false;
 
@@ -153,7 +175,6 @@ public class FileSource extends Source{
         fileSourceConfiguration = createInitialSourceConf();
 
         siddhiAppContext.getSnapshotService().addSnapshotable("file-source",this);
-        //filePointerMap = fileSourceServiceProvider.getFilePointerMap();
     }
 
 
@@ -185,22 +206,11 @@ public class FileSource extends Source{
 
     @Override
     public void disconnect() {
-        /*fileServerConnectorProvider = fileSourceServiceProvider.getFileServerConnectorProvider();
-        for(Thread thread : fileSourceServiceProvider.getServerConnectorList()){
-            thread.stop();
-        }
         try {
-            for(ServerConnector serverConnector : fileSystemMessageProcessor.getFileServerConnectorList()){
-                serverConnector.stop();
+            fileSystemServerConnector.stop();
+            if(Constants.TRUE.equalsIgnoreCase(tailing)) {
+                fileSourceConfiguration.getFileServerConnector().stop();
             }
-            fileSystemServerConnector.stop();
-        } catch (ServerConnectorException e) {
-            throw new SiddhiAppRuntimeException("Error occurred when trying to stop fileSystemServerConnector : "+
-                    e.getMessage());
-        }*/
-        try {
-            fileSystemServerConnector.stop();
-            fileSourceConfiguration.getFileServerConnector().stop();
         } catch (ServerConnectorException e) {
             e.printStackTrace();
         }
@@ -223,12 +233,14 @@ public class FileSource extends Source{
 
     public Map<String, Object> currentState() {
         currentState.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
+        currentState.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURI());
         return currentState;
     }
 
     public void restoreState(Map<String, Object> map) {
         //filePointerMap = (Map<String, Long>) map.get(Constants.FILE_POINTER_MAP);
         this.filePointer = map.get(Constants.FILE_POINTER).toString();
+        this.tailedFileURI = map.get(Constants.TAILED_FILE).toString();
         fileSourceConfiguration.setFilePointer(filePointer);
     }
 
@@ -255,6 +267,7 @@ public class FileSource extends Source{
         conf.setActionAfterProcess(actionAfterProcess);
         conf.setTailingEnabled(Boolean.parseBoolean(tailing));
         conf.setFilePointer(filePointer);
+        conf.setTailedFileURI(tailedFileURI);
         return conf;
     }
 
@@ -287,7 +300,7 @@ public class FileSource extends Source{
                     " Hence stopping the SiddhiApp.");
         }
         if(actionAfterProcess == null && !Constants.TRUE.equalsIgnoreCase(tailing)){
-            throw new SiddhiAppRuntimeException("actionAfterProcess is a mandatory parameter and " +
+            throw new SiddhiAppRuntimeException("actionAfterProcess is mandatory when tailing is not enabled but " +
                     "has not been provided. Hence stopping the SiddhiApp.");
         }
         if(Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)){
@@ -305,4 +318,5 @@ public class FileSource extends Source{
             }
         }
     }
+
 }

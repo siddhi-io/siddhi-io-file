@@ -52,7 +52,7 @@ public class  FileProcessor implements CarbonMessageProcessor {
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
             if(msg != null && msg.length() > 0)
             sourceEventListener.onEvent(new String(content), null);
-            carbonCallback.done(carbonMessage);;
+            //carbonCallback.done(carbonMessage);
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             //TODO : implement consuming binary files (file processor)
             if(msg != null && msg.length() > 0)
@@ -71,7 +71,6 @@ public class  FileProcessor implements CarbonMessageProcessor {
                         sourceEventListener.onEvent(line.trim(), null);
                     }
                 }
-                carbonCallback.done(carbonMessage);
             } else {
                 if(msg != null && msg.length() > 0) {
                     readBytes = msg.getBytes().length;
@@ -81,7 +80,6 @@ public class  FileProcessor implements CarbonMessageProcessor {
                             + "___FILE_POINTER___ :"+ readBytes);
                     sourceEventListener.onEvent(msg, null);
                 }
-                //carbonCallback.done(carbonMessage);;
             }
         } else if(Constants.REGEX.equalsIgnoreCase(mode)){
             int  lastMatchIndex = 0;
@@ -96,7 +94,7 @@ public class  FileProcessor implements CarbonMessageProcessor {
                     while (matcher.find()) {
                         String event = matcher.group(0);
                         lastMatchIndex = matcher.end();
-                        sourceEventListener.onEvent(event, null);
+                       // sourceEventListener.onEvent(event, null);
                     }
                     String tmp;
                     tmp = sb.substring(lastMatchIndex);
@@ -104,11 +102,11 @@ public class  FileProcessor implements CarbonMessageProcessor {
                     sb.setLength(0);
                     sb.append(tmp);
                 }
-                carbonCallback.done(carbonMessage);
             }else{
                 readBytes += content.length;
                 fileSourceServiceProvider.updateFilePointer(id, readBytes);
                 fileSourceConfiguration.updateFilePointer(readBytes);
+
                 sb.append(new String(content));
                 Matcher matcher = pattern.matcher(sb.toString().trim());
                 while (matcher.find()) {

@@ -39,7 +39,7 @@ public class FileSourceConfiguration {
     private CarbonMessageProcessor messageProcessor;
     private FileServerConnector fileServerConnector;
     private ServerConnector fileSystemServerConnector;
-    private String tailingFileURI = null;
+    private String tailedFileURI = null;
 
 
 
@@ -149,12 +149,12 @@ public class FileSourceConfiguration {
         this.executor = executor;
     }
 
-    public String getTailingFileURI() {
-        return tailingFileURI;
+    public String getTailedFileURI() {
+        return tailedFileURI;
     }
 
-    public void setTailingFileURI(String tailingFileURI) {
-        this.tailingFileURI = tailingFileURI;
+    public void setTailedFileURI(String tailedFileURI) {
+        this.tailedFileURI = tailedFileURI;
     }
 
     class DirectExecutor implements Executor {

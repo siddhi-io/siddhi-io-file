@@ -105,7 +105,6 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
 
             vfsClientConnector.send(carbonMessage, null, properties);
             carbonCallback.done(carbonMessage);
-            done();
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             vfsClientConnector = new VFSClientConnector();
             fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, fileURI);
@@ -118,9 +117,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
             vfsClientConnector.send(carbonMessage, null, properties);
-            //fileProcessor.waitTillDone();
             carbonCallback.done(carbonMessage);
-            done();
         } else if(Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)){
             Map<String, String> properties = new HashMap<>();
             properties.put(Constants.ACTION, Constants.READ);
@@ -128,11 +125,11 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
             if (fileSourceConfiguration.isTailingEnabled()) {
-                if(fileSourceConfiguration.getTailingFileURI() == null){
-                    fileSourceConfiguration.setTailingFileURI(fileURI);
+                if(fileSourceConfiguration.getTailedFileURI() == null){
+                    fileSourceConfiguration.setTailedFileURI(fileURI);
                 }
 
-                if(fileSourceConfiguration.getTailingFileURI().equalsIgnoreCase(fileURI)) {
+                if(fileSourceConfiguration.getTailedFileURI().equalsIgnoreCase(fileURI)) {
                     fileSourceConfiguration.getFileSystemServerConnector().stop();
                     tailingFileURI = fileURI;
                     properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
@@ -178,9 +175,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
                 vfsClientConnector.setMessageProcessor(fileProcessor);
 
                 vfsClientConnector.send(carbonMessage, null, properties);
-                //fileProcessor.waitTillDone();
                 carbonCallback.done(carbonMessage);
-                done();
             }
         }
 
@@ -201,22 +196,6 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
 
     public List<ServerConnector> getFileServerConnectorList(){
         return fileServerConnectorList;
-    }
-
-    /**
-     * To wait till file reading operation is finished.
-     *
-     * @throws InterruptedException Interrupted Exception.
-     */
-    public void waitTillDone() throws InterruptedException {
-        latch.await();
-    }
-
-    /**
-     * To make sure the reading the file content is done.
-     */
-    private void done() {
-        latch.countDown();
     }
 
     /**
