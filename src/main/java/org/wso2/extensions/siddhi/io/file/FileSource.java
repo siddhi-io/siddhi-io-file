@@ -21,11 +21,11 @@ package org.wso2.extensions.siddhi.io.file;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
-import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
-import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
 import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
-import org.wso2.extensions.siddhi.io.file.utils.Constants;
-import org.wso2.extensions.siddhi.io.file.utils.FileSourceConfiguration;
+import org.wso2.extensions.siddhi.io.file.messageProcessors.FileSystemMessageProcessor;
+import org.wso2.extensions.siddhi.io.file.util.Constants;
+import org.wso2.extensions.siddhi.io.file.util.FileSourceConfiguration;
+import org.wso2.extensions.siddhi.io.file.util.FileSourceServiceProvider;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
@@ -36,12 +36,9 @@ import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.Source;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.siddhi.core.util.config.ConfigReader;
-import org.wso2.siddhi.core.util.transport.Option;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,33 +109,31 @@ import java.util.Map;
         },
         examples = {
                 @Example(
-                        syntax = "@source(type='inMemory', topic='stock', @map(type='json'))\n"
-                                + "define stream FooStream (symbol string, price float, volume long);\n",
-                        description =  "Above configuration will do a default JSON input mapping. Expected "
-                                + "input will look like below."
-                                + "{\n"
-                                + "    \"event\":{\n"
-                                + "        \"symbol\":\"WSO2\",\n"
-                                + "        \"price\":55.6,\n"
-                                + "        \"volume\":100\n"
-                                + "    }\n"
-                                + "}\n"),
+                        syntax = "" +
+                                "@source(type='file',mode='text.full', tailing='false', " +
+                                "uri='/abc/xyz'," +
+                                "action.after.process='delete'," +
+                                "@map(type='json'))" +
+                                "define stream FooStream (symbol string, price float, volume long); ",
+
+                        description =  "" +
+                                "Under above configuration, all the files in directory will be picked and read " +
+                                "one by one." +
+                                "After reading is finished, the file will be deleted."
+                ),
+
                 @Example(
-                        syntax = "@source(type='inMemory', topic='stock', @map(type='json', "
-                                + "enclosing.element=\"$.portfolio\", "
-                                + "@attributes(symbol = \"company.symbol\", price = \"price\", volume = \"volume\")))",
-                        description =  "Above configuration will perform a custom JSON mapping. Expected input will "
-                                + "look like below."
-                                + "{"
-                                + " \"portfolio\":{\n"
-                                + "     \"stock\":{"
-                                + "        \"volume\":100,\n"
-                                + "        \"company\":{\n"
-                                + "           \"symbol\":\"WSO2\"\n"
-                                + "       },\n"
-                                + "        \"price\":55.6\n"
-                                + "    }\n"
-                                + "}")
+                        syntax = "" +
+                                "@source(type='file',mode='text.full', tailing='true', " +
+                                "uri='/abc/xyz'," +
+                                "@map(type='json'))" +
+                                "define stream FooStream (symbol string, price float, volume long); ",
+
+                        description =  "" +
+                                "Under above configuration, the first file in the directory will be " +
+                                "picked and consumed. It will also be tailed. "
+
+                )
         }
 )
 public class FileSource extends Source{
@@ -149,7 +144,6 @@ public class FileSource extends Source{
     private FileSourceServiceProvider fileSourceServiceProvider;
     private FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
     private ServerConnector fileSystemServerConnector;
-    private FileSystemMessageProcessor fileSystemMessageProcessor = null;
     private Map<String,Object> currentState;
     private String filePointer = "0";
 
@@ -202,7 +196,8 @@ public class FileSource extends Source{
         fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector(fileSourceServiceProvider
                         .getServerConnectorID(),
                 properties);
-        fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener, fileSourceConfiguration);
+        FileSystemMessageProcessor fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener,
+                fileSourceConfiguration);
         fileSystemServerConnector.setMessageProcessor(fileSystemMessageProcessor);
         fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
 
@@ -225,7 +220,6 @@ public class FileSource extends Source{
         } catch (ServerConnectorException e) {
             e.printStackTrace();
         }
-        fileSourceServiceProvider.reset();
     }
 
 
@@ -238,7 +232,6 @@ public class FileSource extends Source{
     }
 
     public void resume() {
-        int x = 10;
 
     }
 

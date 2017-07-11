@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.extensions.siddhi.io.file;
+package org.wso2.extensions.siddhi.io.file.messageProcessors;
 
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;

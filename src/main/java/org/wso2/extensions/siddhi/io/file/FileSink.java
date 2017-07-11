@@ -22,7 +22,8 @@ import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
-import org.wso2.extensions.siddhi.io.file.utils.Constants;
+import org.wso2.extensions.siddhi.io.file.messageProcessors.FileSinkMessageProcessor;
+import org.wso2.extensions.siddhi.io.file.util.Constants;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
@@ -36,8 +37,6 @@ import org.wso2.siddhi.core.util.transport.Option;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 import org.wso2.siddhi.query.api.definition.StreamDefinition;
 
-import java.io.BufferedWriter;
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -78,7 +77,7 @@ import java.util.Map;
         examples = {
                 @Example(
                         syntax = "" +
-                                "@sink(type='file', @map(type='text'), " +
+                                "@sink(type='file', @map(type='json'), " +
                                 "append='false', " +
                                 "uri='/abc/{{symbol}}.txt') " +
                                 "define stream BarStream (symbol string, price float, volume long); ",
@@ -103,7 +102,6 @@ public class FileSink extends Sink{
     private String fileURI = null;
     private VFSClientConnector vfsClientConnector = null;
     private Map<String,String> properties = null;
-    private OptionHolder optionHolder = null;
     private Option uriOption;
 
 
@@ -117,7 +115,6 @@ public class FileSink extends Sink{
     }
 
     protected void init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
-        this.optionHolder = optionHolder;
         uriOption= optionHolder.validateAndGetOption(Constants.URI);
         String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
         properties = new HashMap<>();

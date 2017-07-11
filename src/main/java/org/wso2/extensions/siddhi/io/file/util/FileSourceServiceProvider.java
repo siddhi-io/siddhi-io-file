@@ -1,6 +1,5 @@
-package org.wso2.extensions.siddhi.io.file;
+package org.wso2.extensions.siddhi.io.file.util;
 
-import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
 import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
 
@@ -8,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class FileSourceServiceProvider {
     private static FileSourceServiceProvider fileSourceServiceProvider = new FileSourceServiceProvider();

@@ -1,4 +1,4 @@
-package org.wso2.extensions.siddhi.io.file;
+package org.wso2.extensions.siddhi.io.file.messageProcessors;
 
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
@@ -6,41 +6,29 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TransportSender;
-import org.wso2.extensions.siddhi.io.file.utils.Constants;
-import org.wso2.extensions.siddhi.io.file.utils.FileSourceConfiguration;
+import org.wso2.extensions.siddhi.io.file.util.Constants;
+import org.wso2.extensions.siddhi.io.file.util.FileSourceConfiguration;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class  FileProcessor implements CarbonMessageProcessor {
-    private CountDownLatch latch = new CountDownLatch(1);
-    SourceEventListener sourceEventListener;
-    FileSourceConfiguration fileSourceConfiguration;
-    FileSourceServiceProvider fileSourceServiceProvider;
+    private SourceEventListener sourceEventListener;
+    private FileSourceConfiguration fileSourceConfiguration;
     private String mode;
     private Pattern pattern;
     private int readBytes;
     private StringBuilder sb = new StringBuilder();
-    private String id;
-    private String fileURI;
-    private String fileServerConnectorID;
 
-
-
-    public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration,
-                          String id) {
+    public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSourceConfiguration;
         this.mode = fileSourceConfiguration.getMode();
-        this.fileURI = fileURI;
-        this.id = id;
-        this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         configureFileMessageProcessor();
     }
 
@@ -52,14 +40,12 @@ public class  FileProcessor implements CarbonMessageProcessor {
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
             if(msg != null && msg.length() > 0)
             sourceEventListener.onEvent(new String(content), null);
-            //carbonCallback.done(carbonMessage);
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             //TODO : implement consuming binary files (file processor)
             if(msg != null && msg.length() > 0)
                 sourceEventListener.onEvent(content, null);
             carbonCallback.done(carbonMessage);;
         } else if (Constants.LINE.equalsIgnoreCase(mode)) {
-            //System.err.println("################################# File pointer updated : "+readBytes);
             if(!fileSourceConfiguration.isTailingEnabled()) {
                 InputStream is = new ByteArrayInputStream(content);
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
@@ -67,7 +53,6 @@ public class  FileProcessor implements CarbonMessageProcessor {
                 while((line = bufferedReader.readLine()) != null){
                     if(line != null && line.length() > 0) {
                         readBytes = line.length();
-                        System.err.println("_______ LINE __________ : "+line);
                         sourceEventListener.onEvent(line.trim(), null);
                     }
                 }
@@ -75,9 +60,6 @@ public class  FileProcessor implements CarbonMessageProcessor {
                 if(msg != null && msg.length() > 0) {
                     readBytes = msg.getBytes().length;
                     fileSourceConfiguration.updateFilePointer(readBytes);
-                    fileSourceServiceProvider.updateFilePointer(id, readBytes);
-                    System.err.println("___ LINE ___ : "+msg + "___MSG LENGTH__ : "+msg.length()
-                            + "___FILE_POINTER___ :"+ readBytes);
                     sourceEventListener.onEvent(msg, null);
                 }
             }
@@ -95,7 +77,7 @@ public class  FileProcessor implements CarbonMessageProcessor {
                     while (matcher.find()) {
                         String event = matcher.group(0);
                         lastMatchIndex = matcher.end();
-                        //sourceEventListener.onEvent(event, null);
+                        sourceEventListener.onEvent(event, null);
                     }
                     String tmp;
                     tmp = sb.substring(lastMatchIndex);
@@ -105,7 +87,6 @@ public class  FileProcessor implements CarbonMessageProcessor {
                 }
             }else{
                 readBytes += content.length;
-                fileSourceServiceProvider.updateFilePointer(id, readBytes);
                 fileSourceConfiguration.updateFilePointer(readBytes);
 
                 sb.append(new String(content));
@@ -113,8 +94,7 @@ public class  FileProcessor implements CarbonMessageProcessor {
                 while (matcher.find()) {
                     String event = matcher.group(0);
                     lastMatchIndex = matcher.end();
-                    System.err.println("########################"+event);
-                    //sourceEventListener.onEvent(event, null);
+                    sourceEventListener.onEvent(event, null);
                 }
                 String tmp;
                 tmp = sb.substring(lastMatchIndex);

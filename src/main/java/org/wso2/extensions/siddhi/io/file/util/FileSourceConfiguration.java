@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.extensions.siddhi.io.file.utils;
+package org.wso2.extensions.siddhi.io.file.util;
 
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ServerConnector;
@@ -156,11 +156,4 @@ public class FileSourceConfiguration {
     public void setTailedFileURI(String tailedFileURI) {
         this.tailedFileURI = tailedFileURI;
     }
-
-    class DirectExecutor implements Executor {
-        public void execute(Runnable r) {
-            r.run();
-        }
-    }
-
 }

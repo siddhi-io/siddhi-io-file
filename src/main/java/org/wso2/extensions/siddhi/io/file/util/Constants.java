@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.extensions.siddhi.io.file.utils;
+package org.wso2.extensions.siddhi.io.file.util;
 
 public class Constants {
     /* configuration parameters*/
@@ -69,11 +69,5 @@ public class Constants {
     public static final String SIZE = "size";
     public static final String LAST_MODIFIED_TIMESTAMP = "lastModifiedTimestamp";
 
-    private static enum MODE {
-        TEXT_FULL,
-        BINARY_FULL,
-        REGEX,
-        LINE
-    };
 
 }
