@@ -77,33 +77,24 @@ import java.util.Map;
         },
         examples = {
                 @Example(
-                        syntax = "@source(type='inMemory', topic='stock', @map(type='json'))\n"
-                                + "define stream FooStream (symbol string, price float, volume long);\n",
-                        description =  "Above configuration will do a default JSON input mapping. Expected "
-                                + "input will look like below."
-                                + "{\n"
-                                + "    \"event\":{\n"
-                                + "        \"symbol\":\"WSO2\",\n"
-                                + "        \"price\":55.6,\n"
-                                + "        \"volume\":100\n"
-                                + "    }\n"
-                                + "}\n"),
-                @Example(
-                        syntax = "@source(type='inMemory', topic='stock', @map(type='json', "
-                                + "enclosing.element=\"$.portfolio\", "
-                                + "@attributes(symbol = \"company.symbol\", price = \"price\", volume = \"volume\")))",
-                        description =  "Above configuration will perform a custom JSON mapping. Expected input will "
-                                + "look like below."
-                                + "{"
-                                + " \"portfolio\":{\n"
-                                + "     \"stock\":{"
-                                + "        \"volume\":100,\n"
-                                + "        \"company\":{\n"
-                                + "           \"symbol\":\"WSO2\"\n"
-                                + "       },\n"
-                                + "        \"price\":55.6\n"
-                                + "    }\n"
-                                + "}")
+                        syntax = "" +
+                                "@sink(type='file', @map(type='text'), " +
+                                "append='false', " +
+                                "uri='/abc/{{symbol}}.txt') " +
+                                "define stream BarStream (symbol string, price float, volume long); ",
+
+                        description =  "" +
+                                "Under above configuration, for each event, " +
+                                "a file will be generated if there's no such a file," +
+                                "and then data will be written to that file as json messages" +
+                                "output will looks like below." +
+                                "{\n" +
+                                "    \"event\":{\n" +
+                                "        \"symbol\":\"WSO2\",\n" +
+                                "        \"price\":55.6,\n" +
+                                "        \"volume\":100\n" +
+                                "    }\n" +
+                                "}\n")
         }
 )
 public class FileSink extends Sink{
