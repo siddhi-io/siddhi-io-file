@@ -90,7 +90,25 @@ import java.util.Map;
                         description = "If action.after.process is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.process' parameter.",
                         type = {DataType.STRING}
-                        )
+                        ),
+
+                @Parameter(
+                        name = "begin.regex",
+                        description = "This will define the regex to be matched at the beginning of the " +
+                                "retrieved content. ",
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = ".+"
+                        ),
+
+                @Parameter(
+                        name = "end.regex",
+                        description = "This will define the regex to be matched at the end of the " +
+                                "retrieved content. ",
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "\n"
+                ),
         },
         examples = {
                 @Example(
@@ -130,12 +148,8 @@ public class FileSource extends Source{
     private FileSourceConfiguration fileSourceConfiguration;
     private FileSourceServiceProvider fileSourceServiceProvider;
     private FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
-    private FileServerConnectorProvider fileServerConnectorProvider;
-    private final static String FILE_SYSTEM_SERVER_CONNECTOR_ID = "siddhi.io.file";
-    private FileServerConnector fileServerConnector = null;
     private ServerConnector fileSystemServerConnector;
     private FileSystemMessageProcessor fileSystemMessageProcessor = null;
-    private final String POLLING_INTERVAL = "1000";
     private Map<String,Object> currentState;
     private String filePointer = "0";
 
@@ -147,8 +161,6 @@ public class FileSource extends Source{
     private String beginRegex;
     private String endRegex;
     private String tailedFileURI;
-
-    private boolean isDirectory = false;
 
     @Override
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] strings,
@@ -162,7 +174,7 @@ public class FileSource extends Source{
         actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS, null);
         mode = optionHolder.validateAndGetStaticValue(Constants.MODE, null);
         moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS,
-                generateDefaultFileMoveLocation());
+                null);
         if(Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)){
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.FALSE);
         }else{
@@ -187,7 +199,6 @@ public class FileSource extends Source{
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
         fileSourceConfiguration = createInitialSourceConf();
         Map<String, String> properties = getFileSystemServerProperties();
-        //fileSourceConfiguration.setFilePointer(filePointer);
         fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector(fileSourceServiceProvider
                         .getServerConnectorID(),
                 properties);
@@ -238,23 +249,9 @@ public class FileSource extends Source{
     }
 
     public void restoreState(Map<String, Object> map) {
-        //filePointerMap = (Map<String, Long>) map.get(Constants.FILE_POINTER_MAP);
         this.filePointer = map.get(Constants.FILE_POINTER).toString();
         this.tailedFileURI = map.get(Constants.TAILED_FILE).toString();
         fileSourceConfiguration.setFilePointer(filePointer);
-    }
-
-    private String generateDefaultFileMoveLocation(){
-        StringBuilder sb = new StringBuilder();
-        URI uri = null;
-        URI parent = null;
-        try {
-            uri = new URI(this.uri);
-            parent = uri.getPath().endsWith("/") ? uri.resolve("..") : uri.resolve(".");
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        return sb.append(parent.toString()).append("read").toString();
     }
 
     private FileSourceConfiguration createInitialSourceConf(){
@@ -279,11 +276,11 @@ public class FileSource extends Source{
             map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase());
         }
         map.put(Constants.MOVE_AFTER_PROCESS_KEY, moveAfterProcess);
-        map.put(Constants.POLLING_INTERVAL, POLLING_INTERVAL);
+        map.put(Constants.POLLING_INTERVAL, "1000");
         map.put(Constants.FILE_SORT_ATTRIBUTE, Constants.NAME);
         map.put(Constants.FILE_SORT_ASCENDING, Constants.TRUE);
         map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE);
-        map.put(Constants.ACK_TIME_OUT, "1000");
+        map.put(Constants.ACK_TIME_OUT, "5000");
 
         if(Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
                 Constants.TEXT_FULL.equalsIgnoreCase(mode)){
