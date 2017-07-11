@@ -29,7 +29,6 @@ import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
-import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.output.sink.Sink;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.transport.DynamicOptions;
@@ -52,20 +51,29 @@ import java.util.Map;
         namespace = "sink",
         description = "File Sink",
         parameters = {
-                @Parameter(name = "enclosing.element",
+                @Parameter(name = "uri",
                         description =
-                                "TBD",
-                        type = {DataType.STRING}),
-                @Parameter(name = "fail.on.missing.attribute",
-                        description = "This can either have value true or false. By default it will be true. This "
-                                + "attribute allows user to handle unknown attributes. By default if an json "
-                                + "execution "
-                                + "fails or returns null DAS will drop that message. However setting this property"
-                                + " to "
-                                + "false will prompt DAS to send and event with null value to Siddhi where user "
-                                + "can handle"
-                                + " it accordingly(ie. Assign a default value)",
-                        type = {DataType.BOOL})
+                                "Used to specify the file for data to be written. ",
+                        type = {DataType.STRING},
+                        dynamic = true
+                        ),
+                @Parameter(name = "append",
+                        description = "" +
+                                "This parameter is used to specify whether the data should be " +
+                                "append to the file or not." +
+                                "If append = 'true', " +
+                                "data will be write at the end of the file without " +
+                                "changing the existing content." +
+                                "If file does not exist, a new fill will be crated and then data will be written." +
+                                "If append append = 'false', " +
+                                "If given file exists, existing content will be deleted and then data will be " +
+                                "written back to the file." +
+                                "If given file does not exist, a new file will be created and " +
+                                "then data will be written on it.",
+                        type = {DataType.BOOL},
+                        optional = true,
+                        defaultValue = "true"
+                )
         },
         examples = {
                 @Example(
@@ -102,13 +110,6 @@ public class FileSink extends Sink{
     private static final Logger log = Logger.getLogger(FileSink.class);
 
     private String fileURI = null;
-    private String mode = null;
-    private boolean isAppendEnabled = false;
-    private String actionAfterProcess = null;
-    private String moveAfterProcess = null;
-
-    private File file;
-    private BufferedWriter bufferedWriter = null;
     private VFSClientConnector vfsClientConnector = null;
     private Map<String,String> properties = null;
     private OptionHolder optionHolder = null;
