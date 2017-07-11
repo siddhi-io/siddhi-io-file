@@ -1,3 +1,4 @@
+package org.wso2.extension.siddhi.io.file;
 /*
  * Copyright (c)  2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
@@ -15,19 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import org.apache.log4j.Logger;
-import org.junit.Test;
+//import org.testng.AssertJUnit;
+//import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.stream.input.InputHandler;
-import org.wso2.siddhi.core.stream.output.StreamCallback;
-import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.snapshot.PersistenceReference;
-import org.wso2.siddhi.core.util.transport.InMemoryBroker;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Test cases for siddhi-io-file sink.
+ * */
 public class FileSinkTestCase {
     private static final Logger log = Logger.getLogger(FileSinkTestCase.class);
     private AtomicInteger count = new AtomicInteger();
@@ -39,7 +43,8 @@ public class FileSinkTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='text'), append='false', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/out_test1.txt') " +
+                "@sink(type='file', @map(type='text'), append='false', " +
+                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/out_test1.txt') " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
         String query = "" +
@@ -66,7 +71,7 @@ public class FileSinkTestCase {
         Thread.sleep(100);
 
         //assert event count
-       // Assert.assertEquals(5, wso2Count.get());
+        // Assert.assertEquals(5, wso2Count.get());
         siddhiAppRuntime.shutdown();
 
         //unsubscribe from "inMemory" broker per topic
@@ -80,7 +85,8 @@ public class FileSinkTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='text'), append='true', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/out_test1.txt') " +
+                "@sink(type='file', @map(type='text'), append='true', " +
+                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/out_test1.txt') " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
         String query = "" +
@@ -121,7 +127,8 @@ public class FileSinkTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='json'), append='true', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/{{symbol}}.json')" +
+                "@sink(type='file', @map(type='json'), append='true', " +
+                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/{{symbol}}.json')" +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
         String query = "" +

@@ -15,4 +15,4 @@ buildNumber.properties
 
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 !/.mvn/wrapper/maven-wrapper.jar
-/src/main/java/org/wso2/extensions/siddhi/io/file/testing/
+/org/wso2/extension/siddhi/io/file/testing/

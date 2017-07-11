@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.extensions.siddhi.io.file.util;
+package org.wso2.extension.siddhi.io.file.util;
 
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ServerConnector;
@@ -25,6 +25,9 @@ import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+/**
+ * Class for keep the configurations of a file source instance.
+ * */
 public class FileSourceConfiguration {
 
     private String actionAfterProcess;
@@ -34,7 +37,7 @@ public class FileSourceConfiguration {
     private String mode;
     private String beginRegex = null;
     private String endRegex = null;
-    private String filePointer = "0" ;
+    private String filePointer = "0";
     private Executor executor;
     private CarbonMessageProcessor messageProcessor;
     private FileServerConnector fileServerConnector;
@@ -42,8 +45,7 @@ public class FileSourceConfiguration {
     private String tailedFileURI = null;
 
 
-
-    public FileSourceConfiguration(){
+    public FileSourceConfiguration() {
         executor = Executors.newSingleThreadExecutor();
     }
 
@@ -111,8 +113,8 @@ public class FileSourceConfiguration {
         this.filePointer = filePointer;
     }
 
-    public void updateFilePointer(int valueToAdd){
-        long filePointer  = Long.parseLong(this.filePointer);
+    public void updateFilePointer(int valueToAdd) {
+        long filePointer = Long.parseLong(this.filePointer);
         filePointer += valueToAdd;
         this.filePointer = Long.toString(filePointer);
     }

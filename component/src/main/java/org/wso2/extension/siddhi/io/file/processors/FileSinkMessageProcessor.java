@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.extensions.siddhi.io.file.messageProcessors;
+package org.wso2.extension.siddhi.io.file.processors;
 
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
@@ -26,17 +26,15 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.TransportSender;
 
-import java.util.Map;
-
 /**
- * A Message Processor class to be used for File connector pass through scenarios
+ * A Message Processor class to be used for File connector pass through scenarios.
  */
 public class FileSinkMessageProcessor implements CarbonMessageProcessor {
 
     private TextCarbonMessage textCarbonMessage;
     private BinaryCarbonMessage binaryCarbonMessage;
 
-    @Override public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
+    public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         if (carbonMessage instanceof TextCarbonMessage) {
             textCarbonMessage = (TextCarbonMessage) carbonMessage;
         } else if (carbonMessage instanceof BinaryCarbonMessage) {
@@ -45,15 +43,15 @@ public class FileSinkMessageProcessor implements CarbonMessageProcessor {
         return true;
     }
 
-    @Override public void setTransportSender(TransportSender transportSender) {
+    public void setTransportSender(TransportSender transportSender) {
 
     }
 
-    @Override public void setClientConnector(ClientConnector clientConnector) {
+    public void setClientConnector(ClientConnector clientConnector) {
 
     }
 
-    @Override public String getId() {
+    public String getId() {
         return null;
     }
 

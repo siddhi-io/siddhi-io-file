@@ -16,16 +16,16 @@
  * under the License.
  */
 
-package org.wso2.extensions.siddhi.io.file;
+package org.wso2.extension.siddhi.io.file;
 
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
-import org.wso2.extensions.siddhi.io.file.messageProcessors.FileSystemMessageProcessor;
-import org.wso2.extensions.siddhi.io.file.util.Constants;
-import org.wso2.extensions.siddhi.io.file.util.FileSourceConfiguration;
-import org.wso2.extensions.siddhi.io.file.util.FileSourceServiceProvider;
+import org.wso2.extension.siddhi.io.file.processors.FileSystemMessageProcessor;
+import org.wso2.extension.siddhi.io.file.util.Constants;
+import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
+import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
@@ -42,6 +42,9 @@ import org.wso2.siddhi.core.util.transport.OptionHolder;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Implementation of siddhi-io-file source.
+ * */
 @Extension(
         name = "file",
         namespace = "source",
@@ -53,14 +56,14 @@ import java.util.Map;
                                 "Used to specify the directory to be processed. " +
                                         " All the files inside this directory will be processed",
                         type = {DataType.STRING}
-                        ),
+                ),
 
                 @Parameter(
                         name = "mode",
                         description =
                                 "This parameter is used to specify how files in given directory should",
                         type = {DataType.STRING}
-                        ),
+                ),
 
                 @Parameter(
                         name = "tailing",
@@ -70,7 +73,7 @@ import java.util.Map;
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "true"
-                        ),
+                ),
 
                 @Parameter(
                         name = "action.after.process",
@@ -80,14 +83,14 @@ import java.util.Map;
                                 "If the action.after.process is MOVE, user must specify the location to " +
                                 "move consumed files.",
                         type = {DataType.STRING}
-                        ),
+                ),
 
                 @Parameter(
                         name = "move.after.process",
                         description = "If action.after.process is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.process' parameter.",
                         type = {DataType.STRING}
-                        ),
+                ),
 
                 @Parameter(
                         name = "begin.regex",
@@ -96,7 +99,7 @@ import java.util.Map;
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = ".+"
-                        ),
+                ),
 
                 @Parameter(
                         name = "end.regex",
@@ -116,7 +119,7 @@ import java.util.Map;
                                 "@map(type='json'))" +
                                 "define stream FooStream (symbol string, price float, volume long); ",
 
-                        description =  "" +
+                        description = "" +
                                 "Under above configuration, all the files in directory will be picked and read " +
                                 "one by one." +
                                 "After reading is finished, the file will be deleted."
@@ -129,22 +132,22 @@ import java.util.Map;
                                 "@map(type='json'))" +
                                 "define stream FooStream (symbol string, price float, volume long); ",
 
-                        description =  "" +
+                        description = "" +
                                 "Under above configuration, the first file in the directory will be " +
                                 "picked and consumed. It will also be tailed. "
 
                 )
         }
 )
-public class FileSource extends Source{
+public class FileSource extends Source {
     private static final Logger log = Logger.getLogger(FileSource.class);
 
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
-    private FileSourceServiceProvider fileSourceServiceProvider;
     private FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
     private ServerConnector fileSystemServerConnector;
-    private Map<String,Object> currentState;
+    private FileSourceServiceProvider fileSourceServiceProvider;
+    private Map<String, Object> currentState;
     private String filePointer = "0";
 
     private String uri;
@@ -160,7 +163,7 @@ public class FileSource extends Source{
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] strings,
                      ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
-        this.currentState = new HashMap<>();
+        this.currentState = new HashMap();
         fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         fileSystemServerConnectorProvider = fileSourceServiceProvider.getFileSystemServerConnectorProvider();
 
@@ -169,9 +172,9 @@ public class FileSource extends Source{
         mode = optionHolder.validateAndGetStaticValue(Constants.MODE, null);
         moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS,
                 null);
-        if(Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)){
+        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.FALSE);
-        }else{
+        } else {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
         }
         beginRegex = optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null);
@@ -180,7 +183,7 @@ public class FileSource extends Source{
         validateParameters();
         fileSourceConfiguration = createInitialSourceConf();
 
-        siddhiAppContext.getSnapshotService().addSnapshotable("file-source",this);
+        siddhiAppContext.getSnapshotService().addSnapshotable("file-source", this);
     }
 
 
@@ -193,20 +196,19 @@ public class FileSource extends Source{
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
         fileSourceConfiguration = createInitialSourceConf();
         Map<String, String> properties = getFileSystemServerProperties();
-        fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector(fileSourceServiceProvider
-                        .getServerConnectorID(),
+        fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector("fileSystemServerConnector",
                 properties);
         FileSystemMessageProcessor fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener,
                 fileSourceConfiguration);
         fileSystemServerConnector.setMessageProcessor(fileSystemMessageProcessor);
         fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
 
-        try{
+        try {
             fileSystemServerConnector.start();
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Error when establishing a connection with file-system-server " +
                     "for stream : '"
-                    + sourceEventListener.getStreamDefinition().getId() + "' due to "+ e.getMessage());
+                    + sourceEventListener.getStreamDefinition().getId() + "' due to " + e.getMessage());
         }
     }
 
@@ -214,11 +216,11 @@ public class FileSource extends Source{
     public void disconnect() {
         try {
             fileSystemServerConnector.stop();
-            if(Constants.TRUE.equalsIgnoreCase(tailing)) {
+            if (Constants.TRUE.equalsIgnoreCase(tailing)) {
                 fileSourceConfiguration.getFileServerConnector().stop();
             }
         } catch (ServerConnectorException e) {
-            e.printStackTrace();
+           throw new SiddhiAppRuntimeException("Failed to stop the file server : " + e.getMessage());
         }
     }
 
@@ -247,7 +249,7 @@ public class FileSource extends Source{
         fileSourceConfiguration.setFilePointer(filePointer);
     }
 
-    private FileSourceConfiguration createInitialSourceConf(){
+    private FileSourceConfiguration createInitialSourceConf() {
         FileSourceConfiguration conf = new FileSourceConfiguration();
         conf.setDirURI(uri);
         conf.setMoveAfterProcessUri(moveAfterProcess);
@@ -261,11 +263,11 @@ public class FileSource extends Source{
         return conf;
     }
 
-    private HashMap<String,String> getFileSystemServerProperties(){
-        HashMap<String,String> map = new HashMap<>();
+    private HashMap<String, String> getFileSystemServerProperties() {
+        HashMap<String, String> map = new HashMap();
 
         map.put(Constants.TRANSPORT_FILE_DIR_URI, uri);
-        if(actionAfterProcess != null) {
+        if (actionAfterProcess != null) {
             map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase());
         }
         map.put(Constants.MOVE_AFTER_PROCESS_KEY, moveAfterProcess);
@@ -275,35 +277,35 @@ public class FileSource extends Source{
         map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE);
         map.put(Constants.ACK_TIME_OUT, "5000");
 
-        if(Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
-                Constants.TEXT_FULL.equalsIgnoreCase(mode)){
+        if (Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
+                Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
-        } else{
+        } else {
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.FALSE);
         }
         return map;
     }
 
-    private void validateParameters(){
-        if(uri == null){
+    private void validateParameters() {
+        if (uri == null) {
             throw new SiddhiAppRuntimeException("Uri is a mandatory parameter and has not been provided." +
                     " Hence stopping the SiddhiApp.");
         }
-        if(actionAfterProcess == null && !Constants.TRUE.equalsIgnoreCase(tailing)){
+        if (actionAfterProcess == null && !Constants.TRUE.equalsIgnoreCase(tailing)) {
             throw new SiddhiAppRuntimeException("actionAfterProcess is mandatory when tailing is not enabled but " +
                     "has not been provided. Hence stopping the SiddhiApp.");
         }
-        if(Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)){
-            if(Constants.TRUE.equalsIgnoreCase(tailing)){
-                throw new SiddhiAppRuntimeException("Tailing can't be enabled in '"+mode+"' mode.");
+        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+            if (Constants.TRUE.equalsIgnoreCase(tailing)) {
+                throw new SiddhiAppRuntimeException("Tailing can't be enabled in '" + mode + "' mode.");
             }
         }
-        if(Constants.MOVE.equalsIgnoreCase(actionAfterProcess) && (moveAfterProcess == null)){
+        if (Constants.MOVE.equalsIgnoreCase(actionAfterProcess) && (moveAfterProcess == null)) {
             throw new SiddhiAppRuntimeException("'moveAfterProcess' has not been provided where it is mandatory when" +
                     " 'actoinAfterProcess' is 'move'. Hence stopping the SiddhiApp. ");
         }
-        if(Constants.REGEX.equalsIgnoreCase(mode)){
-            if(beginRegex == null && endRegex == null){
+        if (Constants.REGEX.equalsIgnoreCase(mode)) {
+            if (beginRegex == null && endRegex == null) {
                 mode = Constants.LINE;
             }
         }

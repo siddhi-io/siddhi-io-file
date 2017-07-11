@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.extensions.siddhi.io.file.messageProcessors;
+package org.wso2.extension.siddhi.io.file.processors;
 
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
@@ -29,24 +29,27 @@ import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
-import org.wso2.extensions.siddhi.io.file.util.FileSourceServiceProvider;
-import org.wso2.extensions.siddhi.io.file.util.Constants;
-import org.wso2.extensions.siddhi.io.file.util.FileSourceConfiguration;
+import org.wso2.extension.siddhi.io.file.util.Constants;
+import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
+import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
+import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.util.HashMap;
 import java.util.Map;
 
-
+/**
+ * Message processor for handling file uri's provided by FileSystemServer.
+ * */
 public class FileSystemMessageProcessor implements CarbonMessageProcessor {
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private FileSourceServiceProvider fileSourceServiceProvider;
 
-    public FileSystemMessageProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
+    public FileSystemMessageProcessor(SourceEventListener sourceEventListener,
+                                      FileSourceConfiguration fileSourceConfiguration) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSourceConfiguration;
-        this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
@@ -59,7 +62,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
             vfsClientConnector.setMessageProcessor(fileProcessor);
 
-            Map<String, String> properties = new HashMap<>();
+            Map<String, String> properties = new HashMap();
             properties.put(Constants.URI, fileURI);
             properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
             properties.put(Constants.ACTION, Constants.READ);
@@ -72,7 +75,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
             vfsClientConnector.setMessageProcessor(fileProcessor);
 
-            Map<String, String> properties = new HashMap<>();
+            Map<String, String> properties = new HashMap();
             properties.put(Constants.URI, fileURI);
             properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
             properties.put(Constants.ACTION, Constants.READ);
@@ -80,45 +83,44 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
 
             vfsClientConnector.send(carbonMessage, null, properties);
             carbonCallback.done(carbonMessage);
-        } else if(Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)){
-            Map<String, String> properties = new HashMap<>();
+        } else if (Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)) {
+            Map<String, String> properties = new HashMap();
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.MAX_LINES_PER_POLL, "1"); //TODO : Change no. of lines
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
             if (fileSourceConfiguration.isTailingEnabled()) {
-                if(fileSourceConfiguration.getTailedFileURI() == null){
+                if (fileSourceConfiguration.getTailedFileURI() == null) {
                     fileSourceConfiguration.setTailedFileURI(fileURI);
                 }
 
-                if(fileSourceConfiguration.getTailedFileURI().equalsIgnoreCase(fileURI)) {
+                if (fileSourceConfiguration.getTailedFileURI().equalsIgnoreCase(fileURI)) {
                     fileSourceConfiguration.getFileSystemServerConnector().stop();
                     properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
                     properties.put(Constants.PATH, fileURI);
 
                     FileServerConnectorProvider fileServerConnectorProvider =
                             fileSourceServiceProvider.getFileServerConnectorProvider();
-                    String fileServerConnectorID = fileSourceServiceProvider.getServerConnectorID();
                     fileProcessor = new FileProcessor(sourceEventListener,
                             fileSourceConfiguration);
-                    ServerConnector fileServerConnector = fileServerConnectorProvider
-                            .createConnector(fileServerConnectorID, properties);
+                    final ServerConnector fileServerConnector = fileServerConnectorProvider
+                            .createConnector("file-server-connector", properties);
                     fileServerConnector.setMessageProcessor(fileProcessor);
                     fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
                     Thread t = new Thread(new Runnable() {
-                        @Override
                         public void run() {
                             try {
                                 fileServerConnector.start();
                             } catch (ServerConnectorException e) {
-                                e.printStackTrace();
+                                throw new SiddhiAppRuntimeException("Failed to start file server due to : "
+                                        + e.getMessage());
                             }
                         }
                     });
 
                     fileSourceConfiguration.getExecutor().execute(t);
                     fileSourceConfiguration.getFileSystemServerConnector().stop();
-                } else{
+                } else {
                     carbonCallback.done(carbonMessage);
                 }
             } else {

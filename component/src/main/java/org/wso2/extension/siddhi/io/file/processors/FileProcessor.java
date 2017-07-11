@@ -1,4 +1,4 @@
-package org.wso2.extensions.siddhi.io.file.messageProcessors;
+package org.wso2.extension.siddhi.io.file.processors;
 
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
@@ -6,8 +6,8 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TransportSender;
-import org.wso2.extensions.siddhi.io.file.util.Constants;
-import org.wso2.extensions.siddhi.io.file.util.FileSourceConfiguration;
+import org.wso2.extension.siddhi.io.file.util.Constants;
+import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.io.BufferedReader;
@@ -17,7 +17,10 @@ import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class  FileProcessor implements CarbonMessageProcessor {
+/**
+ * Message processor for handling data retrieved from consumed files.
+ * */
+public class FileProcessor implements CarbonMessageProcessor {
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private String mode;
@@ -32,40 +35,41 @@ public class  FileProcessor implements CarbonMessageProcessor {
         configureFileMessageProcessor();
     }
 
-    @Override
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
         String msg = new String(content);
 
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
-            if(msg != null && msg.length() > 0)
-            sourceEventListener.onEvent(new String(content), null);
+            if (msg.length() > 0) {
+                sourceEventListener.onEvent(new String(content), null);
+            }
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             //TODO : implement consuming binary files (file processor)
-            if(msg != null && msg.length() > 0)
+            if (msg.length() > 0) {
                 sourceEventListener.onEvent(content, null);
-            carbonCallback.done(carbonMessage);;
+            }
+            carbonCallback.done(carbonMessage);
         } else if (Constants.LINE.equalsIgnoreCase(mode)) {
-            if(!fileSourceConfiguration.isTailingEnabled()) {
+            if (!fileSourceConfiguration.isTailingEnabled()) {
                 InputStream is = new ByteArrayInputStream(content);
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
                 String line;
-                while((line = bufferedReader.readLine()) != null){
-                    if(line != null && line.length() > 0) {
+                while ((line = bufferedReader.readLine()) != null) {
+                    if (line.length() > 0) {
                         readBytes = line.length();
                         sourceEventListener.onEvent(line.trim(), null);
                     }
                 }
             } else {
-                if(msg != null && msg.length() > 0) {
+                if (msg != null && msg.length() > 0) {
                     readBytes = msg.getBytes().length;
                     fileSourceConfiguration.updateFilePointer(readBytes);
                     sourceEventListener.onEvent(msg, null);
                 }
             }
-        } else if(Constants.REGEX.equalsIgnoreCase(mode)){
-            int  lastMatchIndex = 0;
-            if(!fileSourceConfiguration.isTailingEnabled()) {
+        } else if (Constants.REGEX.equalsIgnoreCase(mode)) {
+            int lastMatchIndex = 0;
+            if (!fileSourceConfiguration.isTailingEnabled()) {
                 char[] buf = new char[10];
                 InputStream is = new ByteArrayInputStream(content);
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
@@ -85,7 +89,7 @@ public class  FileProcessor implements CarbonMessageProcessor {
                     sb.setLength(0);
                     sb.append(tmp);
                 }
-            }else{
+            } else {
                 readBytes += content.length;
                 fileSourceConfiguration.updateFilePointer(readBytes);
 
@@ -106,30 +110,27 @@ public class  FileProcessor implements CarbonMessageProcessor {
         return false;
     }
 
-    @Override
     public void setTransportSender(TransportSender transportSender) {
 
     }
 
-    @Override
     public void setClientConnector(ClientConnector clientConnector) {
 
     }
 
-    @Override
     public String getId() {
         return null;
     }
-    
+
 
     private void configureFileMessageProcessor() {
         String beginRegex = fileSourceConfiguration.getBeginRegex();
         String endRegex = fileSourceConfiguration.getEndRegex();
         if (beginRegex != null && endRegex != null) {
             pattern = Pattern.compile(beginRegex + "(.+?)" + endRegex);
-        } else if (beginRegex != null && endRegex == null) {
+        } else if (beginRegex != null) {
             pattern = Pattern.compile(beginRegex + "(.+?)" + beginRegex);
-        } else if (beginRegex == null && endRegex != null) {
+        } else if (endRegex != null) {
             pattern = Pattern.compile(".+?" + endRegex);
         }
     }

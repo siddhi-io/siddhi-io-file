@@ -1,3 +1,4 @@
+package org.wso2.extension.siddhi.io.file;
 /*
  * Copyright (c)  2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
@@ -15,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import org.apache.log4j.Logger;
-import org.junit.Test;
+import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
-import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.stream.output.StreamCallback;
 import org.wso2.siddhi.core.util.EventPrinter;
-import org.wso2.siddhi.core.util.transport.InMemoryBroker;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,6 +31,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Test cases for siddhi-io-file source.
+ * */
 public class FileSourceTestCase {
     private static final Logger log = Logger.getLogger(FileSourceTestCase.class);
     private AtomicInteger count = new AtomicInteger();
@@ -40,7 +43,8 @@ public class FileSourceTestCase {
         log.info("test FileSourceMapper 1");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='text.full', tailing='false',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full'," +
+                "@source(type='file',mode='text.full', tailing='false'," +
+                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full', " +
                 "action.after.process='delete'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -67,7 +71,7 @@ public class FileSourceTestCase {
         Thread.sleep(1000);
 
         //assert event count
-       // Assert.assertEquals("Number of events", 4, count.get());
+        // Assert.assertEquals("Number of events", 4, count.get());
         siddhiAppRuntime.shutdown();
     }
 
@@ -76,7 +80,8 @@ public class FileSourceTestCase {
         log.info("test FileSourceMapper 8");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='text.full', action.after.process='delete' ,uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full'," +
+                "@source(type='file',mode='text.full', action.after.process='delete'," +
+                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full'," +
                 "action.after.process='delete'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -273,7 +278,7 @@ public class FileSourceTestCase {
                 "insert into BarStream; ";
 
         SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        final SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
 
 
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
@@ -281,14 +286,12 @@ public class FileSourceTestCase {
             @Override
             public void receive(Event[] events) {
                 int n = count.incrementAndGet();
-                System.err.println("####################### "+n);
                 EventPrinter.print(events);
 
             }
         });
 
         Thread t1 = new Thread(new Runnable() {
-            @Override
             public void run() {
                 siddhiAppRuntime.start();
             }
@@ -296,7 +299,6 @@ public class FileSourceTestCase {
 
         t1.start();
 
-        System.out.println("test");
 
         Thread t2 = new Thread(new Runnable() {
             @Override
@@ -308,11 +310,10 @@ public class FileSourceTestCase {
                     bufferedWriter.newLine();
                     bufferedWriter.write("{\"event\":{\"symbol\":\"GOOGLE\",\"price\":3000,\"volume\":40000}}");
                     bufferedWriter.newLine();
-                    System.err.println("############## writing file");
                     bufferedWriter.flush();
                     bufferedWriter.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage());
                 }
             }
         });
@@ -354,10 +355,8 @@ public class FileSourceTestCase {
         });
 
         siddhiAppRuntime.start();
-        System.out.println("started ");
 
         Thread.sleep(10000000);
-
 
 
         //assert event count
@@ -399,10 +398,8 @@ public class FileSourceTestCase {
         });
 
         siddhiAppRuntime.start();
-        System.out.println("started ");
 
         Thread.sleep(10000000);
-
 
 
         //assert event count
@@ -454,10 +451,11 @@ public class FileSourceTestCase {
             public void run() {
                 File file = new File("/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex_tailing/regex.txt");
                 String str1 = "We’ve seen<begin> a lot from the eight tails, all of which has been very impressive." +
-                        " It was noted by Kisame and the Nine <end>Tails to be the second most <begin>powerful of the nine" +
+                        " It was noted by Kisame and the Nine <end>Tails to be the second most " +
+                        "<begin>powerful of the nine" +
                         " tailed beasts, and it’s held its own against two other tailed beasts<end> despite suffering" +
                         " a past injury.";
-                String str2 ="In Eight Tails<begin> form B. was able to nearly kill Sasuke <end>and friends multiple" +
+                String str2 = "In Eight Tails<begin> form B. was able to nearly kill Sasuke <end>and friends multiple" +
                         " times. The Eight <begin>Tails is probably the smartest of all Tailed Beasts as well as" +
                         " it is shown being highly tactical in <end>battle.";
                 try {
@@ -466,11 +464,10 @@ public class FileSourceTestCase {
                     bufferedWriter.newLine();
                     bufferedWriter.write(str2);
                     bufferedWriter.newLine();
-                    System.err.println("############## writing file");
                     bufferedWriter.flush();
                     bufferedWriter.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage());
                 }
             }
         });
@@ -505,7 +502,6 @@ public class FileSourceTestCase {
             @Override
             public void receive(Event[] events) {
                 int n = count.incrementAndGet();
-                System.err.println("####################### "+n);
                 EventPrinter.print(events);
 
             }
@@ -528,11 +524,10 @@ public class FileSourceTestCase {
             bufferedWriter.newLine();
             bufferedWriter.write("{\"event\":{\"symbol\":\"GOOGLE\",\"price\":3000,\"volume\":40000}}");
             bufferedWriter.newLine();
-            System.err.println("############## writing file");
             bufferedWriter.flush();
             bufferedWriter.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
 
         Thread.sleep(5000);

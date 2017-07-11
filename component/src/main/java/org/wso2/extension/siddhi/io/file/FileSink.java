@@ -16,14 +16,14 @@
  * under the License.
  */
 
-package org.wso2.extensions.siddhi.io.file;
+package org.wso2.extension.siddhi.io.file;
 
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
-import org.wso2.extensions.siddhi.io.file.messageProcessors.FileSinkMessageProcessor;
-import org.wso2.extensions.siddhi.io.file.util.Constants;
+import org.wso2.extension.siddhi.io.file.processors.FileSinkMessageProcessor;
+import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
@@ -55,7 +55,7 @@ import java.util.Map;
                                 "Used to specify the file for data to be written. ",
                         type = {DataType.STRING},
                         dynamic = true
-                        ),
+                ),
                 @Parameter(name = "append",
                         description = "" +
                                 "This parameter is used to specify whether the data should be " +
@@ -82,7 +82,7 @@ import java.util.Map;
                                 "uri='/abc/{{symbol}}.txt') " +
                                 "define stream BarStream (symbol string, price float, volume long); ",
 
-                        description =  "" +
+                        description = "" +
                                 "Under above configuration, for each event, " +
                                 "a file will be generated if there's no such a file," +
                                 "and then data will be written to that file as json messages" +
@@ -96,12 +96,12 @@ import java.util.Map;
                                 "}\n")
         }
 )
-public class FileSink extends Sink{
+public class FileSink extends Sink {
     private static final Logger log = Logger.getLogger(FileSink.class);
 
     private String fileURI = null;
     private VFSClientConnector vfsClientConnector = null;
-    private Map<String,String> properties = null;
+    private Map<String, String> properties = null;
     private Option uriOption;
 
 
@@ -114,12 +114,13 @@ public class FileSink extends Sink{
         return new String[]{"uri"};
     }
 
-    protected void init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
-        uriOption= optionHolder.validateAndGetOption(Constants.URI);
+    protected void init(StreamDefinition streamDefinition, OptionHolder optionHolder,
+                        ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
+        uriOption = optionHolder.validateAndGetOption(Constants.URI);
         String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
-        properties = new HashMap<>();
+        properties = new HashMap();
         properties.put(Constants.ACTION, Constants.WRITE);
-        if(Constants.TRUE.equalsIgnoreCase(append)){
+        if (Constants.TRUE.equalsIgnoreCase(append)) {
             properties.put(Constants.APPEND, append);
         }
     }
@@ -141,7 +142,7 @@ public class FileSink extends Sink{
         String uri = uriOption.getValue(dynamicOptions);
         properties.put(Constants.URI, uri);
         FileSinkMessageProcessor fileSinkMessageProcessor = new FileSinkMessageProcessor();
-        BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(byteArray),true);
+        BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(byteArray), true);
         vfsClientConnector.setMessageProcessor(fileSinkMessageProcessor);
         try {
             vfsClientConnector.send(binaryCarbonMessage, null, properties);
