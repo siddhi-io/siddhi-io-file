@@ -72,5 +72,6 @@ public class Constants {
     public static final String SIZE = "size";
     public static final String LAST_MODIFIED_TIMESTAMP = "lastModifiedTimestamp";
 
+    public static final String UTF_8 = "UTF-8";
 
 }

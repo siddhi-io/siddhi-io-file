@@ -21,8 +21,11 @@ package org.wso2.extension.siddhi.io.file.util;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
+import org.wso2.siddhi.query.api.SiddhiApp;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -43,6 +46,7 @@ public class FileSourceConfiguration {
     private FileServerConnector fileServerConnector;
     private ServerConnector fileSystemServerConnector;
     private String tailedFileURI = null;
+    private ExecutorService executorService = null;
 
 
     public FileSourceConfiguration() {
@@ -157,5 +161,13 @@ public class FileSourceConfiguration {
 
     public void setTailedFileURI(String tailedFileURI) {
         this.tailedFileURI = tailedFileURI;
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
+
+    public void setExecutorService(ExecutorService executorService) {
+        this.executorService = executorService;
     }
 }

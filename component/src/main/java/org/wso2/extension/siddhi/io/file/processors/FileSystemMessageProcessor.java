@@ -18,6 +18,7 @@
 
 package org.wso2.extension.siddhi.io.file.processors;
 
+import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
@@ -29,12 +30,14 @@ import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
+import org.wso2.extension.siddhi.io.file.FileSource;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
 import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
 import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,6 +45,8 @@ import java.util.Map;
  * Message processor for handling file uri's provided by FileSystemServer.
  * */
 public class FileSystemMessageProcessor implements CarbonMessageProcessor {
+    private static final Logger log = Logger.getLogger(FileSinkMessageProcessor.class);
+
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private FileSourceServiceProvider fileSourceServiceProvider;
@@ -50,6 +55,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
                                       FileSourceConfiguration fileSourceConfiguration) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSourceConfiguration;
+        this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
@@ -107,18 +113,21 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
                             .createConnector("file-server-connector", properties);
                     fileServerConnector.setMessageProcessor(fileProcessor);
                     fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
-                    Thread t = new Thread(new Runnable() {
+
+                    Runnable runnableServer = new Runnable() {
+                        @Override
                         public void run() {
                             try {
                                 fileServerConnector.start();
                             } catch (ServerConnectorException e) {
-                                throw new SiddhiAppRuntimeException("Failed to start file server due to : "
-                                        + e.getMessage());
+                                log.error("Failed to start the server for file " + fileURI + ". " +
+                                        "Hence starting to process next file.");
+                                carbonCallback.done(carbonMessage);
                             }
                         }
-                    });
+                    };
 
-                    fileSourceConfiguration.getExecutor().execute(t);
+                    fileSourceConfiguration.getExecutorService().submit(runnableServer);
                     fileSourceConfiguration.getFileSystemServerConnector().stop();
                 } else {
                     carbonCallback.done(carbonMessage);

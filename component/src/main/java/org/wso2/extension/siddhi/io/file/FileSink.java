@@ -37,6 +37,7 @@ import org.wso2.siddhi.core.util.transport.Option;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 import org.wso2.siddhi.query.api.definition.StreamDefinition;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -138,7 +139,12 @@ public class FileSink extends Sink {
     }
 
     public void publish(Object payload, DynamicOptions dynamicOptions) throws ConnectionUnavailableException {
-        byte[] byteArray = payload.toString().getBytes();
+        byte[] byteArray = new byte[0];
+        try {
+            byteArray = payload.toString().getBytes(Constants.UTF_8);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         String uri = uriOption.getValue(dynamicOptions);
         properties.put(Constants.URI, uri);
         FileSinkMessageProcessor fileSinkMessageProcessor = new FileSinkMessageProcessor();

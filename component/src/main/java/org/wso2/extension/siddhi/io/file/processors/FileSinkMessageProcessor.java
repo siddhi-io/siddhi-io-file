@@ -18,6 +18,7 @@
 
 package org.wso2.extension.siddhi.io.file.processors;
 
+import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
@@ -30,6 +31,7 @@ import org.wso2.carbon.messaging.TransportSender;
  * A Message Processor class to be used for File connector pass through scenarios.
  */
 public class FileSinkMessageProcessor implements CarbonMessageProcessor {
+    private static final Logger log = Logger.getLogger(FileSinkMessageProcessor.class);
 
     private TextCarbonMessage textCarbonMessage;
     private BinaryCarbonMessage binaryCarbonMessage;

@@ -7,13 +7,13 @@ import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerCon
  * Class for providing server connectors.
  */
 public class FileSourceServiceProvider {
-    private static FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
-    private static FileServerConnectorProvider fileServerConnectorProvider;
+    private static FileSystemServerConnectorProvider fileSystemServerConnectorProvider =
+            new FileSystemServerConnectorProvider();
+    private static FileServerConnectorProvider fileServerConnectorProvider =
+            new FileServerConnectorProvider();
     private static FileSourceServiceProvider fileSourceServiceProvider = new FileSourceServiceProvider();
 
     private FileSourceServiceProvider() {
-        fileServerConnectorProvider = new FileServerConnectorProvider();
-        fileSystemServerConnectorProvider = new FileSystemServerConnectorProvider();
     }
 
     public static FileSourceServiceProvider getInstance() {

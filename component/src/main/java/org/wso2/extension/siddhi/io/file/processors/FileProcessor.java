@@ -1,5 +1,6 @@
 package org.wso2.extension.siddhi.io.file.processors;
 
+import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
@@ -21,6 +22,8 @@ import java.util.regex.Pattern;
  * Message processor for handling data retrieved from consumed files.
  * */
 public class FileProcessor implements CarbonMessageProcessor {
+    private static final Logger log = Logger.getLogger(FileProcessor.class);
+
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private String mode;
@@ -37,11 +40,11 @@ public class FileProcessor implements CarbonMessageProcessor {
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
-        String msg = new String(content);
+        String msg = new String(content, Constants.UTF_8);
 
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
             if (msg.length() > 0) {
-                sourceEventListener.onEvent(new String(content), null);
+                sourceEventListener.onEvent(new String(content, Constants.UTF_8), null);
             }
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             //TODO : implement consuming binary files (file processor)
@@ -52,7 +55,7 @@ public class FileProcessor implements CarbonMessageProcessor {
         } else if (Constants.LINE.equalsIgnoreCase(mode)) {
             if (!fileSourceConfiguration.isTailingEnabled()) {
                 InputStream is = new ByteArrayInputStream(content);
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
                 String line;
                 while ((line = bufferedReader.readLine()) != null) {
                     if (line.length() > 0) {
@@ -62,7 +65,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                 }
             } else {
                 if (msg != null && msg.length() > 0) {
-                    readBytes = msg.getBytes().length;
+                    readBytes = msg.getBytes(Constants.UTF_8).length;
                     fileSourceConfiguration.updateFilePointer(readBytes);
                     sourceEventListener.onEvent(msg, null);
                 }
@@ -72,7 +75,7 @@ public class FileProcessor implements CarbonMessageProcessor {
             if (!fileSourceConfiguration.isTailingEnabled()) {
                 char[] buf = new char[10];
                 InputStream is = new ByteArrayInputStream(content);
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
 
                 while (bufferedReader.read(buf) != -1) {
                     lastMatchIndex = 0;
@@ -93,7 +96,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                 readBytes += content.length;
                 fileSourceConfiguration.updateFilePointer(readBytes);
 
-                sb.append(new String(content));
+                sb.append(new String(content, Constants.UTF_8));
                 Matcher matcher = pattern.matcher(sb.toString().trim());
                 while (matcher.find()) {
                     String event = matcher.group(0);

@@ -182,8 +182,7 @@ public class FileSource extends Source {
 
         validateParameters();
         fileSourceConfiguration = createInitialSourceConf();
-
-        siddhiAppContext.getSnapshotService().addSnapshotable("file-source", this);
+        fileSourceConfiguration.setExecutorService(siddhiAppContext.getExecutorService());
     }
 
 
@@ -206,9 +205,7 @@ public class FileSource extends Source {
         try {
             fileSystemServerConnector.start();
         } catch (ServerConnectorException e) {
-            throw new SiddhiAppRuntimeException("Error when establishing a connection with file-system-server " +
-                    "for stream : '"
-                    + sourceEventListener.getStreamDefinition().getId() + "' due to " + e.getMessage());
+            throw new ConnectionUnavailableException("Failed to connect to the file system server. Trying again.");
         }
     }
 
@@ -302,7 +299,7 @@ public class FileSource extends Source {
         }
         if (Constants.MOVE.equalsIgnoreCase(actionAfterProcess) && (moveAfterProcess == null)) {
             throw new SiddhiAppRuntimeException("'moveAfterProcess' has not been provided where it is mandatory when" +
-                    " 'actoinAfterProcess' is 'move'. Hence stopping the SiddhiApp. ");
+                    " 'actionAfterProcess' is 'move'. Hence stopping the SiddhiApp. ");
         }
         if (Constants.REGEX.equalsIgnoreCase(mode)) {
             if (beginRegex == null && endRegex == null) {
