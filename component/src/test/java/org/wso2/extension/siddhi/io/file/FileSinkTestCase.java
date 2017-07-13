@@ -44,7 +44,7 @@ public class FileSinkTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='text'), append='false', " +
+                "@sink(type='file', @map(type='json'), append='false', " +
                 "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/out_test1.txt') " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 

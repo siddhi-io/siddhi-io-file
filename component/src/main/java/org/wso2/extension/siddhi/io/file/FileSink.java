@@ -30,6 +30,7 @@ import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.output.sink.Sink;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.transport.DynamicOptions;
@@ -43,7 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by minudika on 18/5/17.
+ * Implementation of siddhi-io-file sink.
  */
 
 @Extension(
@@ -57,6 +58,7 @@ import java.util.Map;
                         type = {DataType.STRING},
                         dynamic = true
                 ),
+
                 @Parameter(name = "append",
                         description = "" +
                                 "This parameter is used to specify whether the data should be " +
@@ -108,7 +110,7 @@ public class FileSink extends Sink {
 
     @Override
     public Class[] getSupportedInputEventClasses() {
-        return new Class[0];
+        return new Class[]{String.class};
     }
 
     public String[] getSupportedDynamicOptions() {
@@ -118,6 +120,9 @@ public class FileSink extends Sink {
     protected void init(StreamDefinition streamDefinition, OptionHolder optionHolder,
                         ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         uriOption = optionHolder.validateAndGetOption(Constants.URI);
+        if(uriOption == null){
+            throw new SiddhiAppCreationException("URI is a mandatory parameter but has not been provided.");
+        }
         String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
         properties = new HashMap();
         properties.put(Constants.ACTION, Constants.WRITE);
@@ -146,10 +151,10 @@ public class FileSink extends Sink {
             log.error("Received payload does not support UTF-8 encoding. Hence dropping the event.");
         }
         String uri = uriOption.getValue(dynamicOptions);
-        properties.put(Constants.URI, uri);
         FileSinkMessageProcessor fileSinkMessageProcessor = new FileSinkMessageProcessor();
         BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(byteArray), true);
         vfsClientConnector.setMessageProcessor(fileSinkMessageProcessor);
+        properties.put(Constants.URI, uri);
         try {
             vfsClientConnector.send(binaryCarbonMessage, null, properties);
         } catch (ClientConnectorException e) {
