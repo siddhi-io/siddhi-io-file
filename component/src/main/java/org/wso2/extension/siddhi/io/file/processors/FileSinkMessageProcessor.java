@@ -54,7 +54,7 @@ public class FileSinkMessageProcessor implements CarbonMessageProcessor {
     }
 
     public String getId() {
-        return null;
+        return "file-sink-message-processor";
     }
 
     public TextCarbonMessage getTextCarbonMessage() {

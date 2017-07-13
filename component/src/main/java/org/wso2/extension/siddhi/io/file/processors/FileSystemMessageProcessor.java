@@ -74,7 +74,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
-            vfsClientConnector.send(carbonMessage, null, properties);
+            vfsClientConnector.send(carbonMessage, carbonCallback, properties);
             carbonCallback.done(carbonMessage);
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             vfsClientConnector = new VFSClientConnector();
@@ -87,12 +87,12 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
-            vfsClientConnector.send(carbonMessage, null, properties);
+            vfsClientConnector.send(carbonMessage, carbonCallback, properties);
             carbonCallback.done(carbonMessage);
         } else if (Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)) {
             Map<String, String> properties = new HashMap();
             properties.put(Constants.ACTION, Constants.READ);
-            properties.put(Constants.MAX_LINES_PER_POLL, "1"); //TODO : Change no. of lines
+            properties.put(Constants.MAX_LINES_PER_POLL, "10"); //TODO : Change no. of lines
             properties.put(Constants.POLLING_INTERVAL, "1000");
 
             if (fileSourceConfiguration.isTailingEnabled()) {
@@ -138,7 +138,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
                 fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
                 vfsClientConnector.setMessageProcessor(fileProcessor);
 
-                vfsClientConnector.send(carbonMessage, null, properties);
+                vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                 carbonCallback.done(carbonMessage);
             }
         }
@@ -155,7 +155,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
     }
 
     public String getId() {
-        return "file-message-processor";
+        return "file-system-message-processor";
     }
 
 }

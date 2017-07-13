@@ -47,6 +47,7 @@ public class FileSourceConfiguration {
     private ServerConnector fileSystemServerConnector;
     private String tailedFileURI = null;
     private ExecutorService executorService = null;
+    private String[] requiredProperties = null;
 
 
     public FileSourceConfiguration() {
@@ -169,5 +170,13 @@ public class FileSourceConfiguration {
 
     public void setExecutorService(ExecutorService executorService) {
         this.executorService = executorService;
+    }
+
+    public String[] getRequiredProperties() {
+        return requiredProperties;
+    }
+
+    public void setRequiredProperties(String[] requiredProperties) {
+        this.requiredProperties = requiredProperties;
     }
 }

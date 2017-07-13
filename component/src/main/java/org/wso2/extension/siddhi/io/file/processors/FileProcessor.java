@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.extension.siddhi.io.file.processors;
 
 import org.apache.log4j.Logger;
@@ -44,12 +62,14 @@ public class FileProcessor implements CarbonMessageProcessor {
 
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
             if (msg.length() > 0) {
-                sourceEventListener.onEvent(new String(content, Constants.UTF_8), null);
+                sourceEventListener.onEvent(new String(content, Constants.UTF_8),
+                        fileSourceConfiguration.getRequiredProperties());
             }
+            carbonCallback.done(carbonMessage);
         } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             //TODO : implement consuming binary files (file processor)
             if (msg.length() > 0) {
-                sourceEventListener.onEvent(content, null);
+                sourceEventListener.onEvent(content, fileSourceConfiguration.getRequiredProperties());
             }
             carbonCallback.done(carbonMessage);
         } else if (Constants.LINE.equalsIgnoreCase(mode)) {
@@ -60,14 +80,15 @@ public class FileProcessor implements CarbonMessageProcessor {
                 while ((line = bufferedReader.readLine()) != null) {
                     if (line.length() > 0) {
                         readBytes = line.length();
-                        sourceEventListener.onEvent(line.trim(), null);
+                        sourceEventListener.onEvent(line.trim(), fileSourceConfiguration.getRequiredProperties());
                     }
                 }
+                carbonCallback.done(carbonMessage);
             } else {
                 if (msg != null && msg.length() > 0) {
                     readBytes = msg.getBytes(Constants.UTF_8).length;
                     fileSourceConfiguration.updateFilePointer(readBytes);
-                    sourceEventListener.onEvent(msg, null);
+                    sourceEventListener.onEvent(msg, fileSourceConfiguration.getRequiredProperties());
                 }
             }
         } else if (Constants.REGEX.equalsIgnoreCase(mode)) {
@@ -84,7 +105,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                     while (matcher.find()) {
                         String event = matcher.group(0);
                         lastMatchIndex = matcher.end();
-                        sourceEventListener.onEvent(event, null);
+                        sourceEventListener.onEvent(event, fileSourceConfiguration.getRequiredProperties());
                     }
                     String tmp;
                     tmp = sb.substring(lastMatchIndex);
@@ -92,6 +113,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                     sb.setLength(0);
                     sb.append(tmp);
                 }
+                carbonCallback.done(carbonMessage);
             } else {
                 readBytes += content.length;
                 fileSourceConfiguration.updateFilePointer(readBytes);
@@ -101,7 +123,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                 while (matcher.find()) {
                     String event = matcher.group(0);
                     lastMatchIndex = matcher.end();
-                    sourceEventListener.onEvent(event, null);
+                    sourceEventListener.onEvent(event, fileSourceConfiguration.getRequiredProperties());
                 }
                 String tmp;
                 tmp = sb.substring(lastMatchIndex);
@@ -122,7 +144,7 @@ public class FileProcessor implements CarbonMessageProcessor {
     }
 
     public String getId() {
-        return null;
+        return "file-message-processor";
     }
 
 
@@ -135,6 +157,8 @@ public class FileProcessor implements CarbonMessageProcessor {
             pattern = Pattern.compile(beginRegex + "(.+?)" + beginRegex);
         } else if (endRegex != null) {
             pattern = Pattern.compile(".+?" + endRegex);
+        } else {
+            pattern = Pattern.compile("(\n$)"); // this will not be reached
         }
     }
 }

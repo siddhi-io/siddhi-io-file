@@ -1,4 +1,3 @@
-package org.wso2.extension.siddhi.io.file;
 /*
  * Copyright (c)  2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
@@ -16,6 +15,8 @@ package org.wso2.extension.siddhi.io.file;
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package org.wso2.extension.siddhi.io.file;
 
 import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
@@ -154,7 +155,8 @@ public class FileSourceTestCase {
         log.info("test FileSourceMapper 2");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='line',uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line'," +
+                "@source(type='file',mode='line', " +
+                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -330,8 +332,6 @@ public class FileSourceTestCase {
                 "@source(type='file',mode='regex', " +
                 "tailing='false', " +
                 "action.after.process='delete', " +
-                "begin.regex='<begin>', " +
-                "end.regex='<end>', " +
                 "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -356,8 +356,7 @@ public class FileSourceTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(10000000);
-
+        Thread.sleep(5000);
 
         //assert event count
         // Assert.assertEquals("Number of events", 4, count.get());
@@ -473,7 +472,7 @@ public class FileSourceTestCase {
         });
         t2.start();
 
-        Thread.sleep(100000);
+        Thread.sleep(10000);
     }
 
     @Test

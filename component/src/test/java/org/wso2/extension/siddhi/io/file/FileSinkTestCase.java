@@ -1,4 +1,3 @@
-package org.wso2.extension.siddhi.io.file;
 /*
  * Copyright (c)  2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
@@ -16,6 +15,8 @@ package org.wso2.extension.siddhi.io.file;
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package org.wso2.extension.siddhi.io.file;
 
 import org.apache.log4j.Logger;
 //import org.testng.AssertJUnit;

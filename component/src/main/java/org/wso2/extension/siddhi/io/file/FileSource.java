@@ -32,6 +32,7 @@ import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.Source;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
@@ -41,6 +42,7 @@ import org.wso2.siddhi.core.util.transport.OptionHolder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Implementation of siddhi-io-file source.
@@ -149,6 +151,9 @@ public class FileSource extends Source {
     private FileSourceServiceProvider fileSourceServiceProvider;
     private Map<String, Object> currentState;
     private String filePointer = "0";
+    private String[] requiredProperties;
+    private ExecutorService executorService;
+    private OptionHolder optionHolder;
 
     private String uri;
     private String mode;
@@ -160,10 +165,14 @@ public class FileSource extends Source {
     private String tailedFileURI;
 
     @Override
-    public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] strings,
+    public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] requiredProperties,
                      ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
         this.currentState = new HashMap();
+        this.executorService = siddhiAppContext.getExecutorService();
+        this.optionHolder = optionHolder;
+        this.requiredProperties = requiredProperties;
+
         fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         fileSystemServerConnectorProvider = fileSourceServiceProvider.getFileSystemServerConnectorProvider();
 
@@ -181,8 +190,6 @@ public class FileSource extends Source {
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
 
         validateParameters();
-        fileSourceConfiguration = createInitialSourceConf();
-        fileSourceConfiguration.setExecutorService(siddhiAppContext.getExecutorService());
     }
 
 
@@ -194,6 +201,8 @@ public class FileSource extends Source {
     @Override
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
         fileSourceConfiguration = createInitialSourceConf();
+        fileSourceConfiguration.setRequiredProperties(getTrpList(requiredProperties, optionHolder));
+        fileSourceConfiguration.setExecutorService(executorService);
         Map<String, String> properties = getFileSystemServerProperties();
         fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector("fileSystemServerConnector",
                 properties);
@@ -281,6 +290,22 @@ public class FileSource extends Source {
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.FALSE);
         }
         return map;
+    }
+
+
+    private String[] getTrpList(String[] requiredProperties, OptionHolder optionHolder){
+        String[] list = new String[requiredProperties.length];
+        int i=0;
+        for(String property : requiredProperties){
+            String value = optionHolder.validateAndGetStaticValue(property, null);
+            if(value != null){
+                list[i++] = value;
+            } else {
+                throw new SiddhiAppCreationException("Required property '" + property + "' has not been provided in " +
+                        "transport configuration.");
+            }
+        }
+        return list;
     }
 
     private void validateParameters() {
