@@ -27,13 +27,19 @@ public class Constants {
     public static final String PATH = "path";
     public static final String MODE = "mode";
     public static final String ACTION_AFTER_PROCESS = "action.after.process";
+    public static final String ACTION_AFTER_FAILURE = "action.after.failure";
     public static final String MOVE_AFTER_PROCESS = "move.after.process";
+    public static final String MOVE_AFTER_FAILURE = "move.after.failure";
     public static final String APPEND = "append";
     public static final String WRITE = "write";
     public static final String READ = "read";
     public static final String TAILING = "tailing";
     public static final String BEGIN_REGEX = "begin.regex";
     public static final String END_REGEX = "end.regex";
+    public static final String DIR_URI = "dir.uri";
+    public static final String FILE_URI = "file.uri";
+    public static final String DIRECTORY_POLLING_INTERVAL = "dir.polling.interval";
+    public static final String FILE_POLLING_INTERVAL = "file.polling.interval";
 
     /* configuration param values*/
     public static final String MOVE = "move";
@@ -44,6 +50,7 @@ public class Constants {
     public static final String LINE = "line";
     public static final String TRUE = "true";
     public static final String FALSE = "false";
+    public static final String NONE = "none";
 
     /*property keys*/
     public static final String ACTION = "action";
@@ -54,7 +61,9 @@ public class Constants {
     public static final String POLLING_INTERVAL = "pollingInterval";
     public static final String READ_FILE_FROM_BEGINNING = "readFromBeginning";
     public static final String ACTION_AFTER_PROCESS_KEY = "actionAfterProcess";
+    public static final String ACTION_AFTER_FAILURE_KEY = "actionAfterFailure";
     public static final String MOVE_AFTER_PROCESS_KEY = "moveAfterProcess";
+    public static final String MOVE_AFTER_FAILURE_KEY = "moveAfterFailure";
     public static final String START_POSITION = "startPosition";
     public static final String MAX_LINES_PER_POLL = "maxLinesPerPoll";
     public static final String FILE_SORT_ATTRIBUTE = "fileSortAttribute";

@@ -30,14 +30,11 @@ import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
-import org.wso2.extension.siddhi.io.file.FileSource;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
 import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
-import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,7 +42,7 @@ import java.util.Map;
  * Message processor for handling file uri's provided by FileSystemServer.
  * */
 public class FileSystemMessageProcessor implements CarbonMessageProcessor {
-    private static final Logger log = Logger.getLogger(FileSinkMessageProcessor.class);
+    private static final Logger log = Logger.getLogger(FileSystemMessageProcessor.class);
 
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
@@ -58,92 +55,86 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
     }
 
+    // todo : handle exceptions in finally
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-        String mode = fileSourceConfiguration.getMode();
-        String fileURI = ((TextCarbonMessage) carbonMessage).getText();
-        VFSClientConnector vfsClientConnector;
-        FileProcessor fileProcessor;
-        if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
-            vfsClientConnector = new VFSClientConnector();
-            fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
-            vfsClientConnector.setMessageProcessor(fileProcessor);
-
-            Map<String, String> properties = new HashMap();
-            properties.put(Constants.URI, fileURI);
-            properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
-            properties.put(Constants.ACTION, Constants.READ);
-            properties.put(Constants.POLLING_INTERVAL, "1000");
-
-            vfsClientConnector.send(carbonMessage, carbonCallback, properties);
-            carbonCallback.done(carbonMessage);
-        } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
-            vfsClientConnector = new VFSClientConnector();
-            fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
-            vfsClientConnector.setMessageProcessor(fileProcessor);
-
-            Map<String, String> properties = new HashMap();
-            properties.put(Constants.URI, fileURI);
-            properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
-            properties.put(Constants.ACTION, Constants.READ);
-            properties.put(Constants.POLLING_INTERVAL, "1000");
-
-            vfsClientConnector.send(carbonMessage, carbonCallback, properties);
-            carbonCallback.done(carbonMessage);
-        } else if (Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)) {
-            Map<String, String> properties = new HashMap();
-            properties.put(Constants.ACTION, Constants.READ);
-            properties.put(Constants.MAX_LINES_PER_POLL, "10"); //TODO : Change no. of lines
-            properties.put(Constants.POLLING_INTERVAL, "1000");
-
-            if (fileSourceConfiguration.isTailingEnabled()) {
-                if (fileSourceConfiguration.getTailedFileURI() == null) {
-                    fileSourceConfiguration.setTailedFileURI(fileURI);
-                }
-
-                if (fileSourceConfiguration.getTailedFileURI().equalsIgnoreCase(fileURI)) {
-                    fileSourceConfiguration.getFileSystemServerConnector().stop();
-                    properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
-                    properties.put(Constants.PATH, fileURI);
-
-                    FileServerConnectorProvider fileServerConnectorProvider =
-                            fileSourceServiceProvider.getFileServerConnectorProvider();
-                    fileProcessor = new FileProcessor(sourceEventListener,
-                            fileSourceConfiguration);
-                    final ServerConnector fileServerConnector = fileServerConnectorProvider
-                            .createConnector("file-server-connector", properties);
-                    fileServerConnector.setMessageProcessor(fileProcessor);
-                    fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
-
-                    Runnable runnableServer = new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                fileServerConnector.start();
-                            } catch (ServerConnectorException e) {
-                                log.error("Failed to start the server for file " + fileURI + ". " +
-                                        "Hence starting to process next file.");
-                                carbonCallback.done(carbonMessage);
-                            }
-                        }
-                    };
-
-                    fileSourceConfiguration.getExecutorService().submit(runnableServer);
-                    fileSourceConfiguration.getFileSystemServerConnector().stop();
-                } else {
-                    carbonCallback.done(carbonMessage);
-                }
-            } else {
-                properties.put(Constants.URI, fileURI);
+        if (carbonMessage instanceof TextCarbonMessage) {
+            String mode = fileSourceConfiguration.getMode();
+            String fileURI = ((TextCarbonMessage) carbonMessage).getText();
+            VFSClientConnector vfsClientConnector;
+            FileProcessor fileProcessor;
+            if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                 vfsClientConnector = new VFSClientConnector();
                 fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
                 vfsClientConnector.setMessageProcessor(fileProcessor);
 
-                vfsClientConnector.send(carbonMessage, carbonCallback, properties);
-                carbonCallback.done(carbonMessage);
-            }
-        }
+                Map<String, String> properties = new HashMap();
+                properties.put(Constants.URI, fileURI);
+                properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
+                properties.put(Constants.ACTION, Constants.READ);
+                properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
+                // todo : add this to siddhi query conf
 
-        return false;
+                vfsClientConnector.send(carbonMessage, carbonCallback, properties);
+                //carbonCallback.done(carbonMessage);
+            } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+                vfsClientConnector = new VFSClientConnector();
+                fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                vfsClientConnector.setMessageProcessor(fileProcessor);
+
+                Map<String, String> properties = new HashMap();
+                properties.put(Constants.URI, fileURI);
+                properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
+                properties.put(Constants.ACTION, Constants.READ);
+                properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
+
+                vfsClientConnector.send(carbonMessage, carbonCallback, properties);
+                //carbonCallback.done(carbonMessage);
+            } else if (Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)) {
+                Map<String, String> properties = new HashMap();
+                properties.put(Constants.ACTION, Constants.READ);
+                properties.put(Constants.MAX_LINES_PER_POLL, "10"); //TODO : Change no. of lines
+                properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
+
+                if (fileSourceConfiguration.isTailingEnabled()) {
+                    if (fileSourceConfiguration.getTailedFileURI() == null) {
+                        fileSourceConfiguration.setTailedFileURI(fileURI);
+                    }
+
+                    if (fileSourceConfiguration.getTailedFileURI().equalsIgnoreCase(fileURI)) {
+                        fileSourceConfiguration.getFileSystemServerConnector().stop();
+                        properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
+                        properties.put(Constants.PATH, fileURI);
+
+                        FileServerConnectorProvider fileServerConnectorProvider =
+                                fileSourceServiceProvider.getFileServerConnectorProvider();
+                        fileProcessor = new FileProcessor(sourceEventListener,
+                                fileSourceConfiguration);
+                        final ServerConnector fileServerConnector = fileServerConnectorProvider
+                                .createConnector("file-server-connector", properties);
+                        fileServerConnector.setMessageProcessor(fileProcessor);
+                        fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
+
+                        FileServerExecutor fileServerExecutor = new FileServerExecutor(carbonMessage, carbonCallback,
+                                fileServerConnector, fileURI);
+                        fileSourceConfiguration.getExecutorService().execute(fileServerExecutor);
+                        fileSourceConfiguration.getFileSystemServerConnector().stop();
+                    } else {
+                        carbonCallback.done(carbonMessage);
+                    }
+                } else {
+                    properties.put(Constants.URI, fileURI);
+                    vfsClientConnector = new VFSClientConnector();
+                    fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                    vfsClientConnector.setMessageProcessor(fileProcessor);
+
+                    vfsClientConnector.send(carbonMessage, carbonCallback, properties);
+                    carbonCallback.done(carbonMessage);
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public void setTransportSender(TransportSender transportSender) {
@@ -158,4 +149,30 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
         return "file-system-message-processor";
     }
 
+    static class FileServerExecutor implements Runnable {
+        ServerConnector fileServerConnector = null;
+        CarbonCallback carbonCallback = null;
+        CarbonMessage carbonMessage = null;
+        String fileURI = null;
+
+        public FileServerExecutor(CarbonMessage carbonMessage, CarbonCallback
+                carbonCallback,
+                                  ServerConnector fileServerConnector, String fileURI) {
+            this.fileURI = fileURI;
+            this.fileServerConnector = fileServerConnector;
+            this.carbonCallback = carbonCallback;
+            this.carbonMessage = carbonMessage;
+        }
+
+        @Override
+        public void run() {
+            try {
+                fileServerConnector.start();
+            } catch (ServerConnectorException e) {
+                log.error("Failed to start the server for file " + fileURI + ". " +
+                        "Hence starting to process next file.");
+                carbonCallback.done(carbonMessage);
+            }
+        }
+    }
 }

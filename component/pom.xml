@@ -36,28 +36,14 @@
             <artifactId>siddhi-annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.siddhi</groupId>
-            <artifactId>siddhi-extension-text-output-mapper</artifactId>
+            <groupId>org.wso2.extension.siddhi.map.xml</groupId>
+            <artifactId>siddhi-map-xml</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.wso2.siddhi</groupId>
-            <artifactId>siddhi-extension-text-input-mapper</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.siddhi</groupId>
-            <artifactId>siddhi-extension-xml-input-mapper</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.siddhi</groupId>
-            <artifactId>siddhi-extension-xml-output-mapper</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.siddhi</groupId>
-            <artifactId>siddhi-extension-json-input-mapper</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.siddhi</groupId>
-            <artifactId>siddhi-extension-json-output-mapper</artifactId>
+            <groupId>org.wso2.extension.siddhi.map.json</groupId>
+            <artifactId>siddhi-map-json</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -110,9 +96,9 @@
         </plugins>
     </build>
 
-    <properties>
+    <!--<properties>
         <mavan.findbugsplugin.exclude.file>../findbugs-exclude.xml</mavan.findbugsplugin.exclude.file>
-    </properties>
+    </properties>-->
 
 
 </project>

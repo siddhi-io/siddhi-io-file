@@ -20,8 +20,13 @@ package org.wso2.extension.siddhi.io.file;
 
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.ServerConnector;
+import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
+import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
+import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
+import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
 import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
+import org.wso2.extension.siddhi.io.file.processors.FileProcessor;
 import org.wso2.extension.siddhi.io.file.processors.FileSystemMessageProcessor;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
@@ -39,8 +44,8 @@ import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 
-
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
@@ -50,27 +55,38 @@ import java.util.concurrent.ExecutorService;
 @Extension(
         name = "file",
         namespace = "source",
-        description = "File Source",
+        description = "File Source", //TODO :EXPLAIN,
         parameters = {
                 @Parameter(
-                        name = "uri",
+                        name = "dir.uri",
                         description =
-                                "Used to specify the directory to be processed. " +
-                                        " All the files inside this directory will be processed",
+                                "Used to specify a directory to be processed. " +
+                                        " All the files inside this directory will be processed" +
+                                        " Only one of 'dir.uri' and 'file.uri' should be provided.",
                         type = {DataType.STRING}
                 ),
 
                 @Parameter(
-                        name = "mode",
+                        name = "file.uri",
+                        description =
+                                "Used to specify a file to be processed. " +
+                                        " Only one of 'dir.uri' and 'file.uri' should be provided.",
+                        type = {DataType.STRING}
+                ),
+
+                @Parameter(
+                        name = "mode", // TODO : state possible values here
                         description =
                                 "This parameter is used to specify how files in given directory should",
                         type = {DataType.STRING}
                 ),
 
                 @Parameter(
+                        // TODO  : tailing should't be provided with full mode : done
                         name = "tailing",
-                        description = "This can either have value true or false. By default it will be true. This "
-                                + "attribute allows user to specify whether the file should be tailed or not. " +
+                        description = "" +
+                                "This can either have value true or false. By default it will be true. " +
+                                "This attribute allows user to specify whether the file should be tailed or not. " +
                                 "If tailing is enabled, the first file of the directory will be tailed.",
                         type = {DataType.BOOL},
                         optional = true,
@@ -78,12 +94,24 @@ import java.util.concurrent.ExecutorService;
                 ),
 
                 @Parameter(
-                        name = "action.after.process",
+                        name = "action.after.process", // TODO : default value == delete : done
                         description = "This parameter is used to specify the action which should be carried out " +
                                 "after processing a file in the given directory. " +
                                 "It can be either DELETE or MOVE. " +
                                 "If the action.after.process is MOVE, user must specify the location to " +
-                                "move consumed files.",
+                                "move consumed files using 'move.after.process' parameter.",
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "delete"
+                ),
+
+                @Parameter(
+                        name = "action.after.failure", // TODO : default value == delete : done
+                        description = "This parameter is used to specify the action which should be carried out " +
+                                "if a failure occured during the process. " +
+                                "It can be either DELETE or MOVE. " +
+                                "If the action.after.failure is MOVE, user must specify the location to " +
+                                "move consumed files using 'move.after.failure' parameter.",
                         type = {DataType.STRING}
                 ),
 
@@ -95,12 +123,26 @@ import java.util.concurrent.ExecutorService;
                 ),
 
                 @Parameter(
+                        name = "move.after.failure",
+                        description = "If action.after.failure is MOVE, user must specify the location to " +
+                                "move consumed files using 'move.after.failure' parameter.",
+                        type = {DataType.STRING}
+                ),
+
+                @Parameter(
+                        name = "move.after.failure",
+                        description = "If action.after.failure is MOVE, user must specify the location to " +
+                                "move consumed files using 'move.after.failure' parameter.",
+                        type = {DataType.STRING}
+                ),
+
+                @Parameter(
                         name = "begin.regex",
                         description = "This will define the regex to be matched at the beginning of the " +
                                 "retrieved content. ",
                         type = {DataType.STRING},
                         optional = true,
-                        defaultValue = ".+"
+                        defaultValue = "None"
                 ),
 
                 @Parameter(
@@ -109,8 +151,30 @@ import java.util.concurrent.ExecutorService;
                                 "retrieved content. ",
                         type = {DataType.STRING},
                         optional = true,
-                        defaultValue = "\n"
+                        defaultValue = "None"
                 ),
+
+                @Parameter(
+                        name = "file.polling.interval",
+                        description = "This parameter is used to specify the time period (in milliseconds) " +
+                                "of a polling cycle for " +
+                                "a file.",
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "1000"
+                ),
+
+                @Parameter(
+                        name = "dir.polling.interval",
+                        description = "This parameter is used to specify the time period (in milliseconds) " +
+                                "of a polling cycle for " +
+                                "a directory.",
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "1000"
+                ),
+
+                // TODO : add action.after.failure (default : delete) , move.after.failure : done
         },
         examples = {
                 @Example(
@@ -118,7 +182,7 @@ import java.util.concurrent.ExecutorService;
                                 "@source(type='file',mode='text.full', tailing='false', " +
                                 "uri='/abc/xyz'," +
                                 "action.after.process='delete'," +
-                                "@map(type='json'))" +
+                                "@map(type='json')) \n" +
                                 "define stream FooStream (symbol string, price float, volume long); ",
 
                         description = "" +
@@ -129,14 +193,14 @@ import java.util.concurrent.ExecutorService;
 
                 @Example(
                         syntax = "" +
-                                "@source(type='file',mode='text.full', tailing='true', " +
+                                "@source(type='file',mode='line', tailing='true', " +
                                 "uri='/abc/xyz'," +
-                                "@map(type='json'))" +
+                                "@map(type='json')) \n" +
                                 "define stream FooStream (symbol string, price float, volume long); ",
 
                         description = "" +
                                 "Under above configuration, the first file in the directory will be " +
-                                "picked and consumed. It will also be tailed. "
+                                "picked and consumed. It will also be tailed. " // TODO : add more content
 
                 )
         }
@@ -147,83 +211,115 @@ public class FileSource extends Source {
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
-    private ServerConnector fileSystemServerConnector;
     private FileSourceServiceProvider fileSourceServiceProvider;
-    private Map<String, Object> currentState;
+    private ServerConnector fileSystemServerConnector;
     private String filePointer = "0";
     private String[] requiredProperties;
-    private ExecutorService executorService;
     private OptionHolder optionHolder;
+    private boolean isTailingEnabled = true;
+    private SiddhiAppContext siddhiAppContext;
 
-    private String uri;
     private String mode;
     private String actionAfterProcess;
+    private String actionAfterFailure = null;
     private String moveAfterProcess;
+    private String moveAfterFailure = null;
     private String tailing;
     private String beginRegex;
     private String endRegex;
     private String tailedFileURI;
+    private String dirUri;
+    private String fileUri;
+    private String dirPollingInterval;
+    private String filePollingInterval;
 
     @Override
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] requiredProperties,
                      ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
-        this.currentState = new HashMap();
-        this.executorService = siddhiAppContext.getExecutorService();
+        this.siddhiAppContext = siddhiAppContext;
         this.optionHolder = optionHolder;
-        this.requiredProperties = requiredProperties;
+        this.requiredProperties = requiredProperties.clone();
+        this.fileSourceConfiguration = new FileSourceConfiguration();
 
-        fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
+        this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         fileSystemServerConnectorProvider = fileSourceServiceProvider.getFileSystemServerConnectorProvider();
 
-        uri = optionHolder.validateAndGetStaticValue(Constants.URI, null);
-        actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS, null);
-        mode = optionHolder.validateAndGetStaticValue(Constants.MODE, null);
-        moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS,
-                null);
+        if (optionHolder.isOptionExists(Constants.DIR_URI)) {
+            dirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
+        }
+        if (optionHolder.isOptionExists(Constants.FILE_URI)) {
+            fileUri = optionHolder.validateAndGetStaticValue(Constants.FILE_URI);
+        }
+
+        if (dirUri != null && fileUri != null) {
+            throw new SiddhiAppCreationException("Only one of directory uro or file url should be provided. But both " +
+                    "have been provided.");
+        }
+
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.FALSE);
         } else {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
         }
+        isTailingEnabled = Boolean.parseBoolean(tailing);
+
+        if (isTailingEnabled) {
+            actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS,
+                    Constants.NONE);
+        } else {
+            actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS,
+                    Constants.DELETE);
+        }
+        actionAfterFailure = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_FAILURE, Constants.DELETE);
+        mode = optionHolder.validateAndGetStaticValue(Constants.MODE, Constants.LINE);
+        if (optionHolder.isOptionExists(Constants.MOVE_AFTER_PROCESS)) {
+            moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS);
+        }
+        if (optionHolder.isOptionExists(Constants.MOVE_AFTER_FAILURE)) {
+            moveAfterFailure = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_FAILURE);
+        }
+
+        if (optionHolder.isOptionExists(Constants.DIRECTORY_POLLING_INTERVAL)) {
+            dirPollingInterval = optionHolder.validateAndGetStaticValue(Constants.DIRECTORY_POLLING_INTERVAL);
+        }
+
+        if (optionHolder.isOptionExists(Constants.FILE_POLLING_INTERVAL)) {
+            filePollingInterval = optionHolder.validateAndGetStaticValue(Constants.FILE_POLLING_INTERVAL);
+        }
+        /*moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS,
+                null); *///TODO : check whether it exists first : done
         beginRegex = optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null);
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
 
         validateParameters();
+        createInitialSourceConf();
+        updateSourceConf();
     }
 
 
     @Override
     public Class[] getOutputEventClasses() {
-        return new Class[0];
+        return new Class[]{String.class, byte[].class};
     }
 
     @Override
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
-        fileSourceConfiguration = createInitialSourceConf();
-        fileSourceConfiguration.setRequiredProperties(getTrpList(requiredProperties, optionHolder));
-        fileSourceConfiguration.setExecutorService(executorService);
-        Map<String, String> properties = getFileSystemServerProperties();
-        fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector("fileSystemServerConnector",
-                properties);
-        FileSystemMessageProcessor fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener,
-                fileSourceConfiguration);
-        fileSystemServerConnector.setMessageProcessor(fileSystemMessageProcessor);
-        fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
-
-        try {
-            fileSystemServerConnector.start();
-        } catch (ServerConnectorException e) {
-            throw new ConnectionUnavailableException("Failed to connect to the file system server. Trying again.");
-        }
+        updateSourceConf();
+        deployServers();
     }
 
     @Override
     public void disconnect() {
         try {
-            fileSystemServerConnector.stop();
-            if (Constants.TRUE.equalsIgnoreCase(tailing)) {
+            if (fileSystemServerConnector != null) {
+                fileSystemServerConnector.stop();
+                fileSystemServerConnector = null; // TODO : set it to null : done
+            }
+            //fileSystemServerConnector = null;
+            if (isTailingEnabled) { // TODO : refer to tailing as boolean : done
                 fileSourceConfiguration.getFileServerConnector().stop();
+                fileSourceConfiguration.setFileServerConnector(null);
             }
         } catch (ServerConnectorException e) {
            throw new SiddhiAppRuntimeException("Failed to stop the file server : " + e.getMessage());
@@ -236,14 +332,31 @@ public class FileSource extends Source {
     }
 
     public void pause() {
-
+        // TODO : pause and resume file servers : done
+        try {
+            if (fileSystemServerConnector != null) {
+                fileSystemServerConnector.stop();
+            }
+            if (isTailingEnabled && fileSourceConfiguration.getFileServerConnector() != null) {
+                fileSourceConfiguration.getFileServerConnector().stop();
+            }
+        } catch (ServerConnectorException e) {
+            throw new SiddhiAppRuntimeException("Failed to stop the file server : " + e.getMessage());
+        }
     }
 
     public void resume() {
-
+        try {
+            updateSourceConf();
+            deployServers();
+        } catch (ConnectionUnavailableException e) {
+            throw new SiddhiAppRuntimeException("Failed to resume siddhi app runtime due to " + e.getMessage(), e);
+        }
     }
 
     public Map<String, Object> currentState() {
+        Map<String, Object> currentState = new HashMap<>();
+        // TODO : move currentState here : done
         currentState.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
         currentState.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURI());
         return currentState;
@@ -255,29 +368,35 @@ public class FileSource extends Source {
         fileSourceConfiguration.setFilePointer(filePointer);
     }
 
-    private FileSourceConfiguration createInitialSourceConf() {
-        FileSourceConfiguration conf = new FileSourceConfiguration();
-        conf.setDirURI(uri);
-        conf.setMoveAfterProcessUri(moveAfterProcess);
-        conf.setBeginRegex(beginRegex);
-        conf.setEndRegex(endRegex);
-        conf.setMode(mode);
-        conf.setActionAfterProcess(actionAfterProcess);
-        conf.setTailingEnabled(Boolean.parseBoolean(tailing));
-        conf.setFilePointer(filePointer);
-        conf.setTailedFileURI(tailedFileURI);
-        return conf;
+    private void createInitialSourceConf() {
+        fileSourceConfiguration.setDirURI(dirUri);
+        fileSourceConfiguration.setFileURI(fileUri);
+        fileSourceConfiguration.setMoveAfterProcessUri(moveAfterProcess);
+        fileSourceConfiguration.setBeginRegex(beginRegex);
+        fileSourceConfiguration.setEndRegex(endRegex);
+        fileSourceConfiguration.setMode(mode);
+        fileSourceConfiguration.setActionAfterProcess(actionAfterProcess);
+        fileSourceConfiguration.setTailingEnabled(Boolean.parseBoolean(tailing));
+        fileSourceConfiguration.setFilePollingInterval(filePollingInterval);
+        fileSourceConfiguration.setDirPollingInterval(dirPollingInterval);
+        fileSourceConfiguration.setActionAfterFailure(actionAfterFailure);
+        fileSourceConfiguration.setMoveAfterFailure(moveAfterFailure);
+    }
+
+    private void updateSourceConf() {
+        fileSourceConfiguration.setFilePointer(filePointer);
+        fileSourceConfiguration.setTailedFileURI(tailedFileURI);
     }
 
     private HashMap<String, String> getFileSystemServerProperties() {
-        HashMap<String, String> map = new HashMap();
+        HashMap<String, String> map = new HashMap<>();
 
-        map.put(Constants.TRANSPORT_FILE_DIR_URI, uri);
+        map.put(Constants.TRANSPORT_FILE_DIR_URI, dirUri);
         if (actionAfterProcess != null) {
-            map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase());
+            map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase(Locale.ENGLISH));
         }
         map.put(Constants.MOVE_AFTER_PROCESS_KEY, moveAfterProcess);
-        map.put(Constants.POLLING_INTERVAL, "1000");
+        map.put(Constants.POLLING_INTERVAL, dirPollingInterval);
         map.put(Constants.FILE_SORT_ATTRIBUTE, Constants.NAME);
         map.put(Constants.FILE_SORT_ASCENDING, Constants.TRUE);
         map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE);
@@ -289,16 +408,23 @@ public class FileSource extends Source {
         } else {
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.FALSE);
         }
+        if (actionAfterFailure != null) {
+            map.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
+        }
+        if (moveAfterFailure != null) {
+            map.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
+        }
         return map;
     }
 
 
-    private String[] getTrpList(String[] requiredProperties, OptionHolder optionHolder){
+    private String[] getTrpList(String[] requiredProperties, OptionHolder optionHolder) {
+        // TODO : get these from carbon transport with carbon message
         String[] list = new String[requiredProperties.length];
-        int i=0;
-        for(String property : requiredProperties){
+        int i = 0;
+        for (String property : requiredProperties) {
             String value = optionHolder.validateAndGetStaticValue(property, null);
-            if(value != null){
+            if (value != null) {
                 list[i++] = value;
             } else {
                 throw new SiddhiAppCreationException("Required property '" + property + "' has not been provided in " +
@@ -309,18 +435,15 @@ public class FileSource extends Source {
     }
 
     private void validateParameters() {
-        if (uri == null) {
-            throw new SiddhiAppRuntimeException("Uri is a mandatory parameter and has not been provided." +
-                    " Hence stopping the SiddhiApp.");
-        }
-        if (actionAfterProcess == null && !Constants.TRUE.equalsIgnoreCase(tailing)) {
-            throw new SiddhiAppRuntimeException("actionAfterProcess is mandatory when tailing is not enabled but " +
-                    "has not been provided. Hence stopping the SiddhiApp.");
-        }
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
-            if (Constants.TRUE.equalsIgnoreCase(tailing)) {
+            if (isTailingEnabled) {
                 throw new SiddhiAppRuntimeException("Tailing can't be enabled in '" + mode + "' mode.");
             }
+        }
+
+        if (isTailingEnabled && moveAfterProcess != null) {
+            throw new SiddhiAppRuntimeException("'moveAfterProcess' cannot be used when tailing is enabled. " +
+                    "Hence stopping the SiddhiApp. ");
         }
         if (Constants.MOVE.equalsIgnoreCase(actionAfterProcess) && (moveAfterProcess == null)) {
             throw new SiddhiAppRuntimeException("'moveAfterProcess' has not been provided where it is mandatory when" +
@@ -329,6 +452,86 @@ public class FileSource extends Source {
         if (Constants.REGEX.equalsIgnoreCase(mode)) {
             if (beginRegex == null && endRegex == null) {
                 mode = Constants.LINE;
+            }
+        }
+    }
+
+    private void deployServers() throws ConnectionUnavailableException {
+        ExecutorService executorService = siddhiAppContext.getExecutorService();
+        createInitialSourceConf();
+        fileSourceConfiguration.setRequiredProperties(getTrpList(requiredProperties, optionHolder));
+        fileSourceConfiguration.setExecutorService(executorService);
+
+        if (dirUri != null) {
+            Map<String, String> properties = getFileSystemServerProperties();
+            fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector("fileSystemServerConnector",
+                    properties);
+            FileSystemMessageProcessor fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener,
+                    fileSourceConfiguration);
+            fileSystemServerConnector.setMessageProcessor(fileSystemMessageProcessor);
+            fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
+
+            try {
+                fileSystemServerConnector.start();
+            } catch (ServerConnectorException e) {
+                throw new ConnectionUnavailableException("Failed to connect to the file system server due to : " +
+                        e.getMessage(), e);
+            }
+        } else if (fileUri != null) {
+            Map<String, String> properties = new HashMap<>();
+            properties.put(Constants.ACTION, Constants.READ);
+            properties.put(Constants.MAX_LINES_PER_POLL, "10"); //TODO : Change no. of lines :done
+            properties.put(Constants.POLLING_INTERVAL, filePollingInterval);
+            if (actionAfterFailure != null) {
+                properties.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
+            }
+            if (moveAfterFailure != null) {
+                properties.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
+            }
+
+            if (fileSourceConfiguration.isTailingEnabled()) {
+                if (fileSourceConfiguration.getTailedFileURI() == null) {
+                    fileSourceConfiguration.setTailedFileURI(fileUri);
+                }
+
+                if (fileSourceConfiguration.getTailedFileURI().equalsIgnoreCase(fileUri)) {
+                    properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
+                    properties.put(Constants.PATH, fileUri);
+
+                    FileServerConnectorProvider fileServerConnectorProvider =
+                            fileSourceServiceProvider.getFileServerConnectorProvider();
+                    FileProcessor fileProcessor = new FileProcessor(sourceEventListener,
+                            fileSourceConfiguration);
+                    final ServerConnector fileServerConnector = fileServerConnectorProvider
+                            .createConnector("file-server-connector", properties);
+                    fileServerConnector.setMessageProcessor(fileProcessor);
+                    fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
+
+                    Runnable runnableServer = new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                fileServerConnector.start();
+                            } catch (ServerConnectorException e) {
+                                log.error("Failed to start the server for file " + fileUri + ". " +
+                                        "Hence starting to process next file.");
+                            }
+                        }
+                    };
+                    fileSourceConfiguration.getExecutorService().execute(runnableServer);
+                }
+            } else {
+                properties.put(Constants.URI, fileUri);
+                VFSClientConnector vfsClientConnector = new VFSClientConnector();
+                FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                vfsClientConnector.setMessageProcessor(fileProcessor);
+
+                try {
+                    vfsClientConnector.send(null, null, properties);
+                } catch (ClientConnectorException e) {
+                    throw new ConnectionUnavailableException("Failed to connect to the file system server due to : " +
+                            e.getMessage(), e);
+                }
             }
         }
     }

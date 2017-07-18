@@ -19,6 +19,7 @@
 package org.wso2.extension.siddhi.io.file;
 
 import org.apache.log4j.Logger;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
@@ -30,6 +31,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -39,13 +41,14 @@ public class FileSourceTestCase {
     private static final Logger log = Logger.getLogger(FileSourceTestCase.class);
     private AtomicInteger count = new AtomicInteger();
 
+
     @Test
     public void fileSourceMapperTest1() throws InterruptedException {
         log.info("test FileSourceMapper 1");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='text.full', tailing='false'," +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full', " +
+                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full', " +
                 "action.after.process='delete'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -82,8 +85,7 @@ public class FileSourceTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='text.full', action.after.process='delete'," +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full'," +
-                "action.after.process='delete'," +
+                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -120,7 +122,7 @@ public class FileSourceTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='text.full', action.after.process='move', " +
                 "move.after.process='/home/minudika/Projects/WSO2/siddhi-io-file/read/text_full' ," +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full'," +
+                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -156,7 +158,7 @@ public class FileSourceTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='line', " +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line'," +
+                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -193,7 +195,7 @@ public class FileSourceTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='line', tailing='false', " +
                 "action.after.process='delete'," +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line'," +
+                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -225,13 +227,13 @@ public class FileSourceTestCase {
 
     @Test
     public void fileSourceMapperTest11() throws InterruptedException {
-        log.info("test FileSourceMapper 10");
+        log.info("test FileSourceMapper 11");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='line', tailing='false', " +
                 "action.after.process='move', " +
                 "move.after.process = '/home/minudika/Projects/WSO2/siddhi-io-file/read/line' ," +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line', " +
+                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -268,8 +270,7 @@ public class FileSourceTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='line', tailing='true', " +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot', " +
-                "move.after.process='/home/minudika/Projects/WSO2/siddhi-io-file/read/line', " +
+                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -332,7 +333,7 @@ public class FileSourceTestCase {
                 "@source(type='file',mode='regex', " +
                 "tailing='false', " +
                 "action.after.process='delete', " +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex', " +
+                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -374,7 +375,7 @@ public class FileSourceTestCase {
                 "move.after.process='/home/minudika/Projects/WSO2/siddhi-io-file/read/regex', " +
                 "begin.regex='<begin>', " +
                 "end.regex='<end>', " +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex', " +
+                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -414,7 +415,7 @@ public class FileSourceTestCase {
                 "@source(type='file',mode='regex', " +
                 "begin.regex='<begin>', " +
                 "end.regex='<end>', " +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex_tailing', " +
+                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex_tailing', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -481,8 +482,7 @@ public class FileSourceTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='line', tailing='true', " +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot', " +
-                "move.after.process='/home/minudika/Projects/WSO2/siddhi-io-file/read/line', " +
+                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -515,9 +515,11 @@ public class FileSourceTestCase {
         Thread.sleep(2000);
 
         siddhiAppRuntime.shutdown();
+        Thread.sleep(1000);
 
         File file = new File("/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot/logs.txt");
         try {
+
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
             bufferedWriter.write("{\"event\":{\"symbol\":\"IBM\",\"price\":2000,\"volume\":30000}}");
             bufferedWriter.newLine();
@@ -531,10 +533,87 @@ public class FileSourceTestCase {
 
         Thread.sleep(5000);
 
-        siddhiAppRuntime.restore(snapshot);
-        siddhiAppRuntime.start();
+        SiddhiAppRuntime siddhiAppRuntime1 = siddhiManager.createSiddhiAppRuntime(streams + query);
 
-        Thread.sleep(5000);
+        siddhiAppRuntime1.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                int n = count.incrementAndGet();
+                EventPrinter.print(events);
+
+            }
+        });
+
+        siddhiAppRuntime1.restore(snapshot);
+        siddhiAppRuntime1.start();
+
+        Thread.sleep(10000);
+
+        siddhiAppRuntime1.shutdown();
+    }
+
+    @Test
+    public void fileSourceMapperTest14() throws InterruptedException {
+        log.info("test FileSourceMapper 14");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file',mode='line', tailing='true', " +
+                "file.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line_tailing/logs.txt', " +
+                "@map(type='json'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select *  " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                int n = count.incrementAndGet();
+                EventPrinter.print(events);
+
+            }
+        });
+
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                siddhiAppRuntime.start();
+            }
+        });
+
+        t1.start();
+
+        Thread t2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                File file = new File("/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line_tailing/logs.txt");
+                try {
+
+                    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
+                    bufferedWriter.write("{\"event\":{\"symbol\":\"IBM\",\"price\":2000,\"volume\":30000}}");
+                    bufferedWriter.newLine();
+                    bufferedWriter.write("{\"event\":{\"symbol\":\"GOOGLE\",\"price\":3000,\"volume\":40000}}");
+                    bufferedWriter.newLine();
+                    bufferedWriter.flush();
+                    bufferedWriter.close();
+                } catch (IOException e) {
+                    log.error(e.getMessage());
+                }
+            }
+        });
+        t2.start();
+
+        Thread.sleep(2000);
+
 
         siddhiAppRuntime.shutdown();
     }

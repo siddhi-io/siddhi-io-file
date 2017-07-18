@@ -38,11 +38,11 @@ public class FileSourceServiceProvider {
         return fileSourceServiceProvider;
     }
 
-    public static FileSystemServerConnectorProvider getFileSystemServerConnectorProvider() {
+    public FileSystemServerConnectorProvider getFileSystemServerConnectorProvider() {
         return fileSystemServerConnectorProvider;
     }
 
-    public static FileServerConnectorProvider getFileServerConnectorProvider() {
+    public FileServerConnectorProvider getFileServerConnectorProvider() {
         return fileServerConnectorProvider;
     }
 }

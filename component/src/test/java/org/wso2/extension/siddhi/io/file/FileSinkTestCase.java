@@ -19,16 +19,16 @@
 package org.wso2.extension.siddhi.io.file;
 
 import org.apache.log4j.Logger;
-//import org.testng.AssertJUnit;
-//import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.stream.input.InputHandler;
-import org.wso2.siddhi.core.util.snapshot.PersistenceReference;
 
 import java.util.concurrent.atomic.AtomicInteger;
+
+//import org.testng.AssertJUnit;
+//import org.testng.annotations.BeforeMethod;
 
 /**
  * Test cases for siddhi-io-file sink.
@@ -128,8 +128,10 @@ public class FileSinkTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='json'), append='true', " +
-                "uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/{{symbol}}.json')" +
+                "@sink(type='file', uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/{{symbol}}.json', " +
+                "@map(type='json'), " +
+                "append='true' " +
+                ")" +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
         String query = "" +
@@ -158,13 +160,10 @@ public class FileSinkTestCase {
         stockStream.send(new Object[]{"cloudbees", 54.4f, 100L});
         stockStream.send(new Object[]{"apache", 80f, 100L});
 
-        PersistenceReference str = siddhiAppRuntime.persist();
-        Thread.sleep(100);
-        siddhiAppRuntime.restoreRevision(str.getRevision());
+        Thread.sleep(1000);
 
         //assert event count
         // Assert.assertEquals(5, wso2Count.get());
-        siddhiAppRuntime.shutdown();
 
         //unsubscribe from "inMemory" broker per topic
         //InMemoryBroker.unsubscribe(subscriberWSO2);

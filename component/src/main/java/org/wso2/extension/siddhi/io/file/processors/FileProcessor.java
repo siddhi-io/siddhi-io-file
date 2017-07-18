@@ -57,82 +57,87 @@ public class FileProcessor implements CarbonMessageProcessor {
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-        byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
-        String msg = new String(content, Constants.UTF_8);
+        if (carbonMessage instanceof BinaryCarbonMessage) {
+            byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
+            String msg = new String(content, Constants.UTF_8);
 
-        if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
-            if (msg.length() > 0) {
-                sourceEventListener.onEvent(new String(content, Constants.UTF_8),
-                        fileSourceConfiguration.getRequiredProperties());
-            }
-            carbonCallback.done(carbonMessage);
-        } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
-            //TODO : implement consuming binary files (file processor)
-            if (msg.length() > 0) {
-                sourceEventListener.onEvent(content, fileSourceConfiguration.getRequiredProperties());
-            }
-            carbonCallback.done(carbonMessage);
-        } else if (Constants.LINE.equalsIgnoreCase(mode)) {
-            if (!fileSourceConfiguration.isTailingEnabled()) {
-                InputStream is = new ByteArrayInputStream(content);
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    if (line.length() > 0) {
-                        readBytes = line.length();
-                        sourceEventListener.onEvent(line.trim(), fileSourceConfiguration.getRequiredProperties());
-                    }
+            if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
+                if (msg.length() > 0) {
+                    sourceEventListener.onEvent(new String(content, Constants.UTF_8),
+                            fileSourceConfiguration.getRequiredProperties());
                 }
                 carbonCallback.done(carbonMessage);
-            } else {
-                if (msg != null && msg.length() > 0) {
-                    readBytes = msg.getBytes(Constants.UTF_8).length;
-                    fileSourceConfiguration.updateFilePointer(readBytes);
-                    sourceEventListener.onEvent(msg, fileSourceConfiguration.getRequiredProperties());
+            } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+                //TODO : implement consuming binary files (file processor) : done
+                if (msg.length() > 0) {
+                    sourceEventListener.onEvent(content, fileSourceConfiguration.getRequiredProperties());
+                    // todo : handle trps here
                 }
-            }
-        } else if (Constants.REGEX.equalsIgnoreCase(mode)) {
-            int lastMatchIndex = 0;
-            if (!fileSourceConfiguration.isTailingEnabled()) {
-                char[] buf = new char[10];
-                InputStream is = new ByteArrayInputStream(content);
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
+                carbonCallback.done(carbonMessage);
+            } else if (Constants.LINE.equalsIgnoreCase(mode)) {
+                if (!fileSourceConfiguration.isTailingEnabled()) {
+                    InputStream is = new ByteArrayInputStream(content);
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
+                    String line;
+                    while ((line = bufferedReader.readLine()) != null) {
+                        if (line.length() > 0) {
+                            readBytes = line.length();
+                            sourceEventListener.onEvent(line.trim(), fileSourceConfiguration.getRequiredProperties());
+                        }
+                    }
+                    carbonCallback.done(carbonMessage);
+                } else {
+                    if (msg.length() > 0) {
+                        readBytes = msg.getBytes(Constants.UTF_8).length;
+                        fileSourceConfiguration.updateFilePointer(readBytes);
+                        sourceEventListener.onEvent(msg, fileSourceConfiguration.getRequiredProperties());
+                    }
+                }
+            } else if (Constants.REGEX.equalsIgnoreCase(mode)) {
+                int lastMatchIndex = 0;
+                if (!fileSourceConfiguration.isTailingEnabled()) {
+                    char[] buf = new char[10];
+                    InputStream is = new ByteArrayInputStream(content);
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
 
-                while (bufferedReader.read(buf) != -1) {
-                    lastMatchIndex = 0;
-                    sb.append(new String(buf));
+                    while (bufferedReader.read(buf) != -1) {
+                        lastMatchIndex = 0;
+                        sb.append(new String(buf));
+                        Matcher matcher = pattern.matcher(sb.toString().trim());
+                        while (matcher.find()) {
+                            String event = matcher.group(0);
+                            lastMatchIndex = matcher.end();
+                            sourceEventListener.onEvent(event, fileSourceConfiguration.getRequiredProperties());
+                        }
+                        String tmp;
+                        tmp = sb.substring(lastMatchIndex);
+
+                        sb.setLength(0); // TODO : create a new one
+                        sb.append(tmp);
+                    }
+                    carbonCallback.done(carbonMessage);
+                } else {
+                    readBytes += content.length;
+                    fileSourceConfiguration.updateFilePointer(readBytes);
+
+                    sb.append(new String(content, Constants.UTF_8));
                     Matcher matcher = pattern.matcher(sb.toString().trim());
                     while (matcher.find()) {
                         String event = matcher.group(0);
-                        lastMatchIndex = matcher.end();
+                        lastMatchIndex = matcher.end(); // TODO : update the fp here
                         sourceEventListener.onEvent(event, fileSourceConfiguration.getRequiredProperties());
                     }
                     String tmp;
-                    tmp = sb.substring(lastMatchIndex);
+                    tmp = sb.substring(lastMatchIndex); // TODO : store sb in the snapshot also
 
                     sb.setLength(0);
                     sb.append(tmp);
                 }
-                carbonCallback.done(carbonMessage);
-            } else {
-                readBytes += content.length;
-                fileSourceConfiguration.updateFilePointer(readBytes);
-
-                sb.append(new String(content, Constants.UTF_8));
-                Matcher matcher = pattern.matcher(sb.toString().trim());
-                while (matcher.find()) {
-                    String event = matcher.group(0);
-                    lastMatchIndex = matcher.end();
-                    sourceEventListener.onEvent(event, fileSourceConfiguration.getRequiredProperties());
-                }
-                String tmp;
-                tmp = sb.substring(lastMatchIndex);
-
-                sb.setLength(0);
-                sb.append(tmp);
             }
+            return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     public void setTransportSender(TransportSender transportSender) {

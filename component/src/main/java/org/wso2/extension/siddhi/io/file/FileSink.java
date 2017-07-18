@@ -22,7 +22,6 @@ import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
-import org.wso2.extension.siddhi.io.file.processors.FileSinkMessageProcessor;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
@@ -30,7 +29,6 @@ import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
-import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.output.sink.Sink;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.transport.DynamicOptions;
@@ -44,13 +42,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Implementation of siddhi-io-file sink.
+ * This class contains the implementation of siddhi-io-file sink which provides the functionality of
+ * publishing data to files through siddhi.
  */
 
 @Extension(
-        name = "file",
-        namespace = "sink",
-        description = "File Sink",
+        name = "file" ,
+        namespace = "sink" ,
+        description = "File Sink can be used to publish (write) data to files  ",
+        // TODO : Add more info to descriptions
         parameters = {
                 @Parameter(name = "uri",
                         description =
@@ -110,21 +110,18 @@ public class FileSink extends Sink {
 
     @Override
     public Class[] getSupportedInputEventClasses() {
-        return new Class[]{String.class};
+        return new Class[]{String.class, byte[].class, Object.class};
     }
 
     public String[] getSupportedDynamicOptions() {
-        return new String[]{"uri"};
+        return new String[]{Constants.URI};
     }
 
     protected void init(StreamDefinition streamDefinition, OptionHolder optionHolder,
                         ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         uriOption = optionHolder.validateAndGetOption(Constants.URI);
-        if(uriOption == null){
-            throw new SiddhiAppCreationException("URI is a mandatory parameter but has not been provided.");
-        }
         String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
-        properties = new HashMap();
+        properties = new HashMap<>();
         properties.put(Constants.ACTION, Constants.WRITE);
         if (Constants.TRUE.equalsIgnoreCase(append)) {
             properties.put(Constants.APPEND, append);
@@ -145,20 +142,23 @@ public class FileSink extends Sink {
 
     public void publish(Object payload, DynamicOptions dynamicOptions) throws ConnectionUnavailableException {
         byte[] byteArray = new byte[0];
-        try {
-            byteArray = payload.toString().getBytes(Constants.UTF_8);
-        } catch (UnsupportedEncodingException e) {
-            log.error("Received payload does not support UTF-8 encoding. Hence dropping the event.");
+        if (payload instanceof byte[]) {
+            byteArray = (byte[]) payload;
+        } else {
+            try {
+                byteArray = payload.toString().getBytes(Constants.UTF_8);
+            } catch (UnsupportedEncodingException e) {
+                log.error("Received payload does not support UTF-8 encoding. Hence dropping the event." , e);
+            }
         }
         String uri = uriOption.getValue(dynamicOptions);
-        FileSinkMessageProcessor fileSinkMessageProcessor = new FileSinkMessageProcessor();
         BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(byteArray), true);
-        vfsClientConnector.setMessageProcessor(fileSinkMessageProcessor);
         properties.put(Constants.URI, uri);
         try {
             vfsClientConnector.send(binaryCarbonMessage, null, properties);
         } catch (ClientConnectorException e) {
-            log.error("Writing data into the file " + fileURI + "failed.\n" + e.getMessage());
+            throw new ConnectionUnavailableException("Writing data into the file " + fileURI + " failed due to " +
+                    e.getMessage() , e); // TODO : add more info , file sink name, etc..
         }
     }
 

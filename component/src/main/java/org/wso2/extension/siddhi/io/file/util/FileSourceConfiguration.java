@@ -21,8 +21,6 @@ package org.wso2.extension.siddhi.io.file.util;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
-import org.wso2.siddhi.core.config.SiddhiAppContext;
-import org.wso2.siddhi.query.api.SiddhiApp;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -37,10 +35,16 @@ public class FileSourceConfiguration {
     private String moveAfterProcessUri;
     private boolean isTailingEnabled;
     private String dirURI;
+    private String fileURI;
     private String mode;
     private String beginRegex = null;
     private String endRegex = null;
     private String filePointer = "0";
+    private String filePollingInterval = null;
+    private String dirPollingInterval = null;
+    private String actionAfterFailure = null;
+    private String moveAfterFailure = null;
+
     private Executor executor;
     private CarbonMessageProcessor messageProcessor;
     private FileServerConnector fileServerConnector;
@@ -173,10 +177,50 @@ public class FileSourceConfiguration {
     }
 
     public String[] getRequiredProperties() {
-        return requiredProperties;
+        return requiredProperties.clone();
     }
 
     public void setRequiredProperties(String[] requiredProperties) {
-        this.requiredProperties = requiredProperties;
+        this.requiredProperties = requiredProperties.clone();
+    }
+
+    public String getFileURI() {
+        return fileURI;
+    }
+
+    public void setFileURI(String fileURI) {
+        this.fileURI = fileURI;
+    }
+
+    public String getFilePollingInterval() {
+        return filePollingInterval;
+    }
+
+    public void setFilePollingInterval(String filePollingInterval) {
+        this.filePollingInterval = filePollingInterval;
+    }
+
+    public String getDirPollingInterval() {
+        return dirPollingInterval;
+    }
+
+    public void setDirPollingInterval(String dirPollingInterval) {
+        this.dirPollingInterval = dirPollingInterval;
+    }
+
+    public String getActionAfterFailure() {
+        return actionAfterFailure;
+    }
+
+    public void setActionAfterFailure(String actionAfterFailure) {
+        this.actionAfterFailure = actionAfterFailure;
+    }
+
+    public String getMoveAfterFailure() {
+        return moveAfterFailure;
+    }
+
+    public void setMoveAfterFailure(String moveAfterFailure) {
+        this.moveAfterFailure = moveAfterFailure;
     }
 }
