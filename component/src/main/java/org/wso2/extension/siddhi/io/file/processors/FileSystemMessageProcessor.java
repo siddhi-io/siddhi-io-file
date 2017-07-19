@@ -72,7 +72,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
                 properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
                 properties.put(Constants.ACTION, Constants.READ);
                 properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
-                // todo : add this to siddhi query conf
+                // todo : add this to siddhi query conf : done
 
                 vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                 //carbonCallback.done(carbonMessage);

@@ -193,7 +193,7 @@ import java.util.concurrent.ExecutorService;
 
                 @Example(
                         syntax = "" +
-                                "@source(type='file',mode='line', tailing='true', " +
+                                "@source(type='file',mode='files.line', tailing='true', " +
                                 "uri='/abc/xyz'," +
                                 "@map(type='json')) \n" +
                                 "define stream FooStream (symbol string, price float, volume long); ",
@@ -257,6 +257,8 @@ public class FileSource extends Source {
                     "have been provided.");
         }
 
+        mode = optionHolder.validateAndGetStaticValue(Constants.MODE, Constants.LINE);
+
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.FALSE);
         } else {
@@ -272,7 +274,6 @@ public class FileSource extends Source {
                     Constants.DELETE);
         }
         actionAfterFailure = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_FAILURE, Constants.DELETE);
-        mode = optionHolder.validateAndGetStaticValue(Constants.MODE, Constants.LINE);
         if (optionHolder.isOptionExists(Constants.MOVE_AFTER_PROCESS)) {
             moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS);
         }
@@ -381,6 +382,7 @@ public class FileSource extends Source {
         fileSourceConfiguration.setDirPollingInterval(dirPollingInterval);
         fileSourceConfiguration.setActionAfterFailure(actionAfterFailure);
         fileSourceConfiguration.setMoveAfterFailure(moveAfterFailure);
+        fileSourceConfiguration.setRequiredProperties(requiredProperties);
     }
 
     private void updateSourceConf() {

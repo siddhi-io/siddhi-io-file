@@ -31,57 +31,68 @@
 
     <dependencyManagement>
         <dependencies>
-        <dependency>
-            <groupId>org.wso2.carbon.transport</groupId>
-            <artifactId>org.wso2.carbon.transport.file</artifactId>
-            <version>${carbon.transport.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.transport</groupId>
-            <artifactId>org.wso2.carbon.transport.file-system</artifactId>
-            <version>${carbon.transport.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.siddhi</groupId>
-            <artifactId>siddhi-query-compiler</artifactId>
-            <version>${siddhi.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.siddhi</groupId>
-            <artifactId>siddhi-core</artifactId>
-            <version>${siddhi.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.siddhi</groupId>
-            <artifactId>siddhi-annotations</artifactId>
-            <version>${siddhi.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.extension.siddhi.map.xml</groupId>
-            <artifactId>siddhi-map-xml</artifactId>
-            <version>${siddhi.map.xml.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.extension.siddhi.map.json</groupId>
-            <artifactId>siddhi-map-json</artifactId>
-            <version>${siddhi.map.json.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-vfs2</artifactId>
-            <version>2.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <scope>test</scope>
-            <version>${testng.version}</version>
-        </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.transport</groupId>
+                <artifactId>org.wso2.carbon.transport.file</artifactId>
+                <version>${carbon.transport.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.transport</groupId>
+                <artifactId>org.wso2.carbon.transport.file-system</artifactId>
+                <version>${carbon.transport.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.siddhi</groupId>
+                <artifactId>siddhi-query-compiler</artifactId>
+                <version>${siddhi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.siddhi</groupId>
+                <artifactId>siddhi-core</artifactId>
+                <version>${siddhi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.siddhi</groupId>
+                <artifactId>siddhi-annotations</artifactId>
+                <version>${siddhi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.extension.siddhi.map.xml</groupId>
+                <artifactId>siddhi-map-xml</artifactId>
+                <version>${siddhi.map.xml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.extension.siddhi.map.json</groupId>
+                <artifactId>siddhi-map-json</artifactId>
+                <version>${siddhi.map.json.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons.wso2</groupId>
+                <artifactId>commons-vfs2</artifactId>
+                <version>2.0-wso2v15</version>
+            </dependency>
+            <dependency>
+                <groupId>org.quartz-scheduler.wso2</groupId>
+                <artifactId>quartz</artifactId>
+                <version>2.1.1.wso2v1</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.5</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <scope>test</scope>
+                <version>${testng.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <properties>
-        <siddhi.version>4.0.0-M18-SNAPSHOT</siddhi.version>
+        <siddhi.version>4.0.0-M21-SNAPSHOT</siddhi.version>
         <!--<carbon.transport.version>4.4.8-SNAPSHOT</carbon.transport.version>-->
         <carbon.transport.version>4.4.15-SNAPSHOT</carbon.transport.version>
         <testng.version>6.8</testng.version>
@@ -134,26 +145,26 @@
                 </configuration>
             </plugin>
             <!--<plugin>&lt;!&ndash; Overridden from parent pom to exclude generated sources &ndash;&gt;-->
-                <!--<groupId>org.codehaus.mojo</groupId>-->
-                <!--<artifactId>findbugs-maven-plugin</artifactId>-->
-                <!--<version>${maven.findbugsplugin.version}</version>-->
-                <!--<configuration>-->
-                    <!--<effort>Max</effort>-->
-                    <!--<threshold>Medium</threshold>-->
-                    <!--<xmlOutput>true</xmlOutput>-->
-                    <!--<findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>-->
-                    <!--&lt;!&ndash;Exclude sources&ndash;&gt;-->
-                    <!--<excludeFilterFile>${mavan.findbugsplugin.exclude.file}</excludeFilterFile>-->
-                <!--</configuration>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>analyze-compile</id>-->
-                        <!--<phase>compile</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>check</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
+            <!--<groupId>org.codehaus.mojo</groupId>-->
+            <!--<artifactId>findbugs-maven-plugin</artifactId>-->
+            <!--<version>${maven.findbugsplugin.version}</version>-->
+            <!--<configuration>-->
+            <!--<effort>Max</effort>-->
+            <!--<threshold>Medium</threshold>-->
+            <!--<xmlOutput>true</xmlOutput>-->
+            <!--<findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>-->
+            <!--&lt;!&ndash;Exclude sources&ndash;&gt;-->
+            <!--<excludeFilterFile>${mavan.findbugsplugin.exclude.file}</excludeFilterFile>-->
+            <!--</configuration>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<id>analyze-compile</id>-->
+            <!--<phase>compile</phase>-->
+            <!--<goals>-->
+            <!--<goal>check</goal>-->
+            <!--</goals>-->
+            <!--</execution>-->
+            <!--</executions>-->
             <!--</plugin>-->
             <!--<plugin>&lt;!&ndash; Overridden from parent pom to exclude generated sources &ndash;&gt;
                 <groupId>org.apache.maven.plugins</groupId>

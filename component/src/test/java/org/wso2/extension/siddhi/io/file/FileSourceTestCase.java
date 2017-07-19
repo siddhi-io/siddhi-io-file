@@ -19,7 +19,9 @@
 package org.wso2.extension.siddhi.io.file;
 
 import org.apache.log4j.Logger;
+import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
@@ -27,11 +29,7 @@ import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.stream.output.StreamCallback;
 import org.wso2.siddhi.core.util.EventPrinter;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -41,15 +39,27 @@ public class FileSourceTestCase {
     private static final Logger log = Logger.getLogger(FileSourceTestCase.class);
     private AtomicInteger count = new AtomicInteger();
 
+    File dir ;
+
+    @BeforeSuite
+    public void init() {
+        ClassLoader classLoader = FileSourceTestCase.class.getClassLoader();
+        dir = new File(classLoader.getResource("files").getFile());
+    }
+
+    @BeforeMethod
+    public void doBeforeMethod() {
+        count.set(0);
+    }
 
     @Test
-    public void fileSourceMapperTest1() throws InterruptedException {
-        log.info("test FileSourceMapper 1");
+    public void siddhiIoFileTest1() throws InterruptedException {
+        log.info("test SiddhiIoFile 1");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='text.full', tailing='false'," +
-                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full', " +
-                "action.after.process='delete'," +
+                "@source(type='file',mode='text.full'," +
+                "dir.uri='" + dir + "/text_full', " +
+                "action.after.process='none'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -67,6 +77,35 @@ public class FileSourceTestCase {
             @Override
             public void receive(Event[] events) {
                 EventPrinter.print(events);
+                int n = count.incrementAndGet();
+                for (Event event : events) {
+                    switch (n) {
+                        case 1:
+                            AssertJUnit.assertEquals("apache", event.getData(0));
+                            break;
+                        case 2:
+                            AssertJUnit.assertEquals("cloudbees", event.getData(0));
+                            break;
+                        case 3:
+                            AssertJUnit.assertEquals("google", event.getData(0));
+                            break;
+                        case 4:
+                            AssertJUnit.assertEquals("ibm", event.getData(0));
+                            break;
+                        case 5:
+                            AssertJUnit.assertEquals("intel", event.getData(0));
+                            break;
+                        case 6:
+                            AssertJUnit.assertEquals("microsoft", event.getData(0));
+                            break;
+                        case 7:
+                            AssertJUnit.assertEquals("redhat", event.getData(0));
+                            break;
+                        case 8:
+                            AssertJUnit.assertEquals("wso2", event.getData(0));
+                            break;
+                    }
+                }
             }
         });
 
@@ -75,17 +114,18 @@ public class FileSourceTestCase {
         Thread.sleep(1000);
 
         //assert event count
-        // Assert.assertEquals("Number of events", 4, count.get());
+        AssertJUnit.assertEquals("Number of events", 8, count.get());
         siddhiAppRuntime.shutdown();
     }
 
     @Test
-    public void fileSourceMapperTest8() throws InterruptedException {
-        log.info("test FileSourceMapper 8");
+    public void siddhiIoFileTest2() throws InterruptedException {
+        log.info("test SiddhiIoFile 2");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='text.full', action.after.process='delete'," +
-                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full'," +
+                "@source(type='file',mode='line', action.after.process='none'," +
+                "file.uri='" + dir + "/line/logs.txt'," +
+                "file.polling.interval='1000', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -103,174 +143,57 @@ public class FileSourceTestCase {
             @Override
             public void receive(Event[] events) {
                 EventPrinter.print(events);
+                int n = count.incrementAndGet();
+
+                for (Event event : events) {
+                    switch (n) {
+                        case 1:
+                            AssertJUnit.assertEquals(0f, event.getData(1));
+                            break;
+                        case 2:
+                            AssertJUnit.assertEquals(1f, event.getData(1));
+                            break;
+                        case 3:
+                            AssertJUnit.assertEquals(2f, event.getData(1));
+                            break;
+                        case 4:
+                            AssertJUnit.assertEquals(3f, event.getData(1));
+                            break;
+                        case 5:
+                            AssertJUnit.assertEquals(4f, event.getData(1));
+                            break;
+                        case 10:
+                            AssertJUnit.assertEquals(9f, event.getData(1));
+                            break;
+                        case 12:
+                            AssertJUnit.assertEquals(11f, event.getData(1));
+                            break;
+                        case 15:
+                            AssertJUnit.assertEquals(14f, event.getData(1));
+                            break;
+                    }
+                }
             }
         });
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(1000);
+        Thread.sleep(3000);
 
         //assert event count
-        // Assert.assertEquals("Number of events", 4, count.get());
+         AssertJUnit.assertEquals("Number of events", 15, count.get());
         siddhiAppRuntime.shutdown();
     }
 
-    @Test
-    public void fileSourceMapperTest9() throws InterruptedException {
-        log.info("test FileSourceMapper 9");
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='text.full', action.after.process='move', " +
-                "move.after.process='/home/minudika/Projects/WSO2/siddhi-io-file/read/text_full' ," +
-                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/text_full'," +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
+    //from here, tests will be implemented later
 
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-            }
-        });
-
-        siddhiAppRuntime.start();
-
-        Thread.sleep(1000);
-
-        //assert event count
-        // Assert.assertEquals("Number of events", 4, count.get());
-        siddhiAppRuntime.shutdown();
-    }
-
-    @Test
-    public void fileSourceMapperTest2() throws InterruptedException {
-        log.info("test FileSourceMapper 2");
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='line', " +
-                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line'," +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-            }
-        });
-
-        siddhiAppRuntime.start();
-
-        Thread.sleep(1000);
-
-        //assert event count
-        // Assert.assertEquals("Number of events", 4, count.get());
-        siddhiAppRuntime.shutdown();
-    }
-
-    @Test
-    public void fileSourceMapperTest10() throws InterruptedException {
-        log.info("test FileSourceMapper 10");
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='line', tailing='false', " +
-                "action.after.process='delete'," +
-                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line'," +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-            }
-        });
-
-        siddhiAppRuntime.start();
-
-        Thread.sleep(1000);
-
-        //assert event count
-        // Assert.assertEquals("Number of events", 4, count.get());
-        siddhiAppRuntime.shutdown();
-    }
-
-    @Test
-    public void fileSourceMapperTest11() throws InterruptedException {
-        log.info("test FileSourceMapper 11");
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='line', tailing='false', " +
-                "action.after.process='move', " +
-                "move.after.process = '/home/minudika/Projects/WSO2/siddhi-io-file/read/line' ," +
-                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line', " +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-            }
-        });
-
-        siddhiAppRuntime.start();
-
-        Thread.sleep(1000);
-
-        //assert event count
-        // Assert.assertEquals("Number of events", 4, count.get());
-        siddhiAppRuntime.shutdown();
-    }
-
-
-    @Test
-    public void fileSourceMapperTest5() throws InterruptedException {
-        log.info("test FileSourceMapper 5");
+    /*@Test
+    public void siddhiIoFileTest5() throws InterruptedException {
+        log.info("test SiddhiIoFile 5");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='line', tailing='true', " +
-                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot', " +
+                "file.uri='" + dir + "/tailing/logs.txt'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -290,6 +213,23 @@ public class FileSourceTestCase {
             public void receive(Event[] events) {
                 int n = count.incrementAndGet();
                 EventPrinter.print(events);
+                for (Event event : events) {
+                    switch (n) {
+                        case 1:
+                        case 2:
+                        case 3:
+                        case 4:
+                        case 5:
+                            AssertJUnit.assertEquals("WSO2", event.getData(0));
+                            break;
+                        case 6:
+                            AssertJUnit.assertEquals("IBM", event.getData(0));
+                            break;
+                        case 7:
+                            AssertJUnit.assertEquals("GOOGLE", event.getData(0));
+                            break;
+                    }
+                }
 
             }
         });
@@ -302,11 +242,10 @@ public class FileSourceTestCase {
 
         t1.start();
 
-
         Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                File file = new File("/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot/logs.txt");
+                File file = new File(dir + "/tailing/logs.txt");
                 try {
                     BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
                     bufferedWriter.write("{\"event\":{\"symbol\":\"IBM\",\"price\":2000,\"volume\":30000}}");
@@ -322,299 +261,6 @@ public class FileSourceTestCase {
         });
         t2.start();
 
-        Thread.sleep(10000);
-    }
-
-    @Test
-    public void fileSourceMapperTest6() throws InterruptedException {
-        log.info("test FileSourceMapper 6");
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='regex', " +
-                "tailing='false', " +
-                "action.after.process='delete', " +
-                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex', " +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-
-            }
-        });
-
-        siddhiAppRuntime.start();
-
-        Thread.sleep(5000);
-
-        //assert event count
-        // Assert.assertEquals("Number of events", 4, count.get());
-        siddhiAppRuntime.shutdown();
-    }
-
-    @Test
-    public void fileSourceMapperTest12() throws InterruptedException {
-        log.info("test FileSourceMapper 12");
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='regex', " +
-                "tailing='false', " +
-                "action.after.process='move', " +
-                "move.after.process='/home/minudika/Projects/WSO2/siddhi-io-file/read/regex', " +
-                "begin.regex='<begin>', " +
-                "end.regex='<end>', " +
-                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex', " +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-
-            }
-        });
-
-        siddhiAppRuntime.start();
-
-        Thread.sleep(10000000);
-
-
-        //assert event count
-        // Assert.assertEquals("Number of events", 4, count.get());
-        siddhiAppRuntime.shutdown();
-    }
-
-    @Test
-    public void fileSourceMapperTest13() throws InterruptedException {
-        log.info("test FileSourceMapper 13");
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='regex', " +
-                "begin.regex='<begin>', " +
-                "end.regex='<end>', " +
-                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex_tailing', " +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-
-            }
-        });
-
-        Thread t1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                siddhiAppRuntime.start();
-            }
-        });
-
-        t1.start();
-
-        Thread t2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                File file = new File("/home/minudika/Projects/WSO2/siddhi-io-file/testDir/regex_tailing/regex.txt");
-                String str1 = "We’ve seen<begin> a lot from the eight tails, all of which has been very impressive." +
-                        " It was noted by Kisame and the Nine <end>Tails to be the second most " +
-                        "<begin>powerful of the nine" +
-                        " tailed beasts, and it’s held its own against two other tailed beasts<end> despite suffering" +
-                        " a past injury.";
-                String str2 = "In Eight Tails<begin> form B. was able to nearly kill Sasuke <end>and friends multiple" +
-                        " times. The Eight <begin>Tails is probably the smartest of all Tailed Beasts as well as" +
-                        " it is shown being highly tactical in <end>battle.";
-                try {
-                    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
-                    bufferedWriter.write(str1);
-                    bufferedWriter.newLine();
-                    bufferedWriter.write(str2);
-                    bufferedWriter.newLine();
-                    bufferedWriter.flush();
-                    bufferedWriter.close();
-                } catch (IOException e) {
-                    log.error(e.getMessage());
-                }
-            }
-        });
-        t2.start();
-
-        Thread.sleep(10000);
-    }
-
-    @Test
-    public void fileSourceMapperTest7() throws InterruptedException {
-        log.info("test FileSourceMapper 7");
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='line', tailing='true', " +
-                "dir.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot', " +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        String query = "" +
-                "from FooStream " +
-                "select *  " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
-
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                int n = count.incrementAndGet();
-                EventPrinter.print(events);
-
-            }
-        });
-
-        siddhiAppRuntime.start();
-
-        Thread.sleep(2000);
-
-        byte[] snapshot = siddhiAppRuntime.snapshot();
-
-        Thread.sleep(2000);
-
-        siddhiAppRuntime.shutdown();
-        Thread.sleep(1000);
-
-        File file = new File("/home/minudika/Projects/WSO2/siddhi-io-file/testDir/snapshot/logs.txt");
-        try {
-
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
-            bufferedWriter.write("{\"event\":{\"symbol\":\"IBM\",\"price\":2000,\"volume\":30000}}");
-            bufferedWriter.newLine();
-            bufferedWriter.write("{\"event\":{\"symbol\":\"GOOGLE\",\"price\":3000,\"volume\":40000}}");
-            bufferedWriter.newLine();
-            bufferedWriter.flush();
-            bufferedWriter.close();
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-
-        Thread.sleep(5000);
-
-        SiddhiAppRuntime siddhiAppRuntime1 = siddhiManager.createSiddhiAppRuntime(streams + query);
-
-        siddhiAppRuntime1.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                int n = count.incrementAndGet();
-                EventPrinter.print(events);
-
-            }
-        });
-
-        siddhiAppRuntime1.restore(snapshot);
-        siddhiAppRuntime1.start();
-
-        Thread.sleep(10000);
-
-        siddhiAppRuntime1.shutdown();
-    }
-
-    @Test
-    public void fileSourceMapperTest14() throws InterruptedException {
-        log.info("test FileSourceMapper 14");
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file',mode='line', tailing='true', " +
-                "file.uri='/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line_tailing/logs.txt', " +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        String query = "" +
-                "from FooStream " +
-                "select *  " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
-
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                int n = count.incrementAndGet();
-                EventPrinter.print(events);
-
-            }
-        });
-
-        Thread t1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                siddhiAppRuntime.start();
-            }
-        });
-
-        t1.start();
-
-        Thread t2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                File file = new File("/home/minudika/Projects/WSO2/siddhi-io-file/testDir/line_tailing/logs.txt");
-                try {
-
-                    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
-                    bufferedWriter.write("{\"event\":{\"symbol\":\"IBM\",\"price\":2000,\"volume\":30000}}");
-                    bufferedWriter.newLine();
-                    bufferedWriter.write("{\"event\":{\"symbol\":\"GOOGLE\",\"price\":3000,\"volume\":40000}}");
-                    bufferedWriter.newLine();
-                    bufferedWriter.flush();
-                    bufferedWriter.close();
-                } catch (IOException e) {
-                    log.error(e.getMessage());
-                }
-            }
-        });
-        t2.start();
-
-        Thread.sleep(2000);
-
-
-        siddhiAppRuntime.shutdown();
-    }
+        Thread.sleep(3000);
+    }*/
 }
