@@ -55,7 +55,6 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
     }
 
-    // todo : handle exceptions in finally
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         if (carbonMessage instanceof TextCarbonMessage) {
             String mode = fileSourceConfiguration.getMode();
@@ -72,7 +71,6 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
                 properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
                 properties.put(Constants.ACTION, Constants.READ);
                 properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
-                // todo : add this to siddhi query conf : done
 
                 vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                 //carbonCallback.done(carbonMessage);
@@ -92,7 +90,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
             } else if (Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)) {
                 Map<String, String> properties = new HashMap();
                 properties.put(Constants.ACTION, Constants.READ);
-                properties.put(Constants.MAX_LINES_PER_POLL, "10"); //TODO : Change no. of lines
+                properties.put(Constants.MAX_LINES_PER_POLL, "10");
                 properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
 
                 if (fileSourceConfiguration.isTailingEnabled()) {

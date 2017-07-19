@@ -27,6 +27,7 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TransportSender;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
+import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.io.BufferedReader;
@@ -48,10 +49,12 @@ public class FileProcessor implements CarbonMessageProcessor {
     private Pattern pattern;
     private int readBytes;
     private StringBuilder sb = new StringBuilder();
+    private String[] requiredProperties;
 
     public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSourceConfiguration;
+        this.requiredProperties = fileSourceConfiguration.getRequiredProperties();
         this.mode = fileSourceConfiguration.getMode();
         configureFileMessageProcessor();
     }
@@ -60,7 +63,7 @@ public class FileProcessor implements CarbonMessageProcessor {
         if (carbonMessage instanceof BinaryCarbonMessage) {
             byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
             String msg = new String(content, Constants.UTF_8);
-
+            String[] requiredPropertyValues = getRequiredPropertyValues(carbonMessage);
             if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
                     sourceEventListener.onEvent(new String(content, Constants.UTF_8),
@@ -70,7 +73,7 @@ public class FileProcessor implements CarbonMessageProcessor {
             } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                 //TODO : implement consuming binary files (file processor) : done
                 if (msg.length() > 0) {
-                    sourceEventListener.onEvent(content, fileSourceConfiguration.getRequiredProperties());
+                    sourceEventListener.onEvent(content, requiredPropertyValues);
                     // todo : handle trps here
                 }
                 carbonCallback.done(carbonMessage);
@@ -82,7 +85,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                     while ((line = bufferedReader.readLine()) != null) {
                         if (line.length() > 0) {
                             readBytes = line.length();
-                            sourceEventListener.onEvent(line.trim(), fileSourceConfiguration.getRequiredProperties());
+                            sourceEventListener.onEvent(line.trim(), requiredPropertyValues);
                         }
                     }
                     carbonCallback.done(carbonMessage);
@@ -90,7 +93,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                     if (msg.length() > 0) {
                         readBytes = msg.getBytes(Constants.UTF_8).length;
                         fileSourceConfiguration.updateFilePointer(readBytes);
-                        sourceEventListener.onEvent(msg, fileSourceConfiguration.getRequiredProperties());
+                        sourceEventListener.onEvent(msg, requiredPropertyValues);
                     }
                 }
             } else if (Constants.REGEX.equalsIgnoreCase(mode)) {
@@ -107,7 +110,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                         while (matcher.find()) {
                             String event = matcher.group(0);
                             lastMatchIndex = matcher.end();
-                            sourceEventListener.onEvent(event, fileSourceConfiguration.getRequiredProperties());
+                            sourceEventListener.onEvent(event, requiredPropertyValues);
                         }
                         String tmp;
                         tmp = sb.substring(lastMatchIndex);
@@ -125,7 +128,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                     while (matcher.find()) {
                         String event = matcher.group(0);
                         lastMatchIndex = matcher.end(); // TODO : update the fp here
-                        sourceEventListener.onEvent(event, fileSourceConfiguration.getRequiredProperties());
+                        sourceEventListener.onEvent(event, requiredPropertyValues);
                     }
                     String tmp;
                     tmp = sb.substring(lastMatchIndex); // TODO : store sb in the snapshot also
@@ -165,5 +168,19 @@ public class FileProcessor implements CarbonMessageProcessor {
         } else {
             pattern = Pattern.compile("(\n$)"); // this will not be reached
         }
+    }
+
+    private String[] getRequiredPropertyValues(CarbonMessage carbonMessage) {
+        String[] values = new String[requiredProperties.length];
+        int i = 0;
+        for (String propertyKey : requiredProperties) {
+            Object value = carbonMessage.getProperty(propertyKey);
+            if (value != null) {
+                values[i++] = value.toString();
+            } else {
+                log.error("Failed to find required transport property '" + propertyKey + "'");
+            }
+        }
+        return  values;
     }
 }

@@ -55,14 +55,16 @@ import java.util.concurrent.ExecutorService;
 @Extension(
         name = "file",
         namespace = "source",
-        description = "File Source", //TODO :EXPLAIN,
+        description = "" +
+                "File Source provides the functionality for user to feed data to siddhi from " +
+                "files. Both text and binary files are supported by file source.",
         parameters = {
                 @Parameter(
                         name = "dir.uri",
                         description =
                                 "Used to specify a directory to be processed. " +
-                                        " All the files inside this directory will be processed" +
-                                        " Only one of 'dir.uri' and 'file.uri' should be provided.",
+                                "All the files inside this directory will be processed. " +
+                                "Only one of 'dir.uri' and 'file.uri' should be provided.",
                         type = {DataType.STRING}
                 ),
 
@@ -77,7 +79,12 @@ import java.util.concurrent.ExecutorService;
                 @Parameter(
                         name = "mode", // TODO : state possible values here
                         description =
-                                "This parameter is used to specify how files in given directory should",
+                                "This parameter is used to specify how files in given directory should." +
+                                "Possible values for this parameter are,\n" +
+                                        "1. TEXT.FULL : to read a text file completely at once.\n" +
+                                        "2. BINARY.FULL : to read a binary file completely at once.\n" +
+                                        "3. LINE : to read a text file line by line.\n" +
+                                        "4. REGEX : to read a text file and extract data using a regex.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -87,7 +94,8 @@ import java.util.concurrent.ExecutorService;
                         description = "" +
                                 "This can either have value true or false. By default it will be true. " +
                                 "This attribute allows user to specify whether the file should be tailed or not. " +
-                                "If tailing is enabled, the first file of the directory will be tailed.",
+                                "If tailing is enabled, the first file of the directory will be tailed.\n" +
+                                "Also tailing should not be enabled in 'binary.full' or 'text.full' modes.",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "true"
@@ -95,9 +103,10 @@ import java.util.concurrent.ExecutorService;
 
                 @Parameter(
                         name = "action.after.process", // TODO : default value == delete : done
-                        description = "This parameter is used to specify the action which should be carried out " +
-                                "after processing a file in the given directory. " +
-                                "It can be either DELETE or MOVE. " +
+                        description = "" +
+                                "This parameter is used to specify the action which should be carried out " +
+                                "after processing a file in the given directory. \n" +
+                                "It can be either DELETE or MOVE and default value will be 'DELETE'.\n" +
                                 "If the action.after.process is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.process' parameter.",
                         type = {DataType.STRING},
@@ -107,9 +116,10 @@ import java.util.concurrent.ExecutorService;
 
                 @Parameter(
                         name = "action.after.failure", // TODO : default value == delete : done
-                        description = "This parameter is used to specify the action which should be carried out " +
-                                "if a failure occured during the process. " +
-                                "It can be either DELETE or MOVE. " +
+                        description = "" +
+                                "This parameter is used to specify the action which should be carried out " +
+                                "if a failure occurred during the process. " +
+                                "It can be either DELETE or MOVE and default value will be 'DELETE'.\n" +
                                 "If the action.after.failure is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.failure' parameter.",
                         type = {DataType.STRING}
@@ -117,28 +127,32 @@ import java.util.concurrent.ExecutorService;
 
                 @Parameter(
                         name = "move.after.process",
-                        description = "If action.after.process is MOVE, user must specify the location to " +
+                        description = "" +
+                                "If action.after.process is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.process' parameter.",
                         type = {DataType.STRING}
                 ),
 
                 @Parameter(
                         name = "move.after.failure",
-                        description = "If action.after.failure is MOVE, user must specify the location to " +
+                        description = "" +
+                                "If action.after.failure is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.failure' parameter.",
                         type = {DataType.STRING}
                 ),
 
                 @Parameter(
                         name = "move.after.failure",
-                        description = "If action.after.failure is MOVE, user must specify the location to " +
+                        description = "" +
+                                "If action.after.failure is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.failure' parameter.",
                         type = {DataType.STRING}
                 ),
 
                 @Parameter(
                         name = "begin.regex",
-                        description = "This will define the regex to be matched at the beginning of the " +
+                        description = "" +
+                                "This will define the regex to be matched at the beginning of the " +
                                 "retrieved content. ",
                         type = {DataType.STRING},
                         optional = true,
@@ -147,7 +161,8 @@ import java.util.concurrent.ExecutorService;
 
                 @Parameter(
                         name = "end.regex",
-                        description = "This will define the regex to be matched at the end of the " +
+                        description = "" +
+                                "This will define the regex to be matched at the end of the " +
                                 "retrieved content. ",
                         type = {DataType.STRING},
                         optional = true,
@@ -156,9 +171,9 @@ import java.util.concurrent.ExecutorService;
 
                 @Parameter(
                         name = "file.polling.interval",
-                        description = "This parameter is used to specify the time period (in milliseconds) " +
-                                "of a polling cycle for " +
-                                "a file.",
+                        description = "" +
+                                "This parameter is used to specify the time period (in milliseconds) " +
+                                "of a polling cycle for a file.",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "1000"
@@ -167,8 +182,7 @@ import java.util.concurrent.ExecutorService;
                 @Parameter(
                         name = "dir.polling.interval",
                         description = "This parameter is used to specify the time period (in milliseconds) " +
-                                "of a polling cycle for " +
-                                "a directory.",
+                                "of a polling cycle for a directory.",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "1000"
@@ -180,28 +194,39 @@ import java.util.concurrent.ExecutorService;
                 @Example(
                         syntax = "" +
                                 "@source(type='file',mode='text.full', tailing='false', " +
-                                "uri='/abc/xyz'," +
+                                "dir.uri='/abc/xyz'," +
                                 "action.after.process='delete'," +
                                 "@map(type='json')) \n" +
                                 "define stream FooStream (symbol string, price float, volume long); ",
 
                         description = "" +
                                 "Under above configuration, all the files in directory will be picked and read " +
-                                "one by one." +
-                                "After reading is finished, the file will be deleted."
+                                "one by one.\n" +
+                                "In this case, it's assumed that all the files contains json valid json strings with " +
+                                "keys 'symbol','price' and 'volume'.\n" +
+                                "Once a file is read, " +
+                                "its content will be converted to an event using siddhi-map-json " +
+                                "extension and then, that event will be received to the FooStream.\n" +
+                                "Finally, after reading is finished, the file will be deleted."
                 ),
 
                 @Example(
                         syntax = "" +
                                 "@source(type='file',mode='files.line', tailing='true', " +
-                                "uri='/abc/xyz'," +
+                                "dir.uri='/abc/xyz'," +
                                 "@map(type='json')) \n" +
                                 "define stream FooStream (symbol string, price float, volume long); ",
 
                         description = "" +
-                                "Under above configuration, the first file in the directory will be " +
-                                "picked and consumed. It will also be tailed. " // TODO : add more content
-
+                                "Under above configuration, " +
+                                "the first file in directory '/abc/xyz'  will be picked and read " +
+                                "line by line.\n" +
+                                "In this case, it is assumed that the file contains lines json strings.\n" +
+                                "For each line, line content will be converted to an event using siddhi-map-json " +
+                                "extension and then, that event will be received to the FooStream.\n" +
+                                "Once file content is completely read, " +
+                                "it will keep checking whether a new entry is added to the file or not.\n" +
+                                "If such entry is added, it will be immediately picked up and processed.\n"
                 )
         }
 )
@@ -215,7 +240,6 @@ public class FileSource extends Source {
     private ServerConnector fileSystemServerConnector;
     private String filePointer = "0";
     private String[] requiredProperties;
-    private OptionHolder optionHolder;
     private boolean isTailingEnabled = true;
     private SiddhiAppContext siddhiAppContext;
 
@@ -238,7 +262,6 @@ public class FileSource extends Source {
                      ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
         this.siddhiAppContext = siddhiAppContext;
-        this.optionHolder = optionHolder;
         this.requiredProperties = requiredProperties.clone();
         this.fileSourceConfiguration = new FileSourceConfiguration();
 
@@ -281,15 +304,10 @@ public class FileSource extends Source {
             moveAfterFailure = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_FAILURE);
         }
 
-        if (optionHolder.isOptionExists(Constants.DIRECTORY_POLLING_INTERVAL)) {
-            dirPollingInterval = optionHolder.validateAndGetStaticValue(Constants.DIRECTORY_POLLING_INTERVAL);
-        }
+        dirPollingInterval = optionHolder.validateAndGetStaticValue(Constants.DIRECTORY_POLLING_INTERVAL, "1000");
 
-        if (optionHolder.isOptionExists(Constants.FILE_POLLING_INTERVAL)) {
-            filePollingInterval = optionHolder.validateAndGetStaticValue(Constants.FILE_POLLING_INTERVAL);
-        }
-        /*moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS,
-                null); *///TODO : check whether it exists first : done
+        filePollingInterval = optionHolder.validateAndGetStaticValue(Constants.FILE_POLLING_INTERVAL, "1000");
+
         beginRegex = optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null);
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
 
@@ -315,10 +333,10 @@ public class FileSource extends Source {
         try {
             if (fileSystemServerConnector != null) {
                 fileSystemServerConnector.stop();
-                fileSystemServerConnector = null; // TODO : set it to null : done
+                fileSystemServerConnector = null;
             }
             //fileSystemServerConnector = null;
-            if (isTailingEnabled) { // TODO : refer to tailing as boolean : done
+            if (isTailingEnabled) {
                 fileSourceConfiguration.getFileServerConnector().stop();
                 fileSourceConfiguration.setFileServerConnector(null);
             }
@@ -333,7 +351,6 @@ public class FileSource extends Source {
     }
 
     public void pause() {
-        // TODO : pause and resume file servers : done
         try {
             if (fileSystemServerConnector != null) {
                 fileSystemServerConnector.stop();
@@ -357,7 +374,6 @@ public class FileSource extends Source {
 
     public Map<String, Object> currentState() {
         Map<String, Object> currentState = new HashMap<>();
-        // TODO : move currentState here : done
         currentState.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
         currentState.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURI());
         return currentState;
@@ -419,23 +435,6 @@ public class FileSource extends Source {
         return map;
     }
 
-
-    private String[] getTrpList(String[] requiredProperties, OptionHolder optionHolder) {
-        // TODO : get these from carbon transport with carbon message
-        String[] list = new String[requiredProperties.length];
-        int i = 0;
-        for (String property : requiredProperties) {
-            String value = optionHolder.validateAndGetStaticValue(property, null);
-            if (value != null) {
-                list[i++] = value;
-            } else {
-                throw new SiddhiAppCreationException("Required property '" + property + "' has not been provided in " +
-                        "transport configuration.");
-            }
-        }
-        return list;
-    }
-
     private void validateParameters() {
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             if (isTailingEnabled) {
@@ -461,7 +460,6 @@ public class FileSource extends Source {
     private void deployServers() throws ConnectionUnavailableException {
         ExecutorService executorService = siddhiAppContext.getExecutorService();
         createInitialSourceConf();
-        fileSourceConfiguration.setRequiredProperties(getTrpList(requiredProperties, optionHolder));
         fileSourceConfiguration.setExecutorService(executorService);
 
         if (dirUri != null) {
@@ -482,7 +480,7 @@ public class FileSource extends Source {
         } else if (fileUri != null) {
             Map<String, String> properties = new HashMap<>();
             properties.put(Constants.ACTION, Constants.READ);
-            properties.put(Constants.MAX_LINES_PER_POLL, "10"); //TODO : Change no. of lines :done
+            properties.put(Constants.MAX_LINES_PER_POLL, "10");
             properties.put(Constants.POLLING_INTERVAL, filePollingInterval);
             if (actionAfterFailure != null) {
                 properties.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
