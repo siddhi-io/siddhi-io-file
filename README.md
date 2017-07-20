@@ -6,5 +6,5 @@ It supports both binary and text formats.
 
 This repository can be independently released from Siddhi.
 
-If there is any bugs or issues please report here.
+If there is any bug or issue please report here.
 

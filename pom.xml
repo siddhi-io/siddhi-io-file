@@ -93,9 +93,9 @@
 
     <properties>
         <siddhi.version>4.0.0-M22</siddhi.version>
-        <carbon.transport.version>4.4.15-SNAPSHOT</carbon.transport.version>
+        <carbon.transport.version>4.4.15</carbon.transport.version>
         <testng.version>6.8</testng.version>
-        <siddhi.map.json.version>4.0.3-SNAPSHOT</siddhi.map.json.version>
+        <siddhi.map.json.version>4.0.3</siddhi.map.json.version>
         <siddhi.map.xml.version>4.0.0-M8</siddhi.map.xml.version>
     </properties>
 
