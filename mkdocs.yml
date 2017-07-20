@@ -1,0 +1,14 @@
+site_name: Siddhi-IO-FILE
+extra_css:
+- stylesheets/extra.css
+extra:
+  logo: images/siddhi-logo-w.svg
+  palette:
+    primary: teal
+    accent: teal
+pages:
+- Welcome to WSO2 Siddhi IO File: index.md
+- About:
+  - License: about/license.md
+
+theme: material

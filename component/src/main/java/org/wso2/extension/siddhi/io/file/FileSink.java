@@ -49,8 +49,9 @@ import java.util.Map;
 @Extension(
         name = "file" ,
         namespace = "sink" ,
-        description = "File Sink can be used to publish (write) data to files  ",
-        // TODO : Add more info to descriptions
+        description = "" +
+                "File Sink can be used to publish (write) event data which is processed within siddhi " +
+                "to files. Siddhi-io-file sink provides support to write both textual and binary data into files",
         parameters = {
                 @Parameter(name = "file.uri",
                         description =
@@ -153,7 +154,7 @@ public class FileSink extends Sink {
             }
         }
 
-        if(canBeWritten) {
+        if (canBeWritten) {
             String uri = uriOption.getValue(dynamicOptions);
             BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(byteArray), true);
             properties.put(Constants.URI, uri);

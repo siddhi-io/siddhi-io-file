@@ -14,7 +14,7 @@
 
     <groupId>org.wso2.extension.siddhi.io.file</groupId>
     <artifactId>siddhi-io-file-parent</artifactId>
-    <version>1.0-SNAPSHOT</version> <!--TODO : 1.0.0-SNAPSHOT-->
+    <version>1.0.0-SNAPSHOT</version>
     <name>Siddhi io file extension</name>
 
     <profiles>
@@ -92,8 +92,7 @@
     </dependencyManagement>
 
     <properties>
-        <siddhi.version>4.0.0-M21-SNAPSHOT</siddhi.version>
-        <!--<carbon.transport.version>4.4.8-SNAPSHOT</carbon.transport.version>-->
+        <siddhi.version>4.0.0-M22</siddhi.version>
         <carbon.transport.version>4.4.15-SNAPSHOT</carbon.transport.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>4.0.3-SNAPSHOT</siddhi.map.json.version>
@@ -144,55 +143,7 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
-            <!--<plugin>&lt;!&ndash; Overridden from parent pom to exclude generated sources &ndash;&gt;-->
-            <!--<groupId>org.codehaus.mojo</groupId>-->
-            <!--<artifactId>findbugs-maven-plugin</artifactId>-->
-            <!--<version>${maven.findbugsplugin.version}</version>-->
-            <!--<configuration>-->
-            <!--<effort>Max</effort>-->
-            <!--<threshold>Medium</threshold>-->
-            <!--<xmlOutput>true</xmlOutput>-->
-            <!--<findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>-->
-            <!--&lt;!&ndash;Exclude sources&ndash;&gt;-->
-            <!--<excludeFilterFile>${mavan.findbugsplugin.exclude.file}</excludeFilterFile>-->
-            <!--</configuration>-->
-            <!--<executions>-->
-            <!--<execution>-->
-            <!--<id>analyze-compile</id>-->
-            <!--<phase>compile</phase>-->
-            <!--<goals>-->
-            <!--<goal>check</goal>-->
-            <!--</goals>-->
-            <!--</execution>-->
-            <!--</executions>-->
-            <!--</plugin>-->
-            <!--<plugin>&lt;!&ndash; Overridden from parent pom to exclude generated sources &ndash;&gt;
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>validate</id>
-                        <phase>validate</phase>
-                        <configuration>
-                            <configLocation>
-                                https://raw.githubusercontent.com/wso2/code-quality-tools/master/checkstyle/checkstyle.xml
-                            </configLocation>
-                            <suppressionsLocation>
-                                ${mavan.checkstyle.suppression.file}
-                            </suppressionsLocation>
-                            <encoding>UTF-8</encoding>
-                            <consoleOutput>true</consoleOutput>
-                            <failsOnError>true</failsOnError>
-                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                            &lt;!&ndash;Exclude generated sources&ndash;&gt;
-                            <excludes>**/parser/*</excludes>
-                        </configuration>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>-->
+
             <plugin>
                 <groupId>org.wso2.siddhi</groupId>
                 <artifactId>siddhi-doc-gen</artifactId>

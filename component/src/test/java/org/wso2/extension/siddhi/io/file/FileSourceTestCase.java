@@ -22,7 +22,6 @@ import org.apache.log4j.Logger;
 import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
@@ -40,7 +39,7 @@ public class FileSourceTestCase {
     private static final Logger log = Logger.getLogger(FileSourceTestCase.class);
     private AtomicInteger count = new AtomicInteger();
 
-    File dir ;
+    File dir;
 
     @BeforeClass
     public void init() {

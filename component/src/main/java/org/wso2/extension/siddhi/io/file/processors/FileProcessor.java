@@ -27,7 +27,6 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TransportSender;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
-import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.io.BufferedReader;
@@ -71,7 +70,6 @@ public class FileProcessor implements CarbonMessageProcessor {
                 }
                 carbonCallback.done(carbonMessage);
             } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
-                //TODO : implement consuming binary files (file processor) : done
                 if (msg.length() > 0) {
                     sourceEventListener.onEvent(content, requiredPropertyValues);
                     // todo : handle trps here
@@ -115,7 +113,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                         String tmp;
                         tmp = sb.substring(lastMatchIndex);
 
-                        sb.setLength(0); // TODO : create a new one
+                        sb.setLength(0);
                         sb.append(tmp);
                     }
                     carbonCallback.done(carbonMessage);
