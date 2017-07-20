@@ -20,6 +20,7 @@ package org.wso2.extension.siddhi.io.file;
 
 import org.apache.log4j.Logger;
 import org.testng.AssertJUnit;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
@@ -41,7 +42,7 @@ public class FileSourceTestCase {
 
     File dir ;
 
-    @BeforeSuite
+    @BeforeClass
     public void init() {
         ClassLoader classLoader = FileSourceTestCase.class.getClassLoader();
         dir = new File(classLoader.getResource("files").getFile());

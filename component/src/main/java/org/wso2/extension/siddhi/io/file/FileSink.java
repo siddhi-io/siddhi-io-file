@@ -52,7 +52,7 @@ import java.util.Map;
         description = "File Sink can be used to publish (write) data to files  ",
         // TODO : Add more info to descriptions
         parameters = {
-                @Parameter(name = "uri",
+                @Parameter(name = "file.uri",
                         description =
                                 "Used to specify the file for data to be written. ",
                         type = {DataType.STRING},
@@ -102,7 +102,6 @@ import java.util.Map;
 public class FileSink extends Sink {
     private static final Logger log = Logger.getLogger(FileSink.class);
 
-    private String fileURI = null;
     private VFSClientConnector vfsClientConnector = null;
     private Map<String, String> properties = null;
     private Option uriOption;
@@ -114,12 +113,12 @@ public class FileSink extends Sink {
     }
 
     public String[] getSupportedDynamicOptions() {
-        return new String[]{Constants.URI};
+        return new String[]{Constants.FILE_URI};
     }
 
     protected void init(StreamDefinition streamDefinition, OptionHolder optionHolder,
                         ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
-        uriOption = optionHolder.validateAndGetOption(Constants.URI);
+        uriOption = optionHolder.validateAndGetOption(Constants.FILE_URI);
         String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
         properties = new HashMap<>();
         properties.put(Constants.ACTION, Constants.WRITE);
@@ -142,23 +141,28 @@ public class FileSink extends Sink {
 
     public void publish(Object payload, DynamicOptions dynamicOptions) throws ConnectionUnavailableException {
         byte[] byteArray = new byte[0];
+        boolean canBeWritten = true;
         if (payload instanceof byte[]) {
             byteArray = (byte[]) payload;
         } else {
             try {
                 byteArray = payload.toString().getBytes(Constants.UTF_8);
             } catch (UnsupportedEncodingException e) {
+                canBeWritten = false;
                 log.error("Received payload does not support UTF-8 encoding. Hence dropping the event." , e);
             }
         }
-        String uri = uriOption.getValue(dynamicOptions);
-        BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(byteArray), true);
-        properties.put(Constants.URI, uri);
-        try {
-            vfsClientConnector.send(binaryCarbonMessage, null, properties);
-        } catch (ClientConnectorException e) {
-            throw new ConnectionUnavailableException("Writing data into the file " + fileURI + " failed due to " +
-                    e.getMessage() , e); // TODO : add more info , file sink name, etc..
+
+        if(canBeWritten) {
+            String uri = uriOption.getValue(dynamicOptions);
+            BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(byteArray), true);
+            properties.put(Constants.URI, uri);
+            try {
+                vfsClientConnector.send(binaryCarbonMessage, null, properties);
+            } catch (ClientConnectorException e) {
+                throw new ConnectionUnavailableException("Writing data into the file " + uri + " failed due to " +
+                        e.getMessage(), e);
+            }
         }
     }
 
