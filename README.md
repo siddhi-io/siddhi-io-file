@@ -1,4 +1,4 @@
-# siddhi-map-json
+# siddhi-io-file
 
 This repository contains source code for siddhi-io-file extension.
 Siddhi-io-file is used to receive/publish event data from/to file.
