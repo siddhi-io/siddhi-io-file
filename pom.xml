@@ -48,6 +48,14 @@
         </profile>
     </profiles>
 
+    <scm>
+        <connection>scm:git:https://github.com/wso2-extensions/siddhi-io-file.git</connection>
+        <url>https://github.com/wso2-extensions/siddhi-io-file.git</url>
+        <developerConnection>scm:git:https://github.com/wso2-extensions/siddhi-io-file.git
+        </developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
