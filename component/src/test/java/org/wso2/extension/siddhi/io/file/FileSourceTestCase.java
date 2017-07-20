@@ -36,11 +36,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Test cases for siddhi-io-file source.
  * */
 public class FileSourceTestCase {
+    // TODO: 20/7/17 Improve Thread.sleep() to use SiddhiTestHelper.waitForEvents().
     private static final Logger log = Logger.getLogger(FileSourceTestCase.class);
     private AtomicInteger count = new AtomicInteger();
 
     File dir;
-
+    
     @BeforeClass
     public void init() {
         ClassLoader classLoader = FileSourceTestCase.class.getClassLoader();

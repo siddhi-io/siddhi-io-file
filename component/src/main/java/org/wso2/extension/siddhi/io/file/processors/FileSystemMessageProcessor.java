@@ -153,8 +153,7 @@ public class FileSystemMessageProcessor implements CarbonMessageProcessor {
         CarbonMessage carbonMessage = null;
         String fileURI = null;
 
-        public FileServerExecutor(CarbonMessage carbonMessage, CarbonCallback
-                carbonCallback,
+        public FileServerExecutor(CarbonMessage carbonMessage, CarbonCallback carbonCallback,
                                   ServerConnector fileServerConnector, String fileURI) {
             this.fileURI = fileURI;
             this.fileServerConnector = fileServerConnector;

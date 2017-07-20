@@ -406,8 +406,8 @@ public class FileSource extends Source {
         fileSourceConfiguration.setTailedFileURI(tailedFileURI);
     }
 
-    private HashMap<String, String> getFileSystemServerProperties() {
-        HashMap<String, String> map = new HashMap<>();
+    private Map<String, String> getFileSystemServerProperties() {
+        Map<String, String> map = new HashMap<>();
 
         map.put(Constants.TRANSPORT_FILE_DIR_URI, dirUri);
         if (actionAfterProcess != null) {
