@@ -85,7 +85,9 @@ import java.util.concurrent.ExecutorService;
                                         "2. BINARY.FULL : to read a binary file completely at once.\n" +
                                         "3. LINE : to read a text file line by line.\n" +
                                         "4. REGEX : to read a text file and extract data using a regex.\n",
-                        type = {DataType.STRING}
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "line"
                 ),
 
                 @Parameter(
@@ -212,7 +214,7 @@ import java.util.concurrent.ExecutorService;
 
                 @Example(
                         syntax = "" +
-                                "@source(type='file',mode='files.line', tailing='true', " +
+                                "@source(type='file',mode='files.repo.line', tailing='true', " +
                                 "dir.uri='/abc/xyz'," +
                                 "@map(type='json')) \n" +
                                 "define stream FooStream (symbol string, price float, volume long); ",
