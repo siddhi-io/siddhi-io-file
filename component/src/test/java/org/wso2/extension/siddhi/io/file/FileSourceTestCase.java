@@ -359,6 +359,461 @@ public class FileSourceTestCase {
     }
 
 
+    /**
+     * Test cases for 'mode = 'regex'.
+     * */
+
+    @Test
+    public void siddhiIoFileTest5() throws InterruptedException {
+        log.info("test SiddhiIoFile 5");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='regex'," +
+                "dir.uri='" + dirUri + "/regex', " +
+                "begin.regex='(\\{)', " +
+                "end.regex='(}})', " +
+                "tailing='false', " +
+                "action.after.process='delete', " +
+                "@map(type='json'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.intValue() % 5;
+                count.incrementAndGet();
+                for (Event event : events) {
+                    switch (n) {
+                        case 0:
+                            AssertJUnit.assertEquals(10000L, event.getData(2));
+                            break;
+                        case 1:
+                            AssertJUnit.assertEquals(10001L, event.getData(2));
+                            break;
+                        case 2:
+                            AssertJUnit.assertEquals(10002L, event.getData(2));
+                            break;
+                        case 3:
+                            AssertJUnit.assertEquals(10003L, event.getData(2));
+                            break;
+                        case 4:
+                            AssertJUnit.assertEquals(10004L, event.getData(2));
+                            break;
+                        default:
+                            AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+
+        siddhiAppRuntime.start();
+
+        Thread.sleep(1000);
+
+        File file = new File(dirUri + "/regex");
+        AssertJUnit.assertEquals(0, file.list().length);
+
+        //assert event count
+        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIoFileTest6() throws InterruptedException {
+        log.info("test SiddhiIoFile 6");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='regex'," +
+                "dir.uri='" + dirUri + "/regex', " +
+                "tailing='false', " +
+                "action.after.process='delete', " +
+                "@map(type='json'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.intValue() % 5;
+                count.incrementAndGet();
+                for (Event event : events) {
+                    switch (n) {
+                        case 0:
+                            AssertJUnit.assertEquals(10000L, event.getData(2));
+                            break;
+                        case 1:
+                            AssertJUnit.assertEquals(10001L, event.getData(2));
+                            break;
+                        case 2:
+                            AssertJUnit.assertEquals(10002L, event.getData(2));
+                            break;
+                        case 3:
+                            AssertJUnit.assertEquals(10003L, event.getData(2));
+                            break;
+                        case 4:
+                            AssertJUnit.assertEquals(10004L, event.getData(2));
+                            break;
+                        default:
+                            AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+
+        siddhiAppRuntime.start();
+
+        Thread.sleep(1000);
+
+        File file = new File(dirUri + "/regex");
+        AssertJUnit.assertEquals(0, file.list().length);
+
+        //assert event count
+        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIoFileTest7() throws InterruptedException {
+        log.info("test SiddhiIoFile 7");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='regex'," +
+                "dir.uri='" + dirUri + "/regex/xml', " +
+                "begin.regex='(<events>)', " +
+                "end.regex='(</events>)', " +
+                "tailing='false', " +
+                "action.after.process='move', " +
+                "move.after.process='" + moveAfterProcessDir + "', " +
+                "@map(type='xml'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.intValue() % 5;
+                count.incrementAndGet();
+                for (Event event : events) {
+                    switch (n) {
+                        case 0:
+                            AssertJUnit.assertEquals(10000L, event.getData(2));
+                            break;
+                        case 1:
+                            AssertJUnit.assertEquals(10001L, event.getData(2));
+                            break;
+                        case 2:
+                            AssertJUnit.assertEquals(10002L, event.getData(2));
+                            break;
+                        case 3:
+                            AssertJUnit.assertEquals(10003L, event.getData(2));
+                            break;
+                        case 4:
+                            AssertJUnit.assertEquals(10004L, event.getData(2));
+                            break;
+                        default:
+                            AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+
+        siddhiAppRuntime.start();
+
+        Thread.sleep(2000);
+
+        File file = new File(moveAfterProcessDir);
+        AssertJUnit.assertEquals(8, file.list().length);
+
+        //assert event count
+        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIoFileTest8() throws InterruptedException {
+        log.info("test SiddhiIoFile 8");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='regex'," +
+                "dir.uri='" + dirUri + "/regex/json', " +
+                "begin.regex='(\\{)', " +
+                "end.regex='(}})', " +
+                "tailing='false', " +
+                "action.after.process='move', " +
+                "move.after.process='" + moveAfterProcessDir + "', " +
+                "@map(type='json'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.intValue() % 5;
+                count.incrementAndGet();
+                for (Event event : events) {
+                    switch (n) {
+                        case 0:
+                            AssertJUnit.assertEquals(10000L, event.getData(2));
+                            break;
+                        case 1:
+                            AssertJUnit.assertEquals(10001L, event.getData(2));
+                            break;
+                        case 2:
+                            AssertJUnit.assertEquals(10002L, event.getData(2));
+                            break;
+                        case 3:
+                            AssertJUnit.assertEquals(10003L, event.getData(2));
+                            break;
+                        case 4:
+                            AssertJUnit.assertEquals(10004L, event.getData(2));
+                            break;
+                        default:
+                            AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+
+        siddhiAppRuntime.start();
+
+        Thread.sleep(1000);
+
+        File file = new File(moveAfterProcessDir);
+        AssertJUnit.assertEquals(8, file.list().length);
+
+        //assert event count
+        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIoFileTest9() throws InterruptedException {
+        log.info("test SiddhiIoFile 9");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='regex'," +
+                "dir.uri='" + dirUri + "/regex/xml', " +
+                "begin.regex='(<events>)', " +
+                "tailing='false', " +
+                "action.after.process='move', " +
+                "move.after.process='" + moveAfterProcessDir + "', " +
+                "@map(type='xml'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.intValue() % 5;
+                count.incrementAndGet();
+                for (Event event : events) {
+                    switch (n) {
+                        case 0:
+                            AssertJUnit.assertEquals(10000L, event.getData(2));
+                            break;
+                        case 1:
+                            AssertJUnit.assertEquals(10001L, event.getData(2));
+                            break;
+                        case 2:
+                            AssertJUnit.assertEquals(10002L, event.getData(2));
+                            break;
+                        case 3:
+                            AssertJUnit.assertEquals(10003L, event.getData(2));
+                            break;
+                        case 4:
+                            AssertJUnit.assertEquals(10004L, event.getData(2));
+                            break;
+                        default:
+                            AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+
+        siddhiAppRuntime.start();
+
+        Thread.sleep(2000);
+
+        File file = new File(moveAfterProcessDir);
+        AssertJUnit.assertEquals(8, file.list().length);
+
+        //assert event count
+        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIoFileTest10() throws InterruptedException {
+        log.info("test SiddhiIoFile 1-");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='regex'," +
+                "dir.uri='" + dirUri + "/regex/xml_single/', " +
+                "begin.regex='(<events>)', " +
+                "tailing='false', " +
+                "action.after.process='move', " +
+                "move.after.process='" + moveAfterProcessDir + "', " +
+                "@map(type='xml'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = events.length;
+                count.incrementAndGet();
+                for (Event event : events) {
+                    switch (n) {
+                        case 1:
+                            AssertJUnit.assertEquals(10000L, event.getData(2));
+                            break;
+                        default:
+                            AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+
+        siddhiAppRuntime.start();
+
+        Thread.sleep(1000);
+
+        File file = new File(moveAfterProcessDir);
+        AssertJUnit.assertEquals(8, file.list().length);
+
+        //assert event count
+        AssertJUnit.assertEquals("Number of events", 8, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIoFileTest11() throws InterruptedException {
+        log.info("test SiddhiIoFile 11" +
+                "]]" +
+                "");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='regex'," +
+                "dir.uri='" + dirUri + "/regex/xml', " +
+                "end.regex='(</events>)', " +
+                "tailing='false', " +
+                "action.after.process='move', " +
+                "move.after.process='" + moveAfterProcessDir + "', " +
+                "@map(type='xml'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.intValue() % 5;
+                count.incrementAndGet();
+                for (Event event : events) {
+                    switch (n) {
+                        case 0:
+                            AssertJUnit.assertEquals(10000L, event.getData(2));
+                            break;
+                        case 1:
+                            AssertJUnit.assertEquals(10001L, event.getData(2));
+                            break;
+                        case 2:
+                            AssertJUnit.assertEquals(10002L, event.getData(2));
+                            break;
+                        case 3:
+                            AssertJUnit.assertEquals(10003L, event.getData(2));
+                            break;
+                        case 4:
+                            AssertJUnit.assertEquals(10004L, event.getData(2));
+                            break;
+                        default:
+                            AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+
+        siddhiAppRuntime.start();
+
+        Thread.sleep(1000);
+
+        File file = new File(moveAfterProcessDir);
+        AssertJUnit.assertEquals(8, file.list().length);
+
+        //assert event count
+        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        siddhiAppRuntime.shutdown();
+    }
 
     @Test
     public void siddhiIoFileTest20() throws InterruptedException {

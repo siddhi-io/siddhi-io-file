@@ -19,6 +19,9 @@
 package org.wso2.extension.siddhi.io.file;
 
 import org.apache.log4j.Logger;
+import org.wso2.carbon.messaging.BinaryCarbonMessage;
+import org.wso2.carbon.messaging.CarbonCallback;
+import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
@@ -26,11 +29,13 @@ import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
 import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
+import org.wso2.carbon.transport.filesystem.connector.server.exception.FileSystemServerConnectorException;
 import org.wso2.extension.siddhi.io.file.processors.FileProcessor;
 import org.wso2.extension.siddhi.io.file.processors.FileSystemMessageProcessor;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
 import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
+import org.wso2.extension.siddhi.io.file.util.VFSClientConnectorCallback;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
@@ -523,17 +528,36 @@ public class FileSource extends Source {
                     fileSourceConfiguration.getExecutorService().execute(runnableServer);
                 }
             } else {
+                // TODO: 23/7/17 When VFSClient is called alone, it keeps the thread running even after job is done
                 properties.put(Constants.URI, fileUri);
+                properties.put(Constants.ACK_TIME_OUT, "1000");
                 VFSClientConnector vfsClientConnector = new VFSClientConnector();
                 FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
                 vfsClientConnector.setMessageProcessor(fileProcessor);
+                VFSClientConnectorCallback vfsClientConnectorCallback = new VFSClientConnectorCallback();
 
-                try {
-                    vfsClientConnector.send(null, null, properties);
-                } catch (ClientConnectorException e) {
-                    throw new ConnectionUnavailableException("Failed to connect to the file system server due to : " +
-                            e.getMessage(), e);
-                }
+                Runnable runnableClient = new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
+                            vfsClientConnectorCallback.waitTillDone(2000, fileUri);
+                            if (moveAfterProcess != null) {
+                                properties.put(Constants.URI, fileUri);
+                                properties.put(Constants.ACTION, Constants.MOVE);
+                                properties.put(Constants.DESTINATION, moveAfterProcess);
+                                vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
+                            }
+                        } catch (ClientConnectorException e) {
+                            log.error("Failed to start the server for file " + fileUri + ". " +
+                                    "Hence starting to process next file.");
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+
+                fileSourceConfiguration.getExecutorService().execute(runnableClient);
             }
         }
     }
