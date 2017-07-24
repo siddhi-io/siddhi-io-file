@@ -40,7 +40,7 @@ public class FileSinkTestCase {
 
     @BeforeClass
     public void init() {
-        ClassLoader classLoader = FileSourceTestCase.class.getClassLoader();
+        ClassLoader classLoader = FileSourceTextFullModeTestCase.class.getClassLoader();
         dir = new File(classLoader.getResource("files").getFile());
     }
 

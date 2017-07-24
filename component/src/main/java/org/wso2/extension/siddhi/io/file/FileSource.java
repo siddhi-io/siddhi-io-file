@@ -454,6 +454,13 @@ public class FileSource extends Source {
             throw new SiddhiAppCreationException("'moveAfterProcess' cannot be used when tailing is enabled. " +
                     "Hence stopping the SiddhiApp. ");
         }
+
+        if (Constants.DELETE.equalsIgnoreCase(actionAfterProcess) && moveAfterProcess != null) {
+            throw new SiddhiAppCreationException("'moveAfterProcess' can only be used when " +
+                    "'action.after.process' is 'move'. But it has been used when 'action.after.process' is 'delete'." +
+                    "Hence stopping the SiddhiApp. ");
+        }
+
         if (Constants.MOVE.equalsIgnoreCase(actionAfterProcess) && (moveAfterProcess == null)) {
             throw new SiddhiAppCreationException("'moveAfterProcess' has not been provided where it is mandatory when" +
                     " 'actionAfterProcess' is 'move'. Hence stopping the SiddhiApp. ");
