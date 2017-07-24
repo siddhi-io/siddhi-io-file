@@ -27,7 +27,6 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TransportSender;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
-import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
@@ -134,7 +133,8 @@ public class FileProcessor implements CarbonMessageProcessor {
                         sb.append(tmp);
                     }
 
-                    if(fileSourceConfiguration.getBeginRegex() != null && fileSourceConfiguration.getEndRegex() == null) {
+                    if (fileSourceConfiguration.getBeginRegex() != null &&
+                            fileSourceConfiguration.getEndRegex() == null) {
                         int regexIndex = sb.toString().indexOf(fileSourceConfiguration.getBeginRegex().substring(1,
                                 fileSourceConfiguration.getBeginRegex().length() - 1));
                         if (regexIndex != -1) {
@@ -201,7 +201,7 @@ public class FileProcessor implements CarbonMessageProcessor {
             if (beginRegex != null && endRegex != null) {
                 pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + endRegex);
             } else if (beginRegex != null) {
-                pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + beginRegex );
+                pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + beginRegex);
             } else if (endRegex != null) {
                 pattern = Pattern.compile("((.|\n)*?)(" + endRegex + ")");
             } else {

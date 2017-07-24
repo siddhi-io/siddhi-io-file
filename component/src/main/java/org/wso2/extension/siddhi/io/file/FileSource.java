@@ -19,9 +19,6 @@
 package org.wso2.extension.siddhi.io.file;
 
 import org.apache.log4j.Logger;
-import org.wso2.carbon.messaging.BinaryCarbonMessage;
-import org.wso2.carbon.messaging.CarbonCallback;
-import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
@@ -29,7 +26,6 @@ import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
 import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
-import org.wso2.carbon.transport.filesystem.connector.server.exception.FileSystemServerConnectorException;
 import org.wso2.extension.siddhi.io.file.processors.FileProcessor;
 import org.wso2.extension.siddhi.io.file.processors.FileSystemMessageProcessor;
 import org.wso2.extension.siddhi.io.file.util.Constants;
@@ -283,8 +279,13 @@ public class FileSource extends Source {
         }
 
         if (dirUri != null && fileUri != null) {
-            throw new SiddhiAppCreationException("Only one of directory uro or file url should be provided. But both " +
+            throw new SiddhiAppCreationException("Only one of directory uri or file uri should be provided. But both " +
                     "have been provided.");
+        }
+
+        if (dirUri == null && fileUri == null) {
+            throw new SiddhiAppCreationException("Either directory uri or file uri should be provided. But both " +
+                    "have not been provided.");
         }
 
         mode = optionHolder.validateAndGetStaticValue(Constants.MODE, Constants.LINE);
@@ -445,16 +446,16 @@ public class FileSource extends Source {
     private void validateParameters() {
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             if (isTailingEnabled) {
-                throw new SiddhiAppRuntimeException("Tailing can't be enabled in '" + mode + "' mode.");
+                throw new SiddhiAppCreationException("Tailing can't be enabled in '" + mode + "' mode.");
             }
         }
 
         if (isTailingEnabled && moveAfterProcess != null) {
-            throw new SiddhiAppRuntimeException("'moveAfterProcess' cannot be used when tailing is enabled. " +
+            throw new SiddhiAppCreationException("'moveAfterProcess' cannot be used when tailing is enabled. " +
                     "Hence stopping the SiddhiApp. ");
         }
         if (Constants.MOVE.equalsIgnoreCase(actionAfterProcess) && (moveAfterProcess == null)) {
-            throw new SiddhiAppRuntimeException("'moveAfterProcess' has not been provided where it is mandatory when" +
+            throw new SiddhiAppCreationException("'moveAfterProcess' has not been provided where it is mandatory when" +
                     " 'actionAfterProcess' is 'move'. Hence stopping the SiddhiApp. ");
         }
         if (Constants.REGEX.equalsIgnoreCase(mode)) {
@@ -549,10 +550,11 @@ public class FileSource extends Source {
                                 vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
                             }
                         } catch (ClientConnectorException e) {
-                            log.error("Failed to start the server for file " + fileUri + ". " +
-                                    "Hence starting to process next file.");
+                            log.error("Failure occurred in vfsClient while reading the file " + fileUri +
+                                    "." + e.getMessage());
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            log.error("Failed to get call back from vfsclient  for file " + fileUri +
+                                    ". due to " + e.getMessage());
                         }
                     }
                 };
