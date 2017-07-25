@@ -32,7 +32,7 @@ import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.output.StreamCallback;
 import org.wso2.siddhi.core.util.EventPrinter;
-import org.wso2.siddhi.query.api.SiddhiApp;
+import org.wso2.siddhi.core.util.SiddhiTestHelper;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -48,6 +48,8 @@ public class FileSourceLineModeTestCase {
     // TODO: 20/7/17 Improve Thread.sleep() to use SiddhiTestHelper.waitForEvents().
     private static final Logger log = Logger.getLogger(FileSourceLineModeTestCase.class);
     private AtomicInteger count = new AtomicInteger();
+    private int waitTime = 2000;
+    private int timeout = 30000;
 
     private String dirUri, moveAfterProcessDir;
     private File sourceRoot, newRoot, movedFiles;
@@ -144,7 +146,7 @@ public class FileSourceLineModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(1000);
+        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
         File file = new File(dirUri + "/line/json");
         AssertJUnit.assertEquals(0, file.list().length);
@@ -208,7 +210,7 @@ public class FileSourceLineModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(1000);
+        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
         File file = new File(dirUri + "/line/json");
         AssertJUnit.assertEquals(0, file.list().length);
@@ -285,7 +287,7 @@ public class FileSourceLineModeTestCase {
 
         t1.start();
 
-        Thread.sleep(3000);
+        SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
 
         Thread t2 = new Thread(new Runnable() {
             @Override
@@ -318,7 +320,7 @@ public class FileSourceLineModeTestCase {
             }
         });
         t2.start();
-        Thread.sleep(2000);
+        SiddhiTestHelper.waitForEvents(waitTime, 7, count, timeout);
 
         //assert event count
         AssertJUnit.assertEquals("Number of events", 7, count.get());
@@ -388,7 +390,7 @@ public class FileSourceLineModeTestCase {
 
         t1.start();
 
-        Thread.sleep(3000);
+        SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
 
         Thread t2 = new Thread(new Runnable() {
             @Override
@@ -421,7 +423,7 @@ public class FileSourceLineModeTestCase {
             }
         });
         t2.start();
-        Thread.sleep(2000);
+        SiddhiTestHelper.waitForEvents(waitTime, 7, count, timeout);
 
         //assert event count
         AssertJUnit.assertEquals("Number of events", 7, count.get());
@@ -480,7 +482,7 @@ public class FileSourceLineModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(1000);
+        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
         File file = new File(dirUri + "/line/json");
         AssertJUnit.assertEquals(0, file.list().length);
@@ -608,7 +610,7 @@ public class FileSourceLineModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(2000);
+        SiddhiTestHelper.waitForEvents(waitTime, 3, count, timeout);
 
         File file = new File(dirUri + "/line/invalid");
         AssertJUnit.assertEquals(0, file.list().length);

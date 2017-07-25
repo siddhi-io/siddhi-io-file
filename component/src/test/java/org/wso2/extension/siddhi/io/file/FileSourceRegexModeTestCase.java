@@ -32,6 +32,7 @@ import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.output.StreamCallback;
 import org.wso2.siddhi.core.util.EventPrinter;
+import org.wso2.siddhi.core.util.SiddhiTestHelper;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -46,6 +47,8 @@ public class FileSourceRegexModeTestCase {
     // TODO: 20/7/17 Improve Thread.sleep() to use SiddhiTestHelper.waitForEvents().
     private static final Logger log = Logger.getLogger(FileSourceRegexModeTestCase.class);
     private AtomicInteger count = new AtomicInteger();
+    private int waitTime = 2000;
+    private int timeout = 30000;
 
     private String dirUri, moveAfterProcessDir;
     private File sourceRoot, newRoot, movedFiles;
@@ -145,7 +148,7 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(1000);
+        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
         File file = new File(dirUri + "/regex");
         AssertJUnit.assertEquals(0, file.list().length);
@@ -209,7 +212,7 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(1000);
+        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
         File file = new File(dirUri + "/regex");
         AssertJUnit.assertEquals(0, file.list().length);
@@ -276,7 +279,7 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(2000);
+        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
         File file = new File(moveAfterProcessDir);
         AssertJUnit.assertEquals(8, file.list().length);
@@ -343,7 +346,7 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(1000);
+        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
         File file = new File(moveAfterProcessDir);
         AssertJUnit.assertEquals(8, file.list().length);
@@ -409,7 +412,7 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(2000);
+        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
         File file = new File(moveAfterProcessDir);
         AssertJUnit.assertEquals(8, file.list().length);
@@ -463,7 +466,7 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(1000);
+        SiddhiTestHelper.waitForEvents(waitTime, 8, count, timeout);
 
         File file = new File(moveAfterProcessDir);
         AssertJUnit.assertEquals(8, file.list().length);
@@ -529,7 +532,7 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(1000);
+        SiddhiTestHelper.waitForEvents(waitTime, 8, count, timeout);
 
         File file = new File(moveAfterProcessDir);
         AssertJUnit.assertEquals(8, file.list().length);
@@ -605,7 +608,7 @@ public class FileSourceRegexModeTestCase {
 
         t1.start();
 
-        Thread.sleep(5000);
+        SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
 
         Thread t2 = new Thread(new Runnable() {
             @Override
@@ -638,7 +641,7 @@ public class FileSourceRegexModeTestCase {
             }
         });
         t2.start();
-        Thread.sleep(2000);
+        SiddhiTestHelper.waitForEvents(waitTime, 7, count, timeout);
 
         //assert event count
         AssertJUnit.assertEquals("Number of events", 7, count.get());
@@ -700,7 +703,7 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(2000);
+        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
         File file = new File(dirUri + "/regex/xml");
         AssertJUnit.assertEquals(0, file.list().length);
@@ -801,7 +804,7 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(2000);
+        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
         File file = new File(dirUri + "/regex/xml");
         AssertJUnit.assertEquals(0, file.list().length);
@@ -867,7 +870,7 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(2000);
+        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
         File file = new File(dirUri + "/regex/xml");
         AssertJUnit.assertEquals(0, file.list().length);
@@ -925,7 +928,7 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        Thread.sleep(2000);
+        SiddhiTestHelper.waitForEvents(waitTime, 3, count, timeout);
 
         File file = new File(dirUri + "/regex/invalid");
         AssertJUnit.assertEquals(0, file.list().length);

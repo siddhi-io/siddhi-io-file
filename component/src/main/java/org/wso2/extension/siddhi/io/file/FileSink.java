@@ -147,7 +147,9 @@ public class FileSink extends Sink {
             byteArray = (byte[]) payload;
         } else {
             try {
-                byteArray = payload.toString().getBytes(Constants.UTF_8);
+                StringBuilder sb = new StringBuilder();
+                sb.append(payload.toString()).append("\n");
+                byteArray = sb.toString().getBytes(Constants.UTF_8);
             } catch (UnsupportedEncodingException e) {
                 canBeWritten = false;
                 log.error("Received payload does not support UTF-8 encoding. Hence dropping the event." , e);

@@ -536,7 +536,6 @@ public class FileSource extends Source {
                     fileSourceConfiguration.getExecutorService().execute(runnableServer);
                 }
             } else {
-                // TODO: 23/7/17 When VFSClient is called alone, it keeps the thread running even after job is done
                 properties.put(Constants.URI, fileUri);
                 properties.put(Constants.ACK_TIME_OUT, "1000");
                 VFSClientConnector vfsClientConnector = new VFSClientConnector();
@@ -550,10 +549,12 @@ public class FileSource extends Source {
                         try {
                             vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
                             vfsClientConnectorCallback.waitTillDone(2000, fileUri);
-                            if (moveAfterProcess != null) {
+                            if (actionAfterProcess != null) {
                                 properties.put(Constants.URI, fileUri);
-                                properties.put(Constants.ACTION, Constants.MOVE);
-                                properties.put(Constants.DESTINATION, moveAfterProcess);
+                                properties.put(Constants.ACTION, actionAfterProcess);
+                                if (moveAfterProcess != null) {
+                                    properties.put(Constants.DESTINATION, moveAfterProcess);
+                                }
                                 vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
                             }
                         } catch (ClientConnectorException e) {
