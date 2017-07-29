@@ -10,7 +10,4 @@ pages:
 - Welcome to WSO2 Siddhi IO File: index.md
 - About:
   - License: about/license.md
-- API Docs:
-  - 1.0.0-M2-SNAPSHOT: api/1.0.0-M2-SNAPSHOT.md
-  - 1.0.0-M1-SNAPSHOT: api/1.0.0-M1-SNAPSHOT.md
 theme: material
