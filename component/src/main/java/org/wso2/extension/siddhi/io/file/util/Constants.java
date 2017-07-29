@@ -74,6 +74,7 @@ public class Constants {
 
     /*source property keys*/
     public static final String TAILED_FILE = "tailedFile";
+    public static final String TAILING_REGEX_STRING_BUILDER = "regexStringBuilder";
 
     /*property values*/
     public static final String ACTION_AFTER_PROCESS_DELETE = "DELETE";

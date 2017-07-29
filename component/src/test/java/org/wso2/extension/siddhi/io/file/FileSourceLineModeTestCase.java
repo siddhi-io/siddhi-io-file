@@ -656,5 +656,4 @@ public class FileSourceLineModeTestCase {
 
         siddhiAppRuntime.shutdown();
     }
-
 }

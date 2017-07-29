@@ -52,10 +52,12 @@ public class FileSourceConfiguration {
     private String tailedFileURI = null;
     private ExecutorService executorService = null;
     private String[] requiredProperties = null;
+    private StringBuilder tailingRegexStringBuilder = null;
 
 
     public FileSourceConfiguration() {
         executor = Executors.newSingleThreadExecutor();
+        tailingRegexStringBuilder = new StringBuilder();
     }
 
     public String getBeginRegex() {
@@ -222,5 +224,13 @@ public class FileSourceConfiguration {
 
     public void setMoveAfterFailure(String moveAfterFailure) {
         this.moveAfterFailure = moveAfterFailure;
+    }
+
+    public StringBuilder getTailingRegexStringBuilder() {
+        return tailingRegexStringBuilder;
+    }
+
+    public void updateTailingRegexStringBuilder(StringBuilder tailingRegexStringBuilder) {
+        this.tailingRegexStringBuilder = tailingRegexStringBuilder;
     }
 }

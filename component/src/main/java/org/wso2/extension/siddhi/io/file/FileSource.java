@@ -78,7 +78,7 @@ import java.util.concurrent.ExecutorService;
                 ),
 
                 @Parameter(
-                        name = "mode", // TODO : state possible values here
+                        name = "mode",
                         description =
                                 "This parameter is used to specify how files in given directory should." +
                                 "Possible values for this parameter are,\n" +
@@ -92,7 +92,6 @@ import java.util.concurrent.ExecutorService;
                 ),
 
                 @Parameter(
-                        // TODO  : tailing should't be provided with full mode : done
                         name = "tailing",
                         description = "" +
                                 "This can either have value true or false. By default it will be true. " +
@@ -105,7 +104,7 @@ import java.util.concurrent.ExecutorService;
                 ),
 
                 @Parameter(
-                        name = "action.after.process", // TODO : default value == delete : done
+                        name = "action.after.process",
                         description = "" +
                                 "This parameter is used to specify the action which should be carried out " +
                                 "after processing a file in the given directory. \n" +
@@ -118,7 +117,7 @@ import java.util.concurrent.ExecutorService;
                 ),
 
                 @Parameter(
-                        name = "action.after.failure", // TODO : default value == delete : done
+                        name = "action.after.failure",
                         description = "" +
                                 "This parameter is used to specify the action which should be carried out " +
                                 "if a failure occurred during the process. " +
@@ -191,7 +190,6 @@ import java.util.concurrent.ExecutorService;
                         defaultValue = "1000"
                 ),
 
-                // TODO : add action.after.failure (default : delete) , move.after.failure : done
         },
         examples = {
                 @Example(
@@ -384,6 +382,8 @@ public class FileSource extends Source {
         Map<String, Object> currentState = new HashMap<>();
         currentState.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
         currentState.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURI());
+        currentState.put(Constants.TAILING_REGEX_STRING_BUILDER,
+                fileSourceConfiguration.getTailingRegexStringBuilder());
         return currentState;
     }
 
@@ -391,6 +391,9 @@ public class FileSource extends Source {
         this.filePointer = map.get(Constants.FILE_POINTER).toString();
         this.tailedFileURI = map.get(Constants.TAILED_FILE).toString();
         fileSourceConfiguration.setFilePointer(filePointer);
+        fileSourceConfiguration.setTailedFileURI(tailedFileURI);
+        fileSourceConfiguration.updateTailingRegexStringBuilder(
+                (StringBuilder) map.get(Constants.TAILING_REGEX_STRING_BUILDER));
     }
 
     private void createInitialSourceConf() {
@@ -465,6 +468,7 @@ public class FileSource extends Source {
             throw new SiddhiAppCreationException("'moveAfterProcess' has not been provided where it is mandatory when" +
                     " 'actionAfterProcess' is 'move'. Hence stopping the SiddhiApp. ");
         }
+
         if (Constants.REGEX.equalsIgnoreCase(mode)) {
             if (beginRegex == null && endRegex == null) {
                 mode = Constants.LINE;

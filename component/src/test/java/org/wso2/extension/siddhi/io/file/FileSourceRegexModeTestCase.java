@@ -413,6 +413,7 @@ public class FileSourceRegexModeTestCase {
         siddhiAppRuntime.start();
 
         SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
+        Thread.sleep(1000);
 
         File file = new File(moveAfterProcessDir);
         AssertJUnit.assertEquals(8, file.list().length);

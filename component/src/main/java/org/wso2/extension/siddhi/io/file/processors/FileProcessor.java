@@ -49,7 +49,7 @@ public class FileProcessor implements CarbonMessageProcessor {
     private String mode;
     private Pattern pattern;
     private int readBytes;
-    private StringBuilder sb = new StringBuilder();
+    private StringBuilder sb;
     private String[] requiredProperties;
 
     public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
@@ -57,6 +57,11 @@ public class FileProcessor implements CarbonMessageProcessor {
         this.fileSourceConfiguration = fileSourceConfiguration;
         this.requiredProperties = fileSourceConfiguration.getRequiredProperties();
         this.mode = fileSourceConfiguration.getMode();
+        if (Constants.REGEX.equalsIgnoreCase(mode) && fileSourceConfiguration.isTailingEnabled()) {
+            sb = fileSourceConfiguration.getTailingRegexStringBuilder();
+        } else {
+            sb = new StringBuilder();
+        }
         configureFileMessageProcessor();
     }
 
@@ -131,21 +136,22 @@ public class FileProcessor implements CarbonMessageProcessor {
 
                         sb.setLength(0);
                         sb.append(tmp);
+                        buf = new char[10]; // to clean existing content of buffer
                     }
 
                     if (fileSourceConfiguration.getBeginRegex() != null &&
                             fileSourceConfiguration.getEndRegex() == null) {
-                        int regexIndex = sb.toString().indexOf(fileSourceConfiguration.getBeginRegex().substring(1,
-                                fileSourceConfiguration.getBeginRegex().length() - 1));
-                        if (regexIndex != -1) {
-                            sourceEventListener.onEvent(sb.substring(regexIndex), requiredPropertyValues);
+                        Pattern p = Pattern.compile(fileSourceConfiguration.getBeginRegex() + "((.|\n)*?)");
+                        Matcher m = p.matcher(sb.toString());
+                        while (m.find()) {
+                            String event = m.group(0);
+                            sourceEventListener.onEvent(sb.substring(sb.indexOf(event)), requiredPropertyValues);
                         }
                     }
                     if (carbonCallback != null) {
                         carbonCallback.done(carbonMessage);
                     }
                 } else {
-                    readBytes += content.length;
                     fileSourceConfiguration.updateFilePointer(readBytes);
 
                     sb.append(new String(content, Constants.UTF_8));
@@ -154,12 +160,8 @@ public class FileProcessor implements CarbonMessageProcessor {
                         String event = matcher.group(0);
                         lastMatchedIndex = matcher.end();
                         if (fileSourceConfiguration.getEndRegex() == null) {
-                            try {
-                                lastMatchedIndex -= (fileSourceConfiguration.getBeginRegex().length() - 2);
-                                event = event.substring(0, lastMatchedIndex);
-                            } catch (StringIndexOutOfBoundsException e) {
-                                int x = 10;
-                            }
+                            lastMatchedIndex -= (fileSourceConfiguration.getBeginRegex().length() - 2);
+                            event = event.substring(0, lastMatchedIndex);
                         } else if (fileSourceConfiguration.getBeginRegex() == null) {
                             if (remainedLength < lastMatchedIndex) {
                                 lastMatchedIndex += remainedLength;
@@ -167,12 +169,14 @@ public class FileProcessor implements CarbonMessageProcessor {
                             remainedLength = sb.length() - event.length() - remainedLength - 1;
                         }
                         sourceEventListener.onEvent(event, requiredPropertyValues);
+                        readBytes += content.length;
                     }
                     String tmp;
-                    tmp = sb.substring(lastMatchedIndex); // TODO : store sb in the snapshot also
+                    tmp = sb.substring(lastMatchedIndex);
 
                     sb.setLength(0);
                     sb.append(tmp);
+
                 }
             }
             return true;
