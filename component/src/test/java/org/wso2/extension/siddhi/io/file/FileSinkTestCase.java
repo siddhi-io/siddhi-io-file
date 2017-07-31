@@ -402,4 +402,205 @@ public class FileSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
     }
+
+    @Test
+    public void fileSinkTest7() throws InterruptedException {
+        log.info("test SiddhiIoFile Sink 7");
+
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "@sink(type='file', @map(type='json'), append='true', " +
+                "file.uri='" + sinkUri + "/{{symbol}}.json') " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
+        stockStream.send(new Object[]{"IBM", 57.678f, 100L});
+        stockStream.send(new Object[]{"GOOGLE", 50f, 100L});
+        stockStream.send(new Object[]{"REDHAT", 50f, 100L});
+        stockStream.send(new Object[]{"WSO2", 56.6f, 200L});
+        stockStream.send(new Object[]{"IBM", 58.678f, 200L});
+
+        Thread.sleep(100);
+
+        ArrayList<String> symbolNames = new ArrayList<>();
+        symbolNames.add("WSO2.json");
+        symbolNames.add("IBM.json");
+        symbolNames.add("GOOGLE.json");
+        symbolNames.add("REDHAT.json");
+
+        File sink = new File(sinkUri);
+        if (sink.isDirectory()) {
+            for (File file : sink.listFiles()) {
+                if (symbolNames.contains(file.getName())) {
+                    count.incrementAndGet();
+                }
+            }
+            AssertJUnit.assertEquals(4, count.intValue());
+        } else {
+            AssertJUnit.fail(sinkUri + " is not a directory.");
+        }
+
+        File wso2File = new File(sinkUri + "/WSO2.json");
+        File ibmFile = new File(sinkUri + "/IBM.json");
+
+        try {
+            BufferedReader bufferedReader1 = new BufferedReader(new FileReader(wso2File));
+            BufferedReader bufferedReader2 = new BufferedReader(new FileReader(ibmFile));
+
+            int n = 0;
+            String line = null;
+            while ((line = bufferedReader1.readLine()) != null) {
+                switch (n) {
+                    case 0:
+                        AssertJUnit.assertEquals("{\"event\":{\"symbol\":\"WSO2\",\"price\":55.6,\"volume\":100}}",
+                                line);
+                        break;
+                    case 1:
+                        AssertJUnit.assertEquals("{\"event\":{\"symbol\":\"WSO2\",\"price\":56.6,\"volume\":200}}",
+                                line);
+                        break;
+                }
+                n++;
+            }
+
+            AssertJUnit.assertEquals(2, n);
+
+            n = 0;
+            while ((line = bufferedReader2.readLine()) != null) {
+                switch (n) {
+                    case 0:
+                        AssertJUnit.assertEquals("{\"event\":{\"symbol\":\"IBM\",\"price\":57.678,\"volume\":100}}",
+                                line);
+                        break;
+                    case 1:
+                        AssertJUnit.assertEquals("{\"event\":{\"symbol\":\"IBM\",\"price\":58.678,\"volume\":200}}",
+                                line);
+                        break;
+                }
+                n++;
+            }
+
+            AssertJUnit.assertEquals(2, n);
+
+        } catch (FileNotFoundException e) {
+            AssertJUnit.fail(e.getMessage());
+        } catch (IOException e) {
+            AssertJUnit.fail(e.getMessage());
+        }
+
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void fileSinkTest8() throws InterruptedException {
+        log.info("test SiddhiIoFile Sink 8");
+
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "@sink(type='file', @map(type='text'), append='false', " +
+                "file.uri='" + sinkUri + "/{{symbol}}.txt') " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
+        stockStream.send(new Object[]{"IBM", 57.678f, 100L});
+        stockStream.send(new Object[]{"GOOGLE", 50f, 100L});
+        stockStream.send(new Object[]{"REDHAT", 50f, 100L});
+        Thread.sleep(100);
+
+        ArrayList<String> symbolNames = new ArrayList<>();
+        symbolNames.add("WSO2.txt");
+        symbolNames.add("IBM.txt");
+        symbolNames.add("GOOGLE.txt");
+        symbolNames.add("REDHAT.txt");
+
+        File sink = new File(sinkUri);
+        if (sink.isDirectory()) {
+            for (File file : sink.listFiles()) {
+                if (symbolNames.contains(file.getName())) {
+                    count.incrementAndGet();
+                }
+            }
+            AssertJUnit.assertEquals(4, count.intValue());
+        } else {
+            AssertJUnit.fail(sinkUri + " is not a directory.");
+        }
+
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void fileSinkTest9() throws InterruptedException {
+        log.info("test SiddhiIoFile Sink 9");
+
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "@sink(type='file', @map(type='xml'), append='false', " +
+                "file.uri='" + sinkUri + "/{{symbol}}.xml') " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
+        stockStream.send(new Object[]{"IBM", 57.678f, 100L});
+        stockStream.send(new Object[]{"GOOGLE", 50f, 100L});
+        stockStream.send(new Object[]{"REDHAT", 50f, 100L});
+        Thread.sleep(100);
+
+        ArrayList<String> symbolNames = new ArrayList<>();
+        symbolNames.add("WSO2.xml");
+        symbolNames.add("IBM.xml");
+        symbolNames.add("GOOGLE.xml");
+        symbolNames.add("REDHAT.xml");
+
+        File sink = new File(sinkUri);
+        if (sink.isDirectory()) {
+            for (File file : sink.listFiles()) {
+                if (symbolNames.contains(file.getName())) {
+                    count.incrementAndGet();
+                }
+            }
+            AssertJUnit.assertEquals(4, count.intValue());
+        } else {
+            AssertJUnit.fail(sinkUri + " is not a directory.");
+        }
+
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
 }
