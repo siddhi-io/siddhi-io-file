@@ -22,7 +22,9 @@
 <suite name="Tcp-IO-Test-Suite">
     <test name="tcp-tests" enabled="true" preserve-order="true">
         <classes>
-            <class name="org.wso2.extension.siddhi.io.file.FileSourceTestCase"/>
+            <class name="org.wso2.extension.siddhi.io.file.FileSourceTextFullModeTestCase"/>
+            <class name="org.wso2.extension.siddhi.io.file.FileSourceRegexModeTestCase"/>
+            <class name="org.wso2.extension.siddhi.io.file.FileSourceLineModeTestCase"/>
             <class name="org.wso2.extension.siddhi.io.file.FileSinkTestCase"/>
         </classes>
     </test>

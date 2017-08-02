@@ -92,6 +92,11 @@
                 <version>${siddhi.map.json.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.wso2.extension.siddhi.map.text</groupId>
+                <artifactId>siddhi-map-text</artifactId>
+                <version>${siddhi.map.text.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.commons.wso2</groupId>
                 <artifactId>commons-vfs2</artifactId>
                 <version>2.0-wso2v15</version>
@@ -117,11 +122,12 @@
     </dependencyManagement>
 
     <properties>
-        <siddhi.version>4.0.0-M22</siddhi.version>
-        <carbon.transport.version>4.4.15</carbon.transport.version>
+        <siddhi.version>4.0.0-M28</siddhi.version>
+        <carbon.transport.version>4.4.26</carbon.transport.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>4.0.3</siddhi.map.json.version>
         <siddhi.map.xml.version>4.0.0-M8</siddhi.map.xml.version>
+        <siddhi.map.text.version>1.0.1</siddhi.map.text.version>
     </properties>
 
     <build>

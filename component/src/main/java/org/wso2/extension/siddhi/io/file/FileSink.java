@@ -106,6 +106,7 @@ public class FileSink extends Sink {
     private VFSClientConnector vfsClientConnector = null;
     private Map<String, String> properties = null;
     private Option uriOption;
+    private SiddhiAppContext siddhiAppContext;
 
 
     @Override
@@ -119,6 +120,7 @@ public class FileSink extends Sink {
 
     protected void init(StreamDefinition streamDefinition, OptionHolder optionHolder,
                         ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
+        this.siddhiAppContext = siddhiAppContext;
         uriOption = optionHolder.validateAndGetOption(Constants.FILE_URI);
         String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
         properties = new HashMap<>();
@@ -147,7 +149,9 @@ public class FileSink extends Sink {
             byteArray = (byte[]) payload;
         } else {
             try {
-                byteArray = payload.toString().getBytes(Constants.UTF_8);
+                StringBuilder sb = new StringBuilder();
+                sb.append(payload.toString()).append("\n");
+                byteArray = sb.toString().getBytes(Constants.UTF_8);
             } catch (UnsupportedEncodingException e) {
                 canBeWritten = false;
                 log.error("Received payload does not support UTF-8 encoding. Hence dropping the event." , e);
@@ -161,7 +165,8 @@ public class FileSink extends Sink {
             try {
                 vfsClientConnector.send(binaryCarbonMessage, null, properties);
             } catch (ClientConnectorException e) {
-                throw new ConnectionUnavailableException("Writing data into the file " + uri + " failed due to " +
+                throw new ConnectionUnavailableException("Writing data into the file " + uri + " failed during the " +
+                        "execution of '" + siddhiAppContext.getName() + "' SiddhiApp, due to " +
                         e.getMessage(), e);
             }
         }

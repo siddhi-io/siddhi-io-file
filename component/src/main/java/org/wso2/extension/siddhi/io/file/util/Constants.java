@@ -70,9 +70,11 @@ public class Constants {
     public static final String FILE_SORT_ASCENDING = "fileSortAscending";
     public static final String CREATE_MOVE_DIR = "createMoveDir";
     public static final String ACK_TIME_OUT = "ackTimeOut";
+    public static final String DESTINATION = "destination";
 
     /*source property keys*/
     public static final String TAILED_FILE = "tailedFile";
+    public static final String TAILING_REGEX_STRING_BUILDER = "regexStringBuilder";
 
     /*property values*/
     public static final String ACTION_AFTER_PROCESS_DELETE = "DELETE";

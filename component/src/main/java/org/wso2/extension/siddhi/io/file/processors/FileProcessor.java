@@ -27,6 +27,7 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TransportSender;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
+import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.io.BufferedReader;
@@ -35,6 +36,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Message processor for handling data retrieved from consumed files.
@@ -47,7 +49,7 @@ public class FileProcessor implements CarbonMessageProcessor {
     private String mode;
     private Pattern pattern;
     private int readBytes;
-    private StringBuilder sb = new StringBuilder();
+    private StringBuilder sb;
     private String[] requiredProperties;
 
     public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
@@ -55,6 +57,11 @@ public class FileProcessor implements CarbonMessageProcessor {
         this.fileSourceConfiguration = fileSourceConfiguration;
         this.requiredProperties = fileSourceConfiguration.getRequiredProperties();
         this.mode = fileSourceConfiguration.getMode();
+        if (Constants.REGEX.equalsIgnoreCase(mode) && fileSourceConfiguration.isTailingEnabled()) {
+            sb = fileSourceConfiguration.getTailingRegexStringBuilder();
+        } else {
+            sb = new StringBuilder();
+        }
         configureFileMessageProcessor();
     }
 
@@ -95,44 +102,85 @@ public class FileProcessor implements CarbonMessageProcessor {
                     }
                 }
             } else if (Constants.REGEX.equalsIgnoreCase(mode)) {
-                int lastMatchIndex = 0;
+                int lastMatchedIndex = 0;
+                int remainedLength = 0;
                 if (!fileSourceConfiguration.isTailingEnabled()) {
                     char[] buf = new char[10];
                     InputStream is = new ByteArrayInputStream(content);
                     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
 
                     while (bufferedReader.read(buf) != -1) {
-                        lastMatchIndex = 0;
+                        lastMatchedIndex = 0;
                         sb.append(new String(buf));
                         Matcher matcher = pattern.matcher(sb.toString().trim());
                         while (matcher.find()) {
                             String event = matcher.group(0);
-                            lastMatchIndex = matcher.end();
+                            lastMatchedIndex = matcher.end();
+                            if (fileSourceConfiguration.getEndRegex() == null) {
+                                try {
+                                    lastMatchedIndex -= (fileSourceConfiguration.getBeginRegex().length() - 2);
+                                    event = event.substring(0, lastMatchedIndex);
+                                } catch (StringIndexOutOfBoundsException e) {
+                                    int x = 10;
+                                }
+                            } else if (fileSourceConfiguration.getBeginRegex() == null) {
+                                if (remainedLength < lastMatchedIndex) {
+                                    lastMatchedIndex += remainedLength;
+                                }
+                                remainedLength = sb.length() - event.length() - remainedLength - 1;
+                            }
                             sourceEventListener.onEvent(event, requiredPropertyValues);
                         }
                         String tmp;
-                        tmp = sb.substring(lastMatchIndex);
+                        tmp = sb.substring(lastMatchedIndex);
 
                         sb.setLength(0);
                         sb.append(tmp);
+                        buf = new char[10]; // to clean existing content of buffer
                     }
-                    carbonCallback.done(carbonMessage);
+
+                    /*
+                    Handling last regex match since it will be having only one begin regex
+                    instead of two to match.
+                    */
+                    if (fileSourceConfiguration.getBeginRegex() != null &&
+                            fileSourceConfiguration.getEndRegex() == null) {
+                        Pattern p = Pattern.compile(fileSourceConfiguration.getBeginRegex() + "((.|\n)*?)");
+                        Matcher m = p.matcher(sb.toString());
+                        while (m.find()) {
+                            String event = m.group(0);
+                            sourceEventListener.onEvent(sb.substring(sb.indexOf(event)), requiredPropertyValues);
+                        }
+                    }
+                    if (carbonCallback != null) {
+                        carbonCallback.done(carbonMessage);
+                    }
                 } else {
-                    readBytes += content.length;
                     fileSourceConfiguration.updateFilePointer(readBytes);
 
                     sb.append(new String(content, Constants.UTF_8));
                     Matcher matcher = pattern.matcher(sb.toString().trim());
                     while (matcher.find()) {
                         String event = matcher.group(0);
-                        lastMatchIndex = matcher.end(); // TODO : update the fp here
+                        lastMatchedIndex = matcher.end();
+                        if (fileSourceConfiguration.getEndRegex() == null) {
+                            lastMatchedIndex -= (fileSourceConfiguration.getBeginRegex().length() - 2);
+                            event = event.substring(0, lastMatchedIndex);
+                        } else if (fileSourceConfiguration.getBeginRegex() == null) {
+                            if (remainedLength < lastMatchedIndex) {
+                                lastMatchedIndex += remainedLength;
+                            }
+                            remainedLength = sb.length() - event.length() - remainedLength - 1;
+                        }
                         sourceEventListener.onEvent(event, requiredPropertyValues);
+                        readBytes += content.length;
                     }
                     String tmp;
-                    tmp = sb.substring(lastMatchIndex); // TODO : store sb in the snapshot also
+                    tmp = sb.substring(lastMatchedIndex);
 
                     sb.setLength(0);
                     sb.append(tmp);
+
                 }
             }
             return true;
@@ -157,14 +205,19 @@ public class FileProcessor implements CarbonMessageProcessor {
     private void configureFileMessageProcessor() {
         String beginRegex = fileSourceConfiguration.getBeginRegex();
         String endRegex = fileSourceConfiguration.getEndRegex();
-        if (beginRegex != null && endRegex != null) {
-            pattern = Pattern.compile(beginRegex + "(.+?)" + endRegex);
-        } else if (beginRegex != null) {
-            pattern = Pattern.compile(beginRegex + "(.+?)" + beginRegex);
-        } else if (endRegex != null) {
-            pattern = Pattern.compile(".+?" + endRegex);
-        } else {
-            pattern = Pattern.compile("(\n$)"); // this will not be reached
+        try {
+            if (beginRegex != null && endRegex != null) {
+                pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + endRegex);
+            } else if (beginRegex != null) {
+                pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + beginRegex);
+            } else if (endRegex != null) {
+                pattern = Pattern.compile("((.|\n)*?)(" + endRegex + ")");
+            } else {
+                pattern = Pattern.compile("(\n$)"); // this will not be reached
+            }
+        } catch (PatternSyntaxException e) {
+            throw new SiddhiAppRuntimeException("Cannot compile the regex '" + beginRegex +
+            "' and '" + endRegex + "'. Hence shutting down the siddhiApp. ");
         }
     }
 
