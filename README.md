@@ -15,30 +15,19 @@ This repository can be independently released from Siddhi.
 Features Supported
 ------------------
  - File source
-   -- Multiple sources can be defined.
-   -- Enables WSO2 Stream Processor to receive messages from files.
+    - Multiple sources can be defined.
+    - Enables WSO2 Stream Processor to receive messages from files.
  - File sink 
-   -- Multiple sinks can be defined.
-   -- Enables WSO2 Stream Processor to publish messages to files.
+   - Multiple sinks can be defined.
+   - Enables WSO2 Stream Processor to publish messages to files.
  - File tailing capability
-   -- Enable Stream Processor to tail a specific file.
+   - Enable Stream Processor to tail a specific file.
      
 Prerequisites for using the feature
 ------------------
  - Siddhi Stream should be defined
  - Stream processor should be running. 
-  siddhi:
   
-     extensions:
-     
-       -extension:
-        name: 'file'
-        namespace: 'source'
-          
-       -extension:
-        name: 'http'
-        namespace: 'sink'
- 
 Deploying the feature
 ------------------
  Feature can be deploy as a OSGI bundle by putting jar file of component to Wso2SPHome/lib directory of SP 4.0.0 pack. 
