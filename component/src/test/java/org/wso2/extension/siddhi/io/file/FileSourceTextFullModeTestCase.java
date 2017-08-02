@@ -35,13 +35,14 @@ import org.wso2.siddhi.core.util.SiddhiTestHelper;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Test cases for siddhi-io-file source.
  * */
 public class FileSourceTextFullModeTestCase {
-    // TODO: 20/7/17 Improve Thread.sleep() to use SiddhiTestHelper.waitForEvents().
     private static final Logger log = Logger.getLogger(FileSourceTextFullModeTestCase.class);
     private AtomicInteger count = new AtomicInteger();
     private int waitTime = 2000;
@@ -329,7 +330,8 @@ public class FileSourceTextFullModeTestCase {
                 siddhiAppRuntime.start();
             }
         });
-        t1.start();
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.execute(t1);
 
         SiddhiTestHelper.waitForEvents(waitTime, 1, count, timeout);
 
@@ -342,6 +344,7 @@ public class FileSourceTextFullModeTestCase {
                     if (count.intValue() == 1) {
                         try {
                             FileUtils.copyFile(source, dest);
+                            break;
                         } catch (IOException e) {
                             AssertJUnit.fail("Failed to add a new file to directory '" +
                                     dirUri + "/text_full_single'.");
@@ -350,9 +353,12 @@ public class FileSourceTextFullModeTestCase {
                 }
             }
         });
-        t2.start();
+
+        executorService.execute(t2);
 
         SiddhiTestHelper.waitForEvents(waitTime, 2, count, timeout);
+
+        executorService.shutdown();
 
         File file = new File(dirUri + "/text_full_single");
         AssertJUnit.assertEquals(0, file.list().length);

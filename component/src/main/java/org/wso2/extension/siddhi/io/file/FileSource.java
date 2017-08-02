@@ -347,7 +347,8 @@ public class FileSource extends Source {
                 fileSourceConfiguration.setFileServerConnector(null);
             }
         } catch (ServerConnectorException e) {
-           throw new SiddhiAppRuntimeException("Failed to stop the file server : " + e.getMessage());
+           throw new SiddhiAppRuntimeException("Failed to stop the file server when shutting down the siddhi app '" +
+                   siddhiAppContext.getName() + "' due to " + e.getMessage(), e);
         }
     }
 

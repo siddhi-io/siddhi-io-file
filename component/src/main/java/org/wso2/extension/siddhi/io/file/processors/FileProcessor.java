@@ -139,6 +139,10 @@ public class FileProcessor implements CarbonMessageProcessor {
                         buf = new char[10]; // to clean existing content of buffer
                     }
 
+                    /*
+                    Handling last regex match since it will be having only one begin regex
+                    instead of two to match.
+                    */
                     if (fileSourceConfiguration.getBeginRegex() != null &&
                             fileSourceConfiguration.getEndRegex() == null) {
                         Pattern p = Pattern.compile(fileSourceConfiguration.getBeginRegex() + "((.|\n)*?)");
