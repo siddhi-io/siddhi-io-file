@@ -83,7 +83,7 @@ import java.util.Map;
                         syntax = "" +
                                 "@sink(type='file', @map(type='json'), " +
                                 "append='false', " +
-                                "uri='/abc/{{symbol}}.txt') " +
+                                "file.uri='/abc/{{symbol}}.txt') " +
                                 "define stream BarStream (symbol string, price float, volume long); ",
 
                         description = "" +
