@@ -29,6 +29,7 @@ import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerCon
 import org.wso2.extension.siddhi.io.file.processors.FileProcessor;
 import org.wso2.extension.siddhi.io.file.processors.FileSystemMessageProcessor;
 import org.wso2.extension.siddhi.io.file.util.Constants;
+import org.wso2.extension.siddhi.io.file.util.ErrorHandler;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
 import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
 import org.wso2.extension.siddhi.io.file.util.VFSClientConnectorCallback;
@@ -486,6 +487,7 @@ public class FileSource extends Source {
             Map<String, String> properties = getFileSystemServerProperties();
             fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector("fileSystemServerConnector",
                     properties);
+            fileSystemServerConnector.setServerConnectorErrorHandler(new ErrorHandler());
             FileSystemMessageProcessor fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener,
                     fileSourceConfiguration);
             fileSystemServerConnector.setMessageProcessor(fileSystemMessageProcessor);
