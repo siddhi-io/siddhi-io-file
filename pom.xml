@@ -118,6 +118,12 @@
                 <scope>test</scope>
                 <version>${testng.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.jacoco</groupId>
+                <artifactId>org.jacoco.agent</artifactId>
+                <classifier>runtime</classifier>
+                <version>${jacoco.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -128,6 +134,7 @@
         <siddhi.map.json.version>4.0.3</siddhi.map.json.version>
         <siddhi.map.xml.version>4.0.0-M8</siddhi.map.xml.version>
         <siddhi.map.text.version>1.0.1</siddhi.map.text.version>
+        <jacoco.version>0.7.9</jacoco.version>
     </properties>
 
     <build>
