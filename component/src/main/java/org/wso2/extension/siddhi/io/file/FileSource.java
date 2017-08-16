@@ -320,6 +320,8 @@ public class FileSource extends Source {
         validateParameters();
         createInitialSourceConf();
         updateSourceConf();
+
+        siddhiAppContext.getSnapshotService().addSnapshotable("siddhi-io-file", this);
     }
 
 
