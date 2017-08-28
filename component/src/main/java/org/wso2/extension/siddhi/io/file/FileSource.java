@@ -563,6 +563,7 @@ public class FileSource extends Source {
                                     properties.put(Constants.DESTINATION, moveAfterProcess);
                                 }
                                 vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
+                                vfsClientConnectorCallback.waitTillDone(2000, fileUri);
                             }
                         } catch (ClientConnectorException e) {
                             log.error("Failure occurred in vfsClient while reading the file " + fileUri +
