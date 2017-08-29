@@ -49,7 +49,6 @@ public class FileSourceLineModeTestCase {
     private AtomicInteger count = new AtomicInteger();
     private int waitTime = 2000;
     private int timeout = 30000;
-
     private String dirUri, moveAfterProcessDir;
     private File sourceRoot, newRoot, movedFiles;
 
@@ -62,7 +61,6 @@ public class FileSourceLineModeTestCase {
         newRoot = new File(dirUri);
         moveAfterProcessDir = rootPath + "/moved_files";
     }
-
     @BeforeMethod
     public void doBeforeMethod() {
         count.set(0);
@@ -77,7 +75,6 @@ public class FileSourceLineModeTestCase {
                     " which are required for tests. Hence aborting tests.", e);
         }
     }
-
     @AfterMethod
     public void doAfterMethod() {
         try {
@@ -112,7 +109,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -142,14 +138,10 @@ public class FileSourceLineModeTestCase {
                 }
             }
         });
-
         siddhiAppRuntime.start();
-
         SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
-
         File file = new File(dirUri + "/line/json");
         AssertJUnit.assertEquals(0, file.list().length);
-
         //assert event count
         AssertJUnit.assertEquals("Number of events", 40, count.get());
         siddhiAppRuntime.shutdown();
@@ -168,7 +160,6 @@ public class FileSourceLineModeTestCase {
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
@@ -176,7 +167,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -206,17 +196,12 @@ public class FileSourceLineModeTestCase {
                 }
             }
         });
-
         siddhiAppRuntime.start();
-
         SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
-
         File file = new File(dirUri + "/line/json");
         AssertJUnit.assertEquals(0, file.list().length);
-
         File movedDir = new File(moveAfterProcessDir);
         AssertJUnit.assertEquals(8, movedDir.list().length);
-
         //assert event count
         AssertJUnit.assertEquals("Number of events", 40, count.get());
         siddhiAppRuntime.shutdown();
@@ -233,7 +218,6 @@ public class FileSourceLineModeTestCase {
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
@@ -241,7 +225,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -277,17 +260,13 @@ public class FileSourceLineModeTestCase {
                 }
             }
         });
-
         Thread t1 = new Thread(new Runnable() {
             public void run() {
                 siddhiAppRuntime.start();
             }
         });
-
         t1.start();
-
         SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
-
         Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -320,12 +299,10 @@ public class FileSourceLineModeTestCase {
         });
         t2.start();
         SiddhiTestHelper.waitForEvents(waitTime, 7, count, timeout);
-
         //assert event count
         AssertJUnit.assertEquals("Number of events", 7, count.get());
         siddhiAppRuntime.shutdown();
     }
-
     @Test
     public void siddhiIoFileTest4() throws InterruptedException {
         log.info("test SiddhiIoFile [mode=line] Test 4");
@@ -336,7 +313,6 @@ public class FileSourceLineModeTestCase {
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
@@ -344,7 +320,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -380,17 +355,13 @@ public class FileSourceLineModeTestCase {
                 }
             }
         });
-
         Thread t1 = new Thread(new Runnable() {
             public void run() {
                 siddhiAppRuntime.start();
             }
         });
-
         t1.start();
-
         SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
-
         Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -423,7 +394,6 @@ public class FileSourceLineModeTestCase {
         });
         t2.start();
         SiddhiTestHelper.waitForEvents(waitTime, 7, count, timeout);
-
         //assert event count
         AssertJUnit.assertEquals("Number of events", 7, count.get());
         siddhiAppRuntime.shutdown();
@@ -440,7 +410,6 @@ public class FileSourceLineModeTestCase {
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
@@ -448,7 +417,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -478,14 +446,10 @@ public class FileSourceLineModeTestCase {
                 }
             }
         });
-
         siddhiAppRuntime.start();
-
         SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
-
         File file = new File(dirUri + "/line/json");
         AssertJUnit.assertEquals(0, file.list().length);
-
         //assert event count
         AssertJUnit.assertEquals("Number of events", 40, count.get());
         siddhiAppRuntime.shutdown();
@@ -503,7 +467,6 @@ public class FileSourceLineModeTestCase {
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
@@ -511,7 +474,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -519,11 +481,8 @@ public class FileSourceLineModeTestCase {
                 EventPrinter.print(events);
             }
         });
-
         siddhiAppRuntime.start();
-
         Thread.sleep(1000);
-
         siddhiAppRuntime.shutdown();
     }
 
@@ -539,7 +498,6 @@ public class FileSourceLineModeTestCase {
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
@@ -547,7 +505,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -555,11 +512,8 @@ public class FileSourceLineModeTestCase {
                 EventPrinter.print(events);
             }
         });
-
         siddhiAppRuntime.start();
-
         Thread.sleep(1000);
-
         siddhiAppRuntime.shutdown();
     }
 
@@ -574,7 +528,6 @@ public class FileSourceLineModeTestCase {
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
@@ -582,7 +535,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -606,14 +558,10 @@ public class FileSourceLineModeTestCase {
                 }
             }
         });
-
         siddhiAppRuntime.start();
-
         SiddhiTestHelper.waitForEvents(waitTime, 3, count, timeout);
-
         File file = new File(dirUri + "/line/invalid");
         AssertJUnit.assertEquals(0, file.list().length);
-
         //assert event count
         AssertJUnit.assertEquals("Number of events", 3, count.get());
         siddhiAppRuntime.shutdown();
@@ -632,7 +580,6 @@ public class FileSourceLineModeTestCase {
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
@@ -640,7 +587,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -648,11 +594,8 @@ public class FileSourceLineModeTestCase {
                 EventPrinter.print(events);
             }
         });
-
         siddhiAppRuntime.start();
-
         Thread.sleep(1000);
-
         siddhiAppRuntime.shutdown();
     }
 
@@ -668,7 +611,6 @@ public class FileSourceLineModeTestCase {
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
@@ -676,7 +618,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -706,14 +647,10 @@ public class FileSourceLineModeTestCase {
                 }
             }
         });
-
         siddhiAppRuntime.start();
-
         SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
-
         File file = new File(dirUri + "/line/xml/");
         AssertJUnit.assertEquals(7, file.list().length);
-
         //assert event count
         AssertJUnit.assertEquals("Number of events", 5, count.get());
         siddhiAppRuntime.shutdown();
@@ -732,7 +669,6 @@ public class FileSourceLineModeTestCase {
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
@@ -740,7 +676,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -770,17 +705,12 @@ public class FileSourceLineModeTestCase {
                 }
             }
         });
-
         siddhiAppRuntime.start();
-
         SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
-
         File file = new File(dirUri + "/line/xml");
         AssertJUnit.assertEquals(0, file.list().length);
-
         File movedDir = new File(moveAfterProcessDir);
         AssertJUnit.assertEquals(8, movedDir.list().length);
-
         //assert event count
         AssertJUnit.assertEquals("Number of events", 40, count.get());
         siddhiAppRuntime.shutdown();
@@ -801,7 +731,6 @@ public class FileSourceLineModeTestCase {
                 "@attributes(symbol = 'A[1]', price = 'A[2]', volume = 'A[3]')))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
@@ -809,7 +738,6 @@ public class FileSourceLineModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -839,17 +767,12 @@ public class FileSourceLineModeTestCase {
                 }
             }
         });
-
         siddhiAppRuntime.start();
-
         SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
-
         File file = new File(dirUri + "/line/text");
         AssertJUnit.assertEquals(0, file.list().length);
-
         File movedDir = new File(moveAfterProcessDir);
         AssertJUnit.assertEquals(8, movedDir.list().length);
-
         //assert event count
         AssertJUnit.assertEquals("Number of events", 40, count.get());
         siddhiAppRuntime.shutdown();
