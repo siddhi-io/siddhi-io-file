@@ -1,245 +1,77 @@
 ﻿siddhi-io-file
 ======================================
+
+The **siddhi-io-file extension** is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> 
+that processes event streams based on unique events.
+Siddhi-io-file is used to receive/publish event data from/to file. 
+It supports both binary and text formats.
+
+Find some useful links below:
+
+* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-io-file">Source code</a>
+* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-io-file/releases">Releases</a>
+* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-io-file/issues">Issue tracker</a>
+
+## Latest API Docs 
+
+
+## How to use 
+
+**Using the extension in <a target="_blank" href="https://github.com/wso2/product-sp">WSO2 Stream Processor</a>**
+
+* You can use this extension in the latest <a target="_blank" href="https://github.com/wso2/product-sp/releases">WSO2 Stream Processor</a> that is a part of <a target="_blank" href="http://wso2.com/analytics?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17">WSO2 Analytics</a> offering, with editor, debugger and simulation support. 
+
+* This extension is shipped by default with WSO2 Stream Processor, if you wish to use an alternative version of this 
+extension you can replace the component <a target="_blank" href="https://github
+.com/wso2-extensions/siddhi-io-file/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` directory.
+
+**Using the extension as a <a target="_blank" href="https://wso2.github.io/siddhi/documentation/running-as-a-java-library">java library</a>**
+
+* This extension can be added as a maven dependency along with other Siddhi dependencies to your project.
+
+```
+     <dependency>
+        <groupId>org.wso2.extension.siddhi.io.file</groupId>
+        <artifactId>siddhi-io-file</artifactId>
+        <version>x.x.x</version>
+     </dependency>
+```
+
+## Jenkins Build Status
+
 ---
+
 |  Branch | Build Status |
 | :------ |:------------ | 
-| master  | [![Build Status](https://wso2.org/jenkins/view/All%20Builds/job/siddhi/job/siddhi-io-file/badge/icon)](https://wso2.org/jenkins/view/All%20Builds/job/siddhi/job/siddhi-io-file/) |
+| master  | [![Build Status](https://wso2.org/jenkins/job/siddhi/job/siddhi-io-file/badge/icon)](https://wso2
+.org/jenkins/job/siddhi/job/siddhi-io-file/) |
+
 ---
-##### New version of Siddhi v4.0.0 is built in Java 8.
 
-This repository contains source code for siddhi-io-file extension. 
-Siddhi-io-file is used to receive/publish event data from/to file. It supports both binary and text formats.
+## Features
 
-This repository can be independently released from Siddhi.
 
-Features Supported
-------------------
- - File source
-    - Multiple sources can be defined.
-    - Enables WSO2 Stream Processor to receive messages from files.
- - File sink 
-   - Multiple sinks can be defined.
-   - Enables WSO2 Stream Processor to publish messages to files.
- - File tailing capability
-   - Enable Stream Processor to tail a specific file.
-     
-Prerequisites for using the feature
-------------------
- - Siddhi Stream should be defined
- - Stream processor should be running. 
+## How to Contribute
+ 
+  * Please report issues at <a target="_blank" href="https://github.com/wso2-extensions/siddhi-io-file/issues">GitHub 
+  Issue
+   Tracker</a>.
   
-Deploying the feature
-------------------
- Feature can be deploy as a OSGI bundle by putting jar file of component to Wso2SPHome/lib directory of SP 4.0.0 pack. 
+  * Send your contributions as pull requests to <a target="_blank" href="https://github
+  .com/wso2-extensions/siddhi-io-file/tree/master">master branch</a>. 
  
-Example Siddhi Queries
------------------- 
-#### Event Source
-##### Reading all the json files in a directory completely which contain single json messages.
- 
-     @source(
-            type='file', 
-            dir.uri='abc/def/',
-            mode = 'text.full',
-            @map(type='json')
-      )
-     define stream inputStream (symbol string, price double, volume long);
-     
-##### Reading a single json file completely which contains a single json message.
- 
-     @source(
-            type='file', 
-            dir.uri='abc/def/message.json',
-            mode = 'text.full',
-            @map(type='json')
-      )
-     define stream inputStream (symbol string, price double, volume long);
-     
-##### Reading all the json files in a directory line by line without tailing enabled.
- 
-     @source(
-            type='file', 
-            dir.uri='abc/def/',
-            mode = 'line',
-            tailing='false',
-            @map(type='json')
-      )
-     define stream inputStream (symbol string, price double, volume long);
+## Contact us 
 
-##### Reading a single json file line by line without tailing enabled.
+ * Post your questions with the <a target="_blank" href="http://stackoverflow.com/search?q=siddhi">"Siddhi"</a> tag in <a target="_blank" href="http://stackoverflow.com/search?q=siddhi">Stackoverflow</a>. 
  
-     @source(
-            type='file', 
-            dir.uri='abc/def/file.json',
-            mode = 'line',
-            tailing='false',
-            @map(type='json')
-      )
-     define stream inputStream (symbol string, price double, volume long);
-       
-##### Reading a single json file line by line with tailing enabled.
+ * Siddhi developers can be contacted via the mailing lists:
  
-     @source(
-            type='file', 
-            dir.uri='abc/def/file.json',
-            mode = 'line',
-            tailing='true',
-            @map(type='json')
-      )
-     define stream inputStream (symbol string, price double, volume long);
+    Developers List   : [dev@wso2.org](mailto:dev@wso2.org)
+    
+    Architecture List : [architecture@wso2.org](mailto:architecture@wso2.org)
  
-   or
-   
-     @source(
-            type='file', 
-            dir.uri='abc/def/file.json',
-            mode = 'line',
-            @map(type='json')
-      )
-     define stream inputStream (symbol string, price double, volume long);
-     
-##### Reading the first file in a directory which is sorted by name in ascending order, line by line with tailing enabled.
- 
-     @source(
-            type='file', 
-            dir.uri='abc/def/',
-            mode = 'line',
-            tailing='true',
-            @map(type='json')
-      )
-     define stream inputStream (symbol string, price double, volume long);
-     
-   or
+## Support 
 
-     @source(
-            type='file', 
-            dir.uri='abc/def/',
-            mode = 'line',
-            @map(type='json')
-      )
-     define stream inputStream (symbol string, price double, volume long);
+* We are committed to ensuring support for this extension in production. Our unique approach ensures that all support leverages our open development methodology and is provided by the very same engineers who build the technology. 
 
-##### Reading all the files in a directory which contain xml messages using regular expressions.
- 
-     @source(
-            type='file', 
-            dir.uri='abc/def/',
-            mode = 'regex',
-            begin.regex = '(<events>)',
-            end.regex =  '(</evnets>))',
-            tailing='false',
-            @map(type='xml')
-      )
-     define stream inputStream (symbol string, price double, volume long);
-
-##### Reading a single file in a directory which contains xml messages using regular expressions without tailing enabled.
- 
-     @source(
-            type='file', 
-            dir.uri='abc/def/xmlMsgs.xml',
-            mode = 'regex',
-            begin.regex = '(<events>)',
-            end.regex =  '(</evnets>))',
-            tailing='false',
-            @map(type='xml')
-      )
-     define stream inputStream (symbol string, price double, volume long);
-     
-##### Reading a single file which contains xml messages using regular expressions with tailing enabled.
- 
-     @source(
-            type='file', 
-            dir.uri='abc/def/xmlMsgs.xml',
-            mode = 'regex',
-            begin.regex = '(<events>)',
-            end.regex =  '(</evnets>))',
-            tailing='true',
-            @map(type='xml')
-      )
-     define stream inputStream (symbol string, price double, volume long);
-     
-##### Reading the first file in a directory which is sorted by name in ascending order, using regular expressions with tailing enabled.
- 
-     @source(
-            type='file', 
-            dir.uri='abc/def/',
-            mode = 'regex',
-            begin.regex = '(<events>)',
-            end.regex =  '(</evnets>))',
-            tailing='true',
-            @map(type='xml')
-      )
-     define stream inputStream (symbol string, price double, volume long);
-     
-   or
-
-     @source(
-            type='file', 
-            dir.uri='abc/def/',
-            mode = 'regex',
-            begin.regex = '(<events>)',
-            end.regex =  '(</evnets>))',
-            @map(type='xml')
-      )
-     define stream inputStream (symbol string, price double, volume long);
-
-#### Event Sink
-
-##### Publishing event data as json messages to a new single specific file.
- 
-     @sink(
-            type='file',
-            file.uri='/abc/def/jsonMsgs.json',
-            append='false', 
-            @map(type='json')
-     )
-     define stream (symbol string, price double, volume long);
-     
-##### Publishing event data as json messages to an existing single specific file by appending.
- 
-     @sink(
-            type='file',
-            file.uri='/abc/def/jsonMsgs.json',
-            append='true', 
-            @map(type='json')
-     )
-     define stream (symbol string, price double, volume long);
-     
-##### Publishing event data as json messages to new files with dynamic names.
- 
-     @sink(
-            type='file',
-            file.uri='/abc/def/{{symbol}}.json',
-            append='false', 
-            @map(type='json')
-     )
-     define stream (symbol string, price double, volume long);
-     
-##### Publishing event data as json messages to files with dynamic names by appending.
- 
-     @sink(
-            type='file',
-            file.uri='/abc/def/{{symbol}}.json',
-            append='true', 
-            @map(type='json')
-     )
-     define stream (symbol string, price double, volume long);
-
-Documentation 
-------------------
-  * https://docs.wso2.com/display/SP400/Configuring+File+Event+Sources
-  * https://docs.wso2.com/display/SP400/Configuring+File+Event+Sinks
-
-How to Contribute
-------------------
-* Send your bug fixes pull requests to [master branch] (https://github.com/wso2-extensions/siddhi-io-file/tree/master) 
-
-Contact us 
-----------
-Siddhi developers can be contacted via the mailing lists:
-  * Carbon Developers List : dev@wso2.org
-  * Carbon Architecture List : architecture@wso2.org
-
-
-
-WSO2 Smart Analytics Team.
+* For more details and to take advantage of this unique opportunity contact us via <a target="_blank" href="http://wso2.com/support?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17">http://wso2.com/support/</a>. 
