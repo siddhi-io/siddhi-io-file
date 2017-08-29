@@ -9,9 +9,13 @@ extra:
   palette:
     primary: teal
     accent: teal
+google_analytics:
+- UA-103065-28
+- auto
 pages:
 - Welcome to WSO2 Siddhi IO File: index.md
-- About:
-  - License: about/license.md
-
+- License: about/license.md
+- API Docs:
+  - 1.0.0-M4-SNAPSHOT: api/1.0.0-M4-SNAPSHOT.md
+  - 1.0.0-M5-SNAPSHOT: api/1.0.0-M5-SNAPSHOT.md
 theme: material

@@ -63,17 +63,17 @@ import java.util.concurrent.ExecutorService;
                 @Parameter(
                         name = "dir.uri",
                         description =
-                                "Used to specify a directory to be processed. " +
-                                "All the files inside this directory will be processed. " +
-                                "Only one of 'dir.uri' and 'file.uri' should be provided.",
+                                "Used to specify a directory to be processed. \n" +
+                                "All the files inside this directory will be processed. \n" +
+                                "Only one of 'dir.uri' and 'file.uri' should be provided.\n",
                         type = {DataType.STRING}
                 ),
 
                 @Parameter(
                         name = "file.uri",
                         description =
-                                "Used to specify a file to be processed. " +
-                                        " Only one of 'dir.uri' and 'file.uri' should be provided.",
+                                "Used to specify a file to be processed. \n" +
+                                        " Only one of 'dir.uri' and 'file.uri' should be provided.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -94,10 +94,10 @@ import java.util.concurrent.ExecutorService;
                 @Parameter(
                         name = "tailing",
                         description = "" +
-                                "This can either have value true or false. By default it will be true. " +
-                                "This attribute allows user to specify whether the file should be tailed or not. " +
+                                "This can either have value true or false. By default it will be true. \n" +
+                                "This attribute allows user to specify whether the file should be tailed or not. \n" +
                                 "If tailing is enabled, the first file of the directory will be tailed.\n" +
-                                "Also tailing should not be enabled in 'binary.full' or 'text.full' modes.",
+                                "Also tailing should not be enabled in 'binary.full' or 'text.full' modes.\n",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "true"
@@ -106,11 +106,11 @@ import java.util.concurrent.ExecutorService;
                 @Parameter(
                         name = "action.after.process",
                         description = "" +
-                                "This parameter is used to specify the action which should be carried out " +
+                                "This parameter is used to specify the action which should be carried out \n" +
                                 "after processing a file in the given directory. \n" +
                                 "It can be either DELETE or MOVE and default value will be 'DELETE'.\n" +
                                 "If the action.after.process is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.process' parameter.",
+                                "move consumed files using 'move.after.process' parameter.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "delete"
@@ -120,10 +120,10 @@ import java.util.concurrent.ExecutorService;
                         name = "action.after.failure",
                         description = "" +
                                 "This parameter is used to specify the action which should be carried out " +
-                                "if a failure occurred during the process. " +
+                                "if a failure occurred during the process. \n" +
                                 "It can be either DELETE or MOVE and default value will be 'DELETE'.\n" +
                                 "If the action.after.failure is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.failure' parameter.",
+                                "move consumed files using 'move.after.failure' parameter.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -131,7 +131,7 @@ import java.util.concurrent.ExecutorService;
                         name = "move.after.process",
                         description = "" +
                                 "If action.after.process is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.process' parameter.",
+                                "move consumed files using 'move.after.process' parameter.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -139,7 +139,7 @@ import java.util.concurrent.ExecutorService;
                         name = "move.after.failure",
                         description = "" +
                                 "If action.after.failure is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.failure' parameter.",
+                                "move consumed files using 'move.after.failure' parameter.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -147,7 +147,7 @@ import java.util.concurrent.ExecutorService;
                         name = "move.after.failure",
                         description = "" +
                                 "If action.after.failure is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.failure' parameter.",
+                                "move consumed files using 'move.after.failure' parameter.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -155,7 +155,7 @@ import java.util.concurrent.ExecutorService;
                         name = "begin.regex",
                         description = "" +
                                 "This will define the regex to be matched at the beginning of the " +
-                                "retrieved content. ",
+                                "retrieved content.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "None"
@@ -165,7 +165,7 @@ import java.util.concurrent.ExecutorService;
                         name = "end.regex",
                         description = "" +
                                 "This will define the regex to be matched at the end of the " +
-                                "retrieved content. ",
+                                "retrieved content.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "None"
@@ -175,7 +175,7 @@ import java.util.concurrent.ExecutorService;
                         name = "file.polling.interval",
                         description = "" +
                                 "This parameter is used to specify the time period (in milliseconds) " +
-                                "of a polling cycle for a file.",
+                                "of a polling cycle for a file.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "1000"
@@ -184,7 +184,7 @@ import java.util.concurrent.ExecutorService;
                 @Parameter(
                         name = "dir.polling.interval",
                         description = "This parameter is used to specify the time period (in milliseconds) " +
-                                "of a polling cycle for a directory.",
+                                "of a polling cycle for a directory.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "1000"
@@ -194,11 +194,13 @@ import java.util.concurrent.ExecutorService;
         examples = {
                 @Example(
                         syntax = "" +
-                                "@source(type='file',mode='text.full', tailing='false', " +
-                                "dir.uri='/abc/xyz'," +
-                                "action.after.process='delete'," +
+                                "@source(type='file',\n" +
+                                "mode='text.full',\n" +
+                                "tailing='false'\n " +
+                                "dir.uri='/abc/xyz',\n" +
+                                "action.after.process='delete',\n" +
                                 "@map(type='json')) \n" +
-                                "define stream FooStream (symbol string, price float, volume long); ",
+                                "define stream FooStream (symbol string, price float, volume long); \n",
 
                         description = "" +
                                 "Under above configuration, all the files in directory will be picked and read " +
@@ -208,15 +210,17 @@ import java.util.concurrent.ExecutorService;
                                 "Once a file is read, " +
                                 "its content will be converted to an event using siddhi-map-json " +
                                 "extension and then, that event will be received to the FooStream.\n" +
-                                "Finally, after reading is finished, the file will be deleted."
+                                "Finally, after reading is finished, the file will be deleted.\n"
                 ),
 
                 @Example(
                         syntax = "" +
-                                "@source(type='file',mode='files.repo.line', tailing='true', " +
-                                "dir.uri='/abc/xyz'," +
+                                "@source(type='file',\n" +
+                                "mode='files.repo.line',\n" +
+                                "tailing='true',\n" +
+                                "dir.uri='/abc/xyz',\n" +
                                 "@map(type='json')) \n" +
-                                "define stream FooStream (symbol string, price float, volume long); ",
+                                "define stream FooStream (symbol string, price float, volume long);\n ",
 
                         description = "" +
                                 "Under above configuration, " +
@@ -320,6 +324,8 @@ public class FileSource extends Source {
         validateParameters();
         createInitialSourceConf();
         updateSourceConf();
+
+        siddhiAppContext.getSnapshotService().addSnapshotable("siddhi-io-file", this);
     }
 
 
@@ -561,6 +567,7 @@ public class FileSource extends Source {
                                     properties.put(Constants.DESTINATION, moveAfterProcess);
                                 }
                                 vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
+                                vfsClientConnectorCallback.waitTillDone(2000, fileUri);
                             }
                         } catch (ClientConnectorException e) {
                             log.error("Failure occurred in vfsClient while reading the file " + fileUri +
