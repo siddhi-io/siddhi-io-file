@@ -42,8 +42,7 @@ extension you can replace the component <a target="_blank" href="https://github
 
 |  Branch | Build Status |
 | :------ |:------------ | 
-| master  | [![Build Status](https://wso2.org/jenkins/job/siddhi/job/siddhi-io-file/badge/icon)](https://wso2
-.org/jenkins/job/siddhi/job/siddhi-io-file/) |
+| master  | [![Build Status](https://wso2.org/jenkins/job/siddhi/job/siddhi-io-file/badge/icon)](https://wso2.org/jenkins/job/siddhi/job/siddhi-io-file/) |
 
 ---
 
