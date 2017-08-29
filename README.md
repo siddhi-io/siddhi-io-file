@@ -2,8 +2,7 @@
 ======================================
 
 The **siddhi-io-file extension** is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> 
-that processes event streams based on unique events.
-Siddhi-io-file is used to receive/publish event data from/to file. 
+which is used to receive/publish event data from/to file. 
 It supports both binary and text formats.
 
 Find some useful links below:
