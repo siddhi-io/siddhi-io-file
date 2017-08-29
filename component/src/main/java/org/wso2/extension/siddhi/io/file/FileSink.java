@@ -51,7 +51,7 @@ import java.util.Map;
         namespace = "sink" ,
         description = "" +
                 "File Sink can be used to publish (write) event data which is processed within siddhi " +
-                "to files. Siddhi-io-file sink provides support to write both textual and binary data into files",
+                "to files. \nSiddhi-io-file sink provides support to write both textual and binary data into files\n",
         parameters = {
                 @Parameter(name = "file.uri",
                         description =
@@ -63,16 +63,16 @@ import java.util.Map;
                 @Parameter(name = "append",
                         description = "" +
                                 "This parameter is used to specify whether the data should be " +
-                                "append to the file or not." +
+                                "append to the file or not.\n" +
                                 "If append = 'true', " +
                                 "data will be write at the end of the file without " +
-                                "changing the existing content." +
-                                "If file does not exist, a new fill will be crated and then data will be written." +
-                                "If append append = 'false', " +
+                                "changing the existing content.\n" +
+                                "If file does not exist, a new fill will be crated and then data will be written.\n" +
+                                "If append append = 'false', \n" +
                                 "If given file exists, existing content will be deleted and then data will be " +
-                                "written back to the file." +
+                                "written back to the file.\n" +
                                 "If given file does not exist, a new file will be created and " +
-                                "then data will be written on it.",
+                                "then data will be written on it.\n",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "true"
@@ -90,7 +90,7 @@ import java.util.Map;
                                 "Under above configuration, for each event, " +
                                 "a file will be generated if there's no such a file," +
                                 "and then data will be written to that file as json messages" +
-                                "output will looks like below." +
+                                "output will looks like below.\n" +
                                 "{\n" +
                                 "    \"event\":{\n" +
                                 "        \"symbol\":\"WSO2\",\n" +
