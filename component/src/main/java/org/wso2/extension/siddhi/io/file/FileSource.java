@@ -286,8 +286,8 @@ public class FileSource extends Source {
         }
 
         if (dirUri == null && fileUri == null) {
-            throw new SiddhiAppCreationException("Either directory uri or file uri should be provided. But both " +
-                    "have not been provided.");
+            throw new SiddhiAppCreationException("Either directory uri or file uri must be provided. But none of them" +
+                    "found.");
         }
 
         mode = optionHolder.validateAndGetStaticValue(Constants.MODE, Constants.LINE);
@@ -307,6 +307,8 @@ public class FileSource extends Source {
                     Constants.DELETE);
         }
         actionAfterFailure = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_FAILURE, Constants.DELETE);
+        // TODO : When file.uri has been provided, the file uri should be provided for move.after.process parameter.
+        // TODO : Fix this in carbon transport
         if (optionHolder.isOptionExists(Constants.MOVE_AFTER_PROCESS)) {
             moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS);
         }
@@ -457,6 +459,13 @@ public class FileSource extends Source {
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             if (isTailingEnabled) {
                 throw new SiddhiAppCreationException("Tailing can't be enabled in '" + mode + "' mode.");
+            }
+
+            if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+                if (beginRegex != null && endRegex != null) {
+                    throw new SiddhiAppCreationException("'begin.regex' and 'end.regex' can be only provided if the" +
+                            " mode is 'regex'. But provided mode is '" + mode + "'.");
+                }
             }
         }
 
