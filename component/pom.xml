@@ -72,10 +72,6 @@
             <artifactId>commons-vfs2</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.quartz-scheduler.wso2</groupId>
-            <artifactId>quartz</artifactId>
-        </dependency>
-        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <scope>test</scope>
@@ -119,21 +115,23 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
-                            org.wso2.extension.siddhi.io.file.processors.*,
-                            org.wso2.extension.siddhi.io.file.util.*,
-                            org.wso2.carbon.transport.file.*,
                             org.wso2.carbon.transport.filesystem.*,
-                            org.wso2.carbon.connector.framework.ConnectorManager,
-                            org.wso2.carbon.connector.framework.server.internal.*,
-                            org.wso2.carbon.connector.framework.server.listening.*,
-                            org.wso2.carbon.connector.framework.server.polling.*,
                             org.apache.commons.vfs2.*,
-                            org.quartz.*;
+                            org.wso2.carbon.transport.file.*,
+                            org.apache.commons.net.*
                         </Private-Package>
                         <Export-Package>
-                            org.wso2.extension.siddhi.io.file.*
+                            org.wso2.extension.siddhi.io.file.*,
+                            !org.wso2.carbon.transport.filesystem.*,
+                            !org.apache.commons.vfs2.*,
+                            !org.wso2.carbon.transport.file.*,
+                            !org.apache.commons.net.*
                         </Export-Package>
                         <Import-Package>
+                            !org.wso2.carbon.transport.filesystem.*,
+                            !org.apache.commons.vfs2.*,
+                            !org.wso2.carbon.transport.file.*,
+                            !org.apache.commons.net.*,
                             *;resolution:=optional
                         </Import-Package>
                         <Include-Resource>
