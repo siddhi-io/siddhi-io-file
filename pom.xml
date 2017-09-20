@@ -132,7 +132,7 @@
         <carbon.transport.version>5.0.0-m1</carbon.transport.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>4.0.4</siddhi.map.json.version>
-        <siddhi.map.xml.version>4.0.0</siddhi.map.xml.version>
+        <siddhi.map.xml.version>4.0.1</siddhi.map.xml.version>
         <siddhi.map.text.version>1.0.4</siddhi.map.text.version>
         <jacoco.version>0.7.9</jacoco.version>
         <commons-net.version>3.6</commons-net.version>
