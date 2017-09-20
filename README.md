@@ -13,7 +13,7 @@ Find some useful links below:
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-file/api/1.0.0-M5-SNAPSHOT">1.0.0-M5-SNAPSHOT</a>.
+Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-file/api/1.0.0-M6-SNAPSHOT">1.0.0-M6-SNAPSHOT</a>.
 
 ## How to use 
 
@@ -49,8 +49,8 @@ extension you can replace the component <a target="_blank" href="https://github
 
 ## Features
 
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-file/api/1.0.0-M5-SNAPSHOT/#file-source">file</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#sources">Source</a>)*<br><div style="padding-left: 1em;"><p>File Source provides the functionality for user to feed data to siddhi from files. Both text and binary files are supported by file source.</p></div>
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-file/api/1.0.0-M5-SNAPSHOT/#file-sink">file</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#sinks">Sink</a>)*<br><div style="padding-left: 1em;"><p>File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p></div>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-file/api/1.0.0-M6-SNAPSHOT/#file-source">file</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#sources">Source</a>)*<br><div style="padding-left: 1em;"><p>File Source provides the functionality for user to feed data to siddhi from files. Both text and binary files are supported by file source.</p></div>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-file/api/1.0.0-M6-SNAPSHOT/#file-sink">file</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#sinks">Sink</a>)*<br><div style="padding-left: 1em;"><p>File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p></div>
 
 ## How to Contribute
  

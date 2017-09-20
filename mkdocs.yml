@@ -17,5 +17,6 @@ pages:
 - API Docs:
   - 1.0.0-M4-SNAPSHOT: api/1.0.0-M4-SNAPSHOT.md
   - 1.0.0-M5-SNAPSHOT: api/1.0.0-M5-SNAPSHOT.md
+  - 1.0.0-M6-SNAPSHOT: api/1.0.0-M6-SNAPSHOT.md
 - License: about/license.md
 theme: material
