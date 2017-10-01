@@ -131,7 +131,9 @@ import java.util.concurrent.ExecutorService;
                         name = "move.after.process",
                         description = "" +
                                 "If action.after.process is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.process' parameter.\n",
+                                "move consumed files using 'move.after.process' parameter.\n" +
+                                "This should be the absolute path of the file that going to be created after moving " +
+                                "is done.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -139,15 +141,9 @@ import java.util.concurrent.ExecutorService;
                         name = "move.after.failure",
                         description = "" +
                                 "If action.after.failure is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.failure' parameter.\n",
-                        type = {DataType.STRING}
-                ),
-
-                @Parameter(
-                        name = "move.after.failure",
-                        description = "" +
-                                "If action.after.failure is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.failure' parameter.\n",
+                                "move consumed files using 'move.after.failure' parameter.\n" +
+                                "This should be the absolute path of the file that going to be created after moving " +
+                                "is done.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -579,10 +575,10 @@ public class FileSource extends Source {
                                 vfsClientConnectorCallback.waitTillDone(2000, fileUri);
                             }
                         } catch (ClientConnectorException e) {
-                            log.error("Failure occurred in vfsClient while reading the file " + fileUri +
+                            log.error("Failure occurred in vfs-client while reading the file " + fileUri +
                                     "." + e.getMessage());
                         } catch (InterruptedException e) {
-                            log.error("Failed to get call back from vfsclient  for file " + fileUri +
+                            log.error("Failed to get callback from vfs-client  for file " + fileUri +
                                     ". due to " + e.getMessage());
                         }
                     }
