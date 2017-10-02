@@ -62,7 +62,7 @@ public class FileProcessor implements CarbonMessageProcessor {
         } else {
             sb = new StringBuilder();
         }
-        configureFileMessageProcessor();
+        pattern = fileSourceConfiguration.getPattern();
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
@@ -121,7 +121,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                                     lastMatchedIndex -= (fileSourceConfiguration.getBeginRegex().length() - 2);
                                     event = event.substring(0, lastMatchedIndex);
                                 } catch (StringIndexOutOfBoundsException e) {
-                                    int x = 10;
+                                    log.error(e.getMessage());
                                 }
                             } else if (fileSourceConfiguration.getBeginRegex() == null) {
                                 if (remainedLength < lastMatchedIndex) {
@@ -199,26 +199,6 @@ public class FileProcessor implements CarbonMessageProcessor {
 
     public String getId() {
         return "file-message-processor";
-    }
-
-
-    private void configureFileMessageProcessor() {
-        String beginRegex = fileSourceConfiguration.getBeginRegex();
-        String endRegex = fileSourceConfiguration.getEndRegex();
-        try {
-            if (beginRegex != null && endRegex != null) {
-                pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + endRegex);
-            } else if (beginRegex != null) {
-                pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + beginRegex);
-            } else if (endRegex != null) {
-                pattern = Pattern.compile("((.|\n)*?)(" + endRegex + ")");
-            } else {
-                pattern = Pattern.compile("(\n$)"); // this will not be reached
-            }
-        } catch (PatternSyntaxException e) {
-            throw new SiddhiAppRuntimeException("Cannot compile the regex '" + beginRegex +
-            "' and '" + endRegex + "'. Hence shutting down the siddhiApp. ");
-        }
     }
 
     private String[] getRequiredPropertyValues(CarbonMessage carbonMessage) {
