@@ -128,7 +128,7 @@
     </dependencyManagement>
 
     <properties>
-        <siddhi.version>4.0.0-M78</siddhi.version>
+        <siddhi.version>4.0.0-M87</siddhi.version>
         <carbon.transport.version>5.0.0-m1</carbon.transport.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>4.0.4</siddhi.map.json.version>
