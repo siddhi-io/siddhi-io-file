@@ -50,6 +50,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Implementation of siddhi-io-file source.
@@ -259,8 +260,6 @@ public class FileSource extends Source {
     private String dirPollingInterval;
     private String filePollingInterval;
 
-    private Pattern pattern;
-
     @Override
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] requiredProperties,
                      ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
@@ -325,6 +324,7 @@ public class FileSource extends Source {
         validateParameters();
         createInitialSourceConf();
         updateSourceConf();
+        getPattern();
 
         siddhiAppContext.getSnapshotService().addSnapshotable("siddhi-io-file", this);
     }
@@ -583,5 +583,26 @@ public class FileSource extends Source {
                 fileSourceConfiguration.getExecutorService().execute(runnableClient);
             }
         }
+    }
+
+    private void getPattern() {
+        String beginRegex = fileSourceConfiguration.getBeginRegex();
+        String endRegex = fileSourceConfiguration.getEndRegex();
+        Pattern pattern = null;
+        try {
+            if (beginRegex != null && endRegex != null) {
+                pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + endRegex);
+            } else if (beginRegex != null) {
+                pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + beginRegex);
+            } else if (endRegex != null) {
+                pattern = Pattern.compile("((.|\n)*?)(" + endRegex + ")");
+            } else {
+                pattern = Pattern.compile("(\n$)"); // this will not be reached
+            }
+        } catch (PatternSyntaxException e) {
+            throw new SiddhiAppRuntimeException("Cannot compile the regex '" + beginRegex +
+                    "' and '" + endRegex + "'. Hence shutting down the siddhiApp. ");
+        }
+        fileSourceConfiguration.setPattern(pattern);
     }
 }

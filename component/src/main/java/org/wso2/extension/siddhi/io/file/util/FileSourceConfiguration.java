@@ -22,6 +22,7 @@ import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 
 import java.util.concurrent.ExecutorService;
+import java.util.regex.Pattern;
 
 /**
  * Class for keep the configurations of a file source instance.
@@ -41,7 +42,7 @@ public class FileSourceConfiguration {
     private ExecutorService executorService = null;
     private String[] requiredProperties = null;
     private StringBuilder tailingRegexStringBuilder = null;
-
+    private Pattern pattern;
 
     public FileSourceConfiguration() {
         tailingRegexStringBuilder = new StringBuilder();
@@ -147,5 +148,13 @@ public class FileSourceConfiguration {
 
     public void updateTailingRegexStringBuilder(StringBuilder tailingRegexStringBuilder) {
         this.tailingRegexStringBuilder = tailingRegexStringBuilder;
+    }
+
+    public Pattern getPattern() {
+        return pattern;
+    }
+
+    public void setPattern(Pattern pattern) {
+        this.pattern = pattern;
     }
 }
