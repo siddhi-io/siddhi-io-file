@@ -27,7 +27,6 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TransportSender;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
-import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.io.BufferedReader;
@@ -36,7 +35,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 /**
  * Message processor for handling data retrieved from consumed files.

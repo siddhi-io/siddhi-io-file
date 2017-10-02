@@ -29,6 +29,7 @@ import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.output.StreamCallback;
 import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.SiddhiTestHelper;
@@ -515,6 +516,30 @@ public class FileSourceTextFullModeTestCase {
 
         //assert event count
         AssertJUnit.assertEquals("Number of events", 1, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void siddhiIoFileTest8() throws InterruptedException {
+        log.info("test SiddhiIoFile [mode = text.full] 8");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='text.full'," +
+                "file.uri='" + dirUri + "/text_full_single/apache.json', " +
+                "tailing='true', " +
+                "@map(type='json'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.start();
+        Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
     }
 }

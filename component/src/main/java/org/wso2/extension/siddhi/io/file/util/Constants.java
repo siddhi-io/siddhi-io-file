@@ -22,6 +22,7 @@ package org.wso2.extension.siddhi.io.file.util;
  * Constants used in siddhi-io-file extension.
  * */
 public class Constants {
+    private Constants(){}
     /* configuration parameters*/
     public static final String URI = "uri";
     public static final String PATH = "path";

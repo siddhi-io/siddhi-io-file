@@ -600,7 +600,7 @@ public class FileSource extends Source {
                 pattern = Pattern.compile("(\n$)"); // this will not be reached
             }
         } catch (PatternSyntaxException e) {
-            throw new SiddhiAppRuntimeException("Cannot compile the regex '" + beginRegex +
+            throw new SiddhiAppCreationException("Cannot compile the regex '" + beginRegex +
                     "' and '" + endRegex + "'. Hence shutting down the siddhiApp. ");
         }
         fileSourceConfiguration.setPattern(pattern);
