@@ -173,10 +173,10 @@ public class FileSink extends Sink {
     }
 
     public Map<String, Object> currentState() {
-        return null;
+        return new HashMap<>();
     }
 
     public void restoreState(Map<String, Object> map) {
-
+        //do nothing
     }
 }

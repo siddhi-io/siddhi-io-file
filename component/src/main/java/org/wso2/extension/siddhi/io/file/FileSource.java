@@ -49,6 +49,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Implementation of siddhi-io-file source.
@@ -131,7 +133,9 @@ import java.util.concurrent.ExecutorService;
                         name = "move.after.process",
                         description = "" +
                                 "If action.after.process is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.process' parameter.\n",
+                                "move consumed files using 'move.after.process' parameter.\n" +
+                                "This should be the absolute path of the file that going to be created after moving " +
+                                "is done.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -139,15 +143,9 @@ import java.util.concurrent.ExecutorService;
                         name = "move.after.failure",
                         description = "" +
                                 "If action.after.failure is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.failure' parameter.\n",
-                        type = {DataType.STRING}
-                ),
-
-                @Parameter(
-                        name = "move.after.failure",
-                        description = "" +
-                                "If action.after.failure is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.failure' parameter.\n",
+                                "move consumed files using 'move.after.failure' parameter.\n" +
+                                "This should be the absolute path of the file that going to be created after moving " +
+                                "is done.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -326,6 +324,7 @@ public class FileSource extends Source {
         validateParameters();
         createInitialSourceConf();
         updateSourceConf();
+        getPattern();
 
         siddhiAppContext.getSnapshotService().addSnapshotable("siddhi-io-file", this);
     }
@@ -406,18 +405,11 @@ public class FileSource extends Source {
     }
 
     private void createInitialSourceConf() {
-        fileSourceConfiguration.setDirURI(dirUri);
-        fileSourceConfiguration.setFileURI(fileUri);
-        fileSourceConfiguration.setMoveAfterProcessUri(moveAfterProcess);
         fileSourceConfiguration.setBeginRegex(beginRegex);
         fileSourceConfiguration.setEndRegex(endRegex);
         fileSourceConfiguration.setMode(mode);
-        fileSourceConfiguration.setActionAfterProcess(actionAfterProcess);
         fileSourceConfiguration.setTailingEnabled(Boolean.parseBoolean(tailing));
         fileSourceConfiguration.setFilePollingInterval(filePollingInterval);
-        fileSourceConfiguration.setDirPollingInterval(dirPollingInterval);
-        fileSourceConfiguration.setActionAfterFailure(actionAfterFailure);
-        fileSourceConfiguration.setMoveAfterFailure(moveAfterFailure);
         fileSourceConfiguration.setRequiredProperties(requiredProperties);
     }
 
@@ -579,10 +571,10 @@ public class FileSource extends Source {
                                 vfsClientConnectorCallback.waitTillDone(2000, fileUri);
                             }
                         } catch (ClientConnectorException e) {
-                            log.error("Failure occurred in vfsClient while reading the file " + fileUri +
+                            log.error("Failure occurred in vfs-client while reading the file " + fileUri +
                                     "." + e.getMessage());
                         } catch (InterruptedException e) {
-                            log.error("Failed to get call back from vfsclient  for file " + fileUri +
+                            log.error("Failed to get callback from vfs-client  for file " + fileUri +
                                     ". due to " + e.getMessage());
                         }
                     }
@@ -593,4 +585,24 @@ public class FileSource extends Source {
         }
     }
 
+    private void getPattern() {
+        String beginRegex = fileSourceConfiguration.getBeginRegex();
+        String endRegex = fileSourceConfiguration.getEndRegex();
+        Pattern pattern = null;
+        try {
+            if (beginRegex != null && endRegex != null) {
+                pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + endRegex);
+            } else if (beginRegex != null) {
+                pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + beginRegex);
+            } else if (endRegex != null) {
+                pattern = Pattern.compile("((.|\n)*?)(" + endRegex + ")");
+            } else {
+                pattern = Pattern.compile("(\n$)"); // this will not be reached
+            }
+        } catch (PatternSyntaxException e) {
+            throw new SiddhiAppCreationException("Cannot compile the regex '" + beginRegex +
+                    "' and '" + endRegex + "'. Hence shutting down the siddhiApp. ");
+        }
+        fileSourceConfiguration.setPattern(pattern);
+    }
 }

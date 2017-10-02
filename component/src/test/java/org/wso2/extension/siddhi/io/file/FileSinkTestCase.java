@@ -603,4 +603,63 @@ public class FileSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
     }
+
+    @Test
+    public void fileSinkTest10() throws InterruptedException {
+        log.info("test SiddhiIoFile Sink 10");
+
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "@sink(type='file', @map(type='xml'), append='false', " +
+                "file.uri='" + sinkUri + "/{{symbol}}.xml') " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        SiddhiAppRuntime siddhiAppRuntime2 = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
+        InputHandler stockStream2 = siddhiAppRuntime2.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
+        stockStream.send(new Object[]{"IBM", 57.678f, 100L});
+        byte[] snapshot = siddhiAppRuntime.snapshot();
+        siddhiAppRuntime.shutdown();
+        Thread.sleep(1000);
+
+        siddhiAppRuntime2.restore(snapshot);
+        siddhiAppRuntime2.start();
+
+        stockStream2.send(new Object[]{"GOOGLE", 50f, 100L});
+        stockStream2.send(new Object[]{"REDHAT", 50f, 100L});
+        Thread.sleep(100);
+
+        ArrayList<String> symbolNames = new ArrayList<>();
+        symbolNames.add("WSO2.xml");
+        symbolNames.add("IBM.xml");
+        symbolNames.add("GOOGLE.xml");
+        symbolNames.add("REDHAT.xml");
+
+        File sink = new File(sinkUri);
+        if (sink.isDirectory()) {
+            for (File file : sink.listFiles()) {
+                if (symbolNames.contains(file.getName())) {
+                    count.incrementAndGet();
+                }
+            }
+            AssertJUnit.assertEquals(4, count.intValue());
+        } else {
+            AssertJUnit.fail(sinkUri + " is not a directory.");
+        }
+
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
 }
