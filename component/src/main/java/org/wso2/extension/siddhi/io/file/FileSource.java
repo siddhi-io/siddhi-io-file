@@ -49,6 +49,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.regex.Pattern;
 
 /**
  * Implementation of siddhi-io-file source.
@@ -258,6 +259,8 @@ public class FileSource extends Source {
     private String dirPollingInterval;
     private String filePollingInterval;
 
+    private Pattern pattern;
+
     @Override
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] requiredProperties,
                      ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
@@ -402,18 +405,11 @@ public class FileSource extends Source {
     }
 
     private void createInitialSourceConf() {
-        fileSourceConfiguration.setDirURI(dirUri);
-        fileSourceConfiguration.setFileURI(fileUri);
-        fileSourceConfiguration.setMoveAfterProcessUri(moveAfterProcess);
         fileSourceConfiguration.setBeginRegex(beginRegex);
         fileSourceConfiguration.setEndRegex(endRegex);
         fileSourceConfiguration.setMode(mode);
-        fileSourceConfiguration.setActionAfterProcess(actionAfterProcess);
         fileSourceConfiguration.setTailingEnabled(Boolean.parseBoolean(tailing));
         fileSourceConfiguration.setFilePollingInterval(filePollingInterval);
-        fileSourceConfiguration.setDirPollingInterval(dirPollingInterval);
-        fileSourceConfiguration.setActionAfterFailure(actionAfterFailure);
-        fileSourceConfiguration.setMoveAfterFailure(moveAfterFailure);
         fileSourceConfiguration.setRequiredProperties(requiredProperties);
     }
 
@@ -588,5 +584,4 @@ public class FileSource extends Source {
             }
         }
     }
-
 }
