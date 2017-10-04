@@ -31,7 +31,7 @@
 
     <groupId>org.wso2.extension.siddhi.io.file</groupId>
     <artifactId>siddhi-io-file-parent</artifactId>
-    <version>1.0.0-M7-SNAPSHOT</version>
+    <version>1.0.0-M8-SNAPSHOT</version>
     <name>Siddhi io file extension</name>
 
     <profiles>
