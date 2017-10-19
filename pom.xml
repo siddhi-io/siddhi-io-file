@@ -114,12 +114,6 @@
                 <version>${testng.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.jacoco</groupId>
-                <artifactId>org.jacoco.agent</artifactId>
-                <classifier>runtime</classifier>
-                <version>${jacoco.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>commons-net</groupId>
                 <artifactId>commons-net</artifactId>
                 <version>${commons-net.version}</version>
@@ -128,14 +122,16 @@
     </dependencyManagement>
 
     <properties>
-        <siddhi.version>4.0.0-M89</siddhi.version>
+        <siddhi.version>4.0.0-M106</siddhi.version>
         <carbon.transport.version>5.0.1</carbon.transport.version>
         <testng.version>6.8</testng.version>
-        <siddhi.map.json.version>4.0.4</siddhi.map.json.version>
-        <siddhi.map.xml.version>4.0.1</siddhi.map.xml.version>
-        <siddhi.map.text.version>1.0.4</siddhi.map.text.version>
+        <siddhi.map.json.version>4.0.6</siddhi.map.json.version>
+        <siddhi.map.xml.version>4.0.2</siddhi.map.xml.version>
+        <siddhi.map.text.version>1.0.5</siddhi.map.text.version>
         <jacoco.version>0.7.9</jacoco.version>
         <commons-net.version>3.6</commons-net.version>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <build>
@@ -151,7 +147,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <configuration>
-                    <preparationGoals>clean install</preparationGoals>
+                    <preparationGoals>clean install -Pdocumentation-deploy</preparationGoals>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
             </plugin>
@@ -175,23 +171,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <encoding>UTF-8</encoding>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.wso2.siddhi</groupId>
-                <artifactId>siddhi-doc-gen</artifactId>
-                <version>${siddhi.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate-md-docs</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
 
