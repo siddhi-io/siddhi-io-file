@@ -1,50 +1,4 @@
-# API Docs - v1.0.0-M10-SNAPSHOT
-
-## Sink
-
-### file *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#sink">(Sink)</a>*
-
-<p style="word-wrap: break-word">File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p>
-
-<span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
-```
-@sink(type="file", file.uri="<STRING>", append="<BOOL>", @map(...)))
-```
-
-<span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
-<table>
-    <tr>
-        <th>Name</th>
-        <th style="min-width: 20em">Description</th>
-        <th>Default Value</th>
-        <th>Possible Data Types</th>
-        <th>Optional</th>
-        <th>Dynamic</th>
-    </tr>
-    <tr>
-        <td style="vertical-align: top">file.uri</td>
-        <td style="vertical-align: top; word-wrap: break-word">Used to specify the file for data to be written. </td>
-        <td style="vertical-align: top"></td>
-        <td style="vertical-align: top">STRING</td>
-        <td style="vertical-align: top">No</td>
-        <td style="vertical-align: top">Yes</td>
-    </tr>
-    <tr>
-        <td style="vertical-align: top">append</td>
-        <td style="vertical-align: top; word-wrap: break-word">This parameter is used to specify whether the data should be append to the file or not.<br>If append = 'true', data will be write at the end of the file without changing the existing content.<br>If file does not exist, a new fill will be crated and then data will be written.<br>If append append = 'false', <br>If given file exists, existing content will be deleted and then data will be written back to the file.<br>If given file does not exist, a new file will be created and then data will be written on it.<br></td>
-        <td style="vertical-align: top">true</td>
-        <td style="vertical-align: top">BOOL</td>
-        <td style="vertical-align: top">Yes</td>
-        <td style="vertical-align: top">No</td>
-    </tr>
-</table>
-
-<span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
-<span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
-```
-@sink(type='file', @map(type='json'), append='false', file.uri='/abc/{{symbol}}.txt') define stream BarStream (symbol string, price float, volume long); 
-```
-<p style="word-wrap: break-word">Under above configuration, for each event, a file will be generated if there's no such a file,and then data will be written to that file as json messagesoutput will looks like below.<br>{<br>&nbsp;&nbsp;&nbsp;&nbsp;"event":{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"symbol":"WSO2",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"price":55.6,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"volume":100<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></p>
+# API Docs - v1.0.0-M10
 
 ## Source
 
@@ -190,4 +144,50 @@ define stream FooStream (symbol string, price float, volume long);
  
 ```
 <p style="word-wrap: break-word">Under above configuration, the first file in directory '/abc/xyz'  will be picked and read line by line.<br>In this case, it is assumed that the file contains lines json strings.<br>For each line, line content will be converted to an event using siddhi-map-json extension and then, that event will be received to the FooStream.<br>Once file content is completely read, it will keep checking whether a new entry is added to the file or not.<br>If such entry is added, it will be immediately picked up and processed.<br></p>
+
+## Sink
+
+### file *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#sink">(Sink)</a>*
+
+<p style="word-wrap: break-word">File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p>
+
+<span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
+```
+@sink(type="file", file.uri="<STRING>", append="<BOOL>", @map(...)))
+```
+
+<span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
+<table>
+    <tr>
+        <th>Name</th>
+        <th style="min-width: 20em">Description</th>
+        <th>Default Value</th>
+        <th>Possible Data Types</th>
+        <th>Optional</th>
+        <th>Dynamic</th>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.uri</td>
+        <td style="vertical-align: top; word-wrap: break-word">Used to specify the file for data to be written. </td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">Yes</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">append</td>
+        <td style="vertical-align: top; word-wrap: break-word">This parameter is used to specify whether the data should be append to the file or not.<br>If append = 'true', data will be write at the end of the file without changing the existing content.<br>If file does not exist, a new fill will be crated and then data will be written.<br>If append append = 'false', <br>If given file exists, existing content will be deleted and then data will be written back to the file.<br>If given file does not exist, a new file will be created and then data will be written on it.<br></td>
+        <td style="vertical-align: top">true</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+</table>
+
+<span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
+<span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
+```
+@sink(type='file', @map(type='json'), append='false', file.uri='/abc/{{symbol}}.txt') define stream BarStream (symbol string, price float, volume long); 
+```
+<p style="word-wrap: break-word">Under above configuration, for each event, a file will be generated if there's no such a file,and then data will be written to that file as json messagesoutput will looks like below.<br>{<br>&nbsp;&nbsp;&nbsp;&nbsp;"event":{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"symbol":"WSO2",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"price":55.6,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"volume":100<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></p>
 

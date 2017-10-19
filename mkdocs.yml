@@ -15,9 +15,7 @@ google_analytics:
 pages:
 - Welcome to WSO2 Siddhi IO File: index.md
 - API Docs:
-  - 1.0.0-M4-SNAPSHOT: api/1.0.0-M4-SNAPSHOT.md
-  - 1.0.0-M5-SNAPSHOT: api/1.0.0-M5-SNAPSHOT.md
-  - 1.0.0-M6-SNAPSHOT: api/1.0.0-M6-SNAPSHOT.md
-  - 1.0.0-M7-SNAPSHOT: api/1.0.0-M7-SNAPSHOT.md
+  - 1.0.0-M10: api/1.0.0-M10.md
+  - latest: api/latest.md
 - License: about/license.md
 theme: material
