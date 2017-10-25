@@ -22,7 +22,7 @@
     <parent>
         <artifactId>siddhi-io-file-parent</artifactId>
         <groupId>org.wso2.extension.siddhi.io.file</groupId>
-        <version>1.0.0-M11</version>
+        <version>1.0.0-M12-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
