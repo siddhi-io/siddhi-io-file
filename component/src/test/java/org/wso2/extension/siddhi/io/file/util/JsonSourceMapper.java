@@ -136,6 +136,11 @@ public class JsonSourceMapper extends SourceMapper {
         }
     }
 
+    @Override
+    protected boolean allowNullInTransportProperties() {
+        return !failOnMissingAttribute;
+    }
+
     /**
      * Convert the given JSON string to {@link Event}.
      *
