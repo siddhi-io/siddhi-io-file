@@ -16,7 +16,7 @@
     
     
       
-        <title>1.0.0-M10 - Siddhi-IO-File</title>
+        <title>1.0.0-M12 - Siddhi-IO-File</title>
       
     
     
@@ -84,7 +84,7 @@
                 </span>
               
             
-            1.0.0-M10
+            1.0.0-M12
           
         </span>
       </div>
@@ -181,30 +181,6 @@
           
           
 
-
-  <li class="md-nav__item">
-    <a href="../1.0.0-M12/" title="1.0.0-M12" class="md-nav__link">
-      1.0.0-M12
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../1.0.0-M11/" title="1.0.0-M11" class="md-nav__link">
-      1.0.0-M11
-    </a>
-  </li>
-
-        
-          
-          
-          
-
   
 
 
@@ -216,11 +192,11 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="toc">
-        1.0.0-M10
+        1.0.0-M12
       </label>
     
-    <a href="./" title="1.0.0-M10" class="md-nav__link md-nav__link--active">
-      1.0.0-M10
+    <a href="./" title="1.0.0-M12" class="md-nav__link md-nav__link--active">
+      1.0.0-M12
     </a>
     
       
@@ -232,26 +208,6 @@
   
     <label class="md-nav__title" for="toc">Table of contents</label>
     <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#source" title="Source" class="md-nav__link">
-    Source
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#file-source" title="file (Source)" class="md-nav__link">
-    file (Source)
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
       
         <li class="md-nav__item">
   <a href="#sink" title="Sink" class="md-nav__link">
@@ -273,12 +229,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#source" title="Source" class="md-nav__link">
+    Source
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-source" title="file (Source)" class="md-nav__link">
+    file (Source)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
       
       
     </ul>
   
 </nav>
     
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../1.0.0-M11/" title="1.0.0-M11" class="md-nav__link">
+      1.0.0-M11
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../1.0.0-M10/" title="1.0.0-M10" class="md-nav__link">
+      1.0.0-M10
+    </a>
   </li>
 
         
@@ -332,26 +332,6 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#source" title="Source" class="md-nav__link">
-    Source
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#file-source" title="file (Source)" class="md-nav__link">
-    file (Source)
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#sink" title="Sink" class="md-nav__link">
     Sink
   </a>
@@ -362,6 +342,26 @@
           <li class="md-nav__item">
   <a href="#file-sink" title="file (Sink)" class="md-nav__link">
     file (Sink)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source" title="Source" class="md-nav__link">
+    Source
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-source" title="file (Source)" class="md-nav__link">
+    file (Source)
   </a>
   
 </li>
@@ -386,7 +386,49 @@
               
                 
                 
-                <h1 id="api-docs-v100-m10">API Docs - v1.0.0-M10</h1>
+                <h1 id="api-docs-v100-m12">API Docs - v1.0.0-M12</h1>
+<h2 id="sink">Sink</h2>
+<h3 id="file-sink">file <em><a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#sink">(Sink)</a></em></h3>
+<p style="word-wrap: break-word">File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p>
+
+<p><span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
+<pre><code>@sink(type=&quot;file&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, append=&quot;&lt;BOOL&gt;&quot;, @map(...)))
+</code></pre>
+
+<p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
+<table>
+    <tr>
+        <th>Name</th>
+        <th style="min-width: 20em">Description</th>
+        <th>Default Value</th>
+        <th>Possible Data Types</th>
+        <th>Optional</th>
+        <th>Dynamic</th>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.uri</td>
+        <td style="vertical-align: top; word-wrap: break-word">Used to specify the file for data to be written. </td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">Yes</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">append</td>
+        <td style="vertical-align: top; word-wrap: break-word">This parameter is used to specify whether the data should be append to the file or not.<br>If append = 'true', data will be write at the end of the file without changing the existing content.<br>If file does not exist, a new fill will be crated and then data will be written.<br>If append append = 'false', <br>If given file exists, existing content will be deleted and then data will be written back to the file.<br>If given file does not exist, a new file will be created and then data will be written on it.<br></td>
+        <td style="vertical-align: top">true</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+</table></p>
+<p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
+<span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
+<pre><code>@sink(type='file', @map(type='json'), append='false', file.uri='/abc/{{symbol}}.txt') define stream BarStream (symbol string, price float, volume long); 
+</code></pre>
+
+<p style="word-wrap: break-word">Under above configuration, for each event, a file will be generated if there's no such a file,and then data will be written to that file as json messagesoutput will looks like below.<br>{<br>&nbsp;&nbsp;&nbsp;&nbsp;"event":{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"symbol":"WSO2",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"price":55.6,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"volume":100<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></p>
+
 <h2 id="source">Source</h2>
 <h3 id="file-source">file <em><a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#source">(Source)</a></em></h3>
 <p style="word-wrap: break-word">File Source provides the functionality for user to feed data to siddhi from files. Both text and binary files are supported by file source.</p>
@@ -527,48 +569,6 @@ define stream FooStream (symbol string, price float, volume long);
 </code></pre>
 
 <p style="word-wrap: break-word">Under above configuration, the first file in directory '/abc/xyz'  will be picked and read line by line.<br>In this case, it is assumed that the file contains lines json strings.<br>For each line, line content will be converted to an event using siddhi-map-json extension and then, that event will be received to the FooStream.<br>Once file content is completely read, it will keep checking whether a new entry is added to the file or not.<br>If such entry is added, it will be immediately picked up and processed.<br></p>
-
-<h2 id="sink">Sink</h2>
-<h3 id="file-sink">file <em><a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#sink">(Sink)</a></em></h3>
-<p style="word-wrap: break-word">File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p>
-
-<p><span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<pre><code>@sink(type=&quot;file&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, append=&quot;&lt;BOOL&gt;&quot;, @map(...)))
-</code></pre>
-
-<p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
-<table>
-    <tr>
-        <th>Name</th>
-        <th style="min-width: 20em">Description</th>
-        <th>Default Value</th>
-        <th>Possible Data Types</th>
-        <th>Optional</th>
-        <th>Dynamic</th>
-    </tr>
-    <tr>
-        <td style="vertical-align: top">file.uri</td>
-        <td style="vertical-align: top; word-wrap: break-word">Used to specify the file for data to be written. </td>
-        <td style="vertical-align: top"></td>
-        <td style="vertical-align: top">STRING</td>
-        <td style="vertical-align: top">No</td>
-        <td style="vertical-align: top">Yes</td>
-    </tr>
-    <tr>
-        <td style="vertical-align: top">append</td>
-        <td style="vertical-align: top; word-wrap: break-word">This parameter is used to specify whether the data should be append to the file or not.<br>If append = 'true', data will be write at the end of the file without changing the existing content.<br>If file does not exist, a new fill will be crated and then data will be written.<br>If append append = 'false', <br>If given file exists, existing content will be deleted and then data will be written back to the file.<br>If given file does not exist, a new file will be created and then data will be written on it.<br></td>
-        <td style="vertical-align: top">true</td>
-        <td style="vertical-align: top">BOOL</td>
-        <td style="vertical-align: top">Yes</td>
-        <td style="vertical-align: top">No</td>
-    </tr>
-</table></p>
-<p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
-<span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
-<pre><code>@sink(type='file', @map(type='json'), append='false', file.uri='/abc/{{symbol}}.txt') define stream BarStream (symbol string, price float, volume long); 
-</code></pre>
-
-<p style="word-wrap: break-word">Under above configuration, for each event, a file will be generated if there's no such a file,and then data will be written to that file as json messagesoutput will looks like below.<br>{<br>&nbsp;&nbsp;&nbsp;&nbsp;"event":{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"symbol":"WSO2",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"price":55.6,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"volume":100<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></p>
                 
                   
                 
@@ -587,7 +587,7 @@ define stream FooStream (symbol string, price float, volume long);
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../1.0.0-M11/" title="1.0.0-M11" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../.." title="Welcome to WSO2 Siddhi IO File" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -596,19 +596,19 @@ define stream FooStream (symbol string, price float, volume long);
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                1.0.0-M11
+                Welcome to WSO2 Siddhi IO File
               </span>
             </div>
           </a>
         
         
-          <a href="../latest/" title="latest" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../1.0.0-M11/" title="1.0.0-M11" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                latest
+                1.0.0-M11
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">
