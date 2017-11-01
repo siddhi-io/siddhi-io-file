@@ -1,4 +1,4 @@
-?siddhi-io-file
+siddhi-io-file
 ======================================
 
 The **siddhi-io-file extension** is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> 

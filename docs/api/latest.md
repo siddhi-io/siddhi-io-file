@@ -1,4 +1,4 @@
-# API Docs - v1.0.0-M12
+# API Docs - v1.0.0-SNAPSHOT
 
 ## Sink
 
