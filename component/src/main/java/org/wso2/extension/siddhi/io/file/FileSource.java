@@ -25,9 +25,11 @@ import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
-import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
+import org.wso2.carbon.transport.remotefilesystem.RemoteFileSystemConnectorFactory;
+import org.wso2.carbon.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
+import org.wso2.carbon.transport.remotefilesystem.server.connector.contract.RemoteFileSystemServerConnector;
+import org.wso2.extension.siddhi.io.file.listeners.FileSystemListener;
 import org.wso2.extension.siddhi.io.file.processors.FileProcessor;
-import org.wso2.extension.siddhi.io.file.processors.FileSystemMessageProcessor;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
 import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
@@ -45,9 +47,13 @@ import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -238,9 +244,9 @@ public class FileSource extends Source {
 
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
-    private FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
+    private RemoteFileSystemConnectorFactory fileSystemConnectorFactory;
     private FileSourceServiceProvider fileSourceServiceProvider;
-    private ServerConnector fileSystemServerConnector;
+    private RemoteFileSystemServerConnector fileSystemServerConnector;
     private String filePointer = "0";
     private String[] requiredProperties;
     private boolean isTailingEnabled = true;
@@ -269,13 +275,26 @@ public class FileSource extends Source {
         this.fileSourceConfiguration = new FileSourceConfiguration();
 
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
-        fileSystemServerConnectorProvider = fileSourceServiceProvider.getFileSystemServerConnectorProvider();
-
+        this.fileSystemConnectorFactory = fileSourceServiceProvider.getFileSystemConnectorFactory();
         if (optionHolder.isOptionExists(Constants.DIR_URI)) {
             dirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
+            try {
+                new URL(dirUri);
+                fileSourceConfiguration.setSourceProtocol(dirUri.split(File.separator)[0]);
+            } catch (MalformedURLException e) {
+                throw new SiddhiAppCreationException("Provided directory uri is invalid due to '" +
+                        e.getCause().getLocalizedMessage(), e);
+            }
         }
         if (optionHolder.isOptionExists(Constants.FILE_URI)) {
             fileUri = optionHolder.validateAndGetStaticValue(Constants.FILE_URI);
+            try {
+                new URL(fileUri);
+                fileSourceConfiguration.setSourceProtocol(fileUri.split(File.separator)[0]);
+            } catch (MalformedURLException e) {
+                throw new SiddhiAppCreationException("Provided file uri is invalid due to '" +
+                        e.getCause().getLocalizedMessage(), e);
+            }
         }
 
         if (dirUri != null && fileUri != null) {
@@ -309,9 +328,25 @@ public class FileSource extends Source {
         // TODO : Fix this in carbon transport
         if (optionHolder.isOptionExists(Constants.MOVE_AFTER_PROCESS)) {
             moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS);
+            try {
+                new URL(moveAfterProcess);
+                fileSourceConfiguration.setProtocolForMoveAfterProcess(moveAfterProcess.split(File.separator)[0]);
+            } catch (MalformedURLException e) {
+                throw new SiddhiAppCreationException("Provided uri for moveAfterProcess parameter '" +
+                        moveAfterProcess +
+                        "' is invalid due to '" + e.getCause().getLocalizedMessage(), e);
+            }
         }
         if (optionHolder.isOptionExists(Constants.MOVE_AFTER_FAILURE)) {
             moveAfterFailure = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_FAILURE);
+            try {
+                new URL(moveAfterFailure);
+                fileSourceConfiguration.setProtocolForMoveAfterFailure(moveAfterFailure.split(File.separator)[0]);
+            } catch (MalformedURLException e) {
+                throw new SiddhiAppCreationException("Provided uri for moveAfterFailure parameter '" +
+                        moveAfterFailure +
+                        "' is invalid due to '" + e.getCause().getLocalizedMessage(), e);
+            }
         }
 
         dirPollingInterval = optionHolder.validateAndGetStaticValue(Constants.DIRECTORY_POLLING_INTERVAL, "1000");
@@ -352,6 +387,10 @@ public class FileSource extends Source {
             if (isTailingEnabled) {
                 fileSourceConfiguration.getFileServerConnector().stop();
                 fileSourceConfiguration.setFileServerConnector(null);
+            }
+            ExecutorService executorService = fileSourceConfiguration.getExecutorService();
+            if (executorService != null && !executorService.isShutdown()) {
+                executorService.shutdown();
             }
         } catch (ServerConnectorException e) {
            throw new SiddhiAppRuntimeException("Failed to stop the file server when shutting down the siddhi app '" +
@@ -411,6 +450,8 @@ public class FileSource extends Source {
         fileSourceConfiguration.setTailingEnabled(Boolean.parseBoolean(tailing));
         fileSourceConfiguration.setFilePollingInterval(filePollingInterval);
         fileSourceConfiguration.setRequiredProperties(requiredProperties);
+        fileSourceConfiguration.setActionAfterProcess(actionAfterProcess);
+        fileSourceConfiguration.setMoveAfterProcess(moveAfterProcess);
     }
 
     private void updateSourceConf() {
@@ -425,24 +466,24 @@ public class FileSource extends Source {
         if (actionAfterProcess != null) {
             map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase(Locale.ENGLISH));
         }
-        map.put(Constants.MOVE_AFTER_PROCESS_KEY, moveAfterProcess);
+        map.put(Constants.MOVE_AFTER_PROCESS_KEY.toUpperCase(Locale.ENGLISH), moveAfterProcess);
         map.put(Constants.POLLING_INTERVAL, dirPollingInterval);
         map.put(Constants.FILE_SORT_ATTRIBUTE, Constants.NAME);
-        map.put(Constants.FILE_SORT_ASCENDING, Constants.TRUE);
-        map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE);
+        map.put(Constants.FILE_SORT_ASCENDING, Constants.TRUE.toUpperCase(Locale.ENGLISH));
+        map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE.toUpperCase(Locale.ENGLISH));
         map.put(Constants.ACK_TIME_OUT, "5000");
 
         if (Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
                 Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
-            map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
+            map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE.toUpperCase(Locale.ENGLISH));
         } else {
-            map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.FALSE);
+            map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.FALSE.toUpperCase(Locale.ENGLISH));
         }
         if (actionAfterFailure != null) {
-            map.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
+            map.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure.toUpperCase(Locale.ENGLISH));
         }
         if (moveAfterFailure != null) {
-            map.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
+            map.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure.toUpperCase(Locale.ENGLISH));
         }
         return map;
     }
@@ -491,18 +532,16 @@ public class FileSource extends Source {
 
         if (dirUri != null) {
             Map<String, String> properties = getFileSystemServerProperties();
-            fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector("fileSystemServerConnector",
-                    properties);
-            FileSystemMessageProcessor fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener,
+            CountDownLatch latch = new CountDownLatch(1);
+            FileSystemListener fileSystemListener = new FileSystemListener(sourceEventListener,
                     fileSourceConfiguration);
-            fileSystemServerConnector.setMessageProcessor(fileSystemMessageProcessor);
-            fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
-
             try {
+                fileSystemServerConnector =  fileSystemConnectorFactory.createServerConnector(
+                        siddhiAppContext.getName(), properties, fileSystemListener);
+                fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
                 fileSystemServerConnector.start();
-            } catch (ServerConnectorException e) {
-                throw new ConnectionUnavailableException("Failed to connect to the file system server due to : " +
-                        e.getMessage(), e);
+            } catch (RemoteFileSystemConnectorException e) {
+                throw new ConnectionUnavailableException("Failed to connect to the remote file system server. ", e);
             }
         } else if (fileUri != null) {
             Map<String, String> properties = new HashMap<>();

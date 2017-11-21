@@ -18,8 +18,8 @@
 
 package org.wso2.extension.siddhi.io.file.util;
 
-import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
+import org.wso2.carbon.transport.remotefilesystem.server.connector.contract.RemoteFileSystemServerConnector;
 
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
@@ -35,14 +35,20 @@ public class FileSourceConfiguration {
     private String endRegex = null;
     private String filePointer = "0";
     private String filePollingInterval = null;
+    private String sourceProtocol = null;
+    private String protocolForMoveAfterFailure = null;
+    private String protocolForMoveAfterProcess = null;
 
     private FileServerConnector fileServerConnector;
-    private ServerConnector fileSystemServerConnector;
+    private RemoteFileSystemServerConnector fileSystemServerConnector;
     private String tailedFileURI = null;
     private ExecutorService executorService = null;
     private String[] requiredProperties = null;
     private StringBuilder tailingRegexStringBuilder = null;
     private Pattern pattern;
+
+    private String actionAfterProcess = null;
+    private String moveAfterProcess = null;
 
     public FileSourceConfiguration() {
         tailingRegexStringBuilder = new StringBuilder();
@@ -102,11 +108,11 @@ public class FileSourceConfiguration {
         this.fileServerConnector = fileServerConnector;
     }
 
-    public ServerConnector getFileSystemServerConnector() {
-        return fileSystemServerConnector;
+    public RemoteFileSystemServerConnector getFileSystemServerConnector() {
+        return this.fileSystemServerConnector;
     }
 
-    public void setFileSystemServerConnector(ServerConnector fileSystemServerConnector) {
+    public void setFileSystemServerConnector(RemoteFileSystemServerConnector fileSystemServerConnector) {
         this.fileSystemServerConnector = fileSystemServerConnector;
     }
 
@@ -156,5 +162,45 @@ public class FileSourceConfiguration {
 
     public void setPattern(Pattern pattern) {
         this.pattern = pattern;
+    }
+
+    public String getActionAfterProcess() {
+        return actionAfterProcess;
+    }
+
+    public void setActionAfterProcess(String actionAfterProcess) {
+        this.actionAfterProcess = actionAfterProcess;
+    }
+
+    public String getMoveAfterProcess() {
+        return moveAfterProcess;
+    }
+
+    public void setMoveAfterProcess(String moveAfterProcess) {
+        this.moveAfterProcess = moveAfterProcess;
+    }
+
+    public String getSourceProtocol() {
+        return sourceProtocol;
+    }
+
+    public void setSourceProtocol(String sourceProtocol) {
+        this.sourceProtocol = sourceProtocol;
+    }
+
+    public String getProtocolForMoveAfterFailure() {
+        return protocolForMoveAfterFailure;
+    }
+
+    public void setProtocolForMoveAfterFailure(String protocolForMoveAfterFailure) {
+        this.protocolForMoveAfterFailure = protocolForMoveAfterFailure;
+    }
+
+    public String getProtocolForMoveAfterProcess() {
+        return protocolForMoveAfterProcess;
+    }
+
+    public void setProtocolForMoveAfterProcess(String protocolForMoveAfterProcess) {
+        this.protocolForMoveAfterProcess = protocolForMoveAfterProcess;
     }
 }

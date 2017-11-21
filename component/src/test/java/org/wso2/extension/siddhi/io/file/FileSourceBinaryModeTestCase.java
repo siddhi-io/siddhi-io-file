@@ -95,9 +95,9 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='binary.full'," +
-                "dir.uri='" + dirUri + "/binary', " +
+                "dir.uri='file:/" + dirUri + "/binary', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -162,7 +162,7 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='binary.full'," +
-                "dir.uri='" + dirUri + "/binary', " +
+                "dir.uri='file:/" + dirUri + "/binary', " +
                 "action.after.process='delete', " +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -228,7 +228,7 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='binary.full'," +
-                "file.uri='" + dirUri + "/binary/apache.bin', " +
+                "file.uri='file:/" + dirUri + "/binary/apache.bin', " +
                 "action.after.process='delete', " +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -273,9 +273,9 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='binary.full'," +
-                "file.uri='" + dirUri + "/binary/apache.bin', " +
+                "file.uri='file:/" + dirUri + "/binary/apache.bin', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "/apache.json', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "/apache.json', " +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -321,7 +321,7 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='binary.full'," +
-                "dir.uri='" + dirUri + "/binary', " +
+                "dir.uri='file:/" + dirUri + "/binary', " +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -386,7 +386,7 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='binary.full'," +
-                "dir.uri='" + dirUri + "/binary', " +
+                "dir.uri='file:/" + dirUri + "/binary', " +
                 "begin.regex='<event>'," +
                 "end.regex='</event>'," +
                 "@map(type='binary'))" +
@@ -453,7 +453,7 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', " +
-                "dir.uri='" + dirUri + "/binary', " +
+                "dir.uri='file:/" + dirUri + "/binary', " +
                 "tailing='false'," +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -583,7 +583,7 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='binary.full', " +
-                "dir.uri='" + dirUri + "/malformed_binary', " +
+                "dir.uri='file:/" + dirUri + "/malformed_binary', " +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -636,7 +636,7 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='binary.full'," +
-                "dir.uri='" + dirUri + "/binary', " +
+                "dir.uri='file:/" + dirUri + "/binary', " +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol double, price float, volume long); " +
                 "define stream BarStream (symbol double, price float, volume long); ";
@@ -701,9 +701,9 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='binary.full'," +
-                "dir.uri='" + dirUri + "/binary', " +
+                "dir.uri='file:/" + dirUri + "/binary', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "action.after.failure='delete'," +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -769,11 +769,11 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='binary.full'," +
-                "dir.uri='" + dirUri + "/binary', " +
+                "dir.uri='file:/" + dirUri + "/binary', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "action.after.failure='move'," +
-                "move.after.failure='" + moveAfterProcessDir + "', " +
+                "move.after.failure='file:/" + moveAfterProcessDir + "', " +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -838,12 +838,12 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='binary.full'," +
-                "dir.uri='" + dirUri + "/binary', " +
-                "file.uri='" + dirUri + "/binary/apache.bin', " +
+                "dir.uri='file:/" + dirUri + "/binary', " +
+                "file.uri='file:/" + dirUri + "/binary/apache.bin', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "action.after.failure='move'," +
-                "move.after.failure='" + moveAfterProcessDir + "', " +
+                "move.after.failure='file:/" + moveAfterProcessDir + "', " +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";

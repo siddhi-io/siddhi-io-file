@@ -70,16 +70,16 @@ public class FileProcessor implements CarbonMessageProcessor {
             String[] requiredPropertyValues = getRequiredPropertyValues(carbonMessage);
             if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
+                    carbonCallback.done(carbonMessage);
                     sourceEventListener.onEvent(new String(content, Constants.UTF_8),
-                            fileSourceConfiguration.getRequiredProperties());
+                            requiredPropertyValues);
                 }
-                carbonCallback.done(carbonMessage);
             } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
+                    carbonCallback.done(carbonMessage);
                     sourceEventListener.onEvent(content, requiredPropertyValues);
                     // todo : handle trps here
                 }
-                carbonCallback.done(carbonMessage);
             } else if (Constants.LINE.equalsIgnoreCase(mode)) {
                 if (!fileSourceConfiguration.isTailingEnabled()) {
                     InputStream is = new ByteArrayInputStream(content);
@@ -175,10 +175,12 @@ public class FileProcessor implements CarbonMessageProcessor {
                     }
                     String tmp;
                     tmp = sb.substring(lastMatchedIndex);
-
                     sb.setLength(0);
                     sb.append(tmp);
 
+                    if (carbonCallback != null) {
+                        carbonCallback.done(carbonMessage);
+                    }
                 }
             }
             return true;

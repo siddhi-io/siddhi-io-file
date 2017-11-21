@@ -95,7 +95,7 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/json', " +
+                "dir.uri='file:/" + dirUri + "/line/json', " +
                 "action.after.process='delete', " +
                 "tailing='false', " +
                 "@map(type='json'))" +
@@ -153,9 +153,9 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/json', " +
+                "dir.uri='file:/" + dirUri + "/line/json', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "tailing='false', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -213,7 +213,7 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/xml', " +
+                "dir.uri='file:/" + dirUri + "/line/xml', " +
                 "tailing='true', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -309,7 +309,7 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/xml', " +
+                "dir.uri='file:/" + dirUri + "/line/xml', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -405,7 +405,7 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/json', " +
+                "dir.uri='file:/" + dirUri + "/line/json', " +
                 "tailing='false', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -461,7 +461,7 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/json', " +
+                "dir.uri='file:/" + dirUri + "/line/json', " +
                 "action.after.process='move', " +
                 "tailing='false', " +
                 "@map(type='json'))" +
@@ -492,7 +492,7 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/json_invalid_path', " +
+                "dir.uri='file:/" + dirUri + "/line/json_invalid_path', " +
                 "action.after.process='move', " +
                 "tailing='false', " +
                 "@map(type='json'))" +
@@ -523,7 +523,7 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/invalid', " +
+                "dir.uri='file:/" + dirUri + "/line/invalid', " +
                 "tailing='false', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -573,10 +573,10 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/invalid', " +
+                "dir.uri='file:/" + dirUri + "/line/invalid', " +
                 "tailing='false'," +
                 "action.after.process='delete', " +
-                "move.after.process='/abc/def/', " +
+                "move.after.process='file://abc/def/', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -605,7 +605,7 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "file.uri='" + dirUri + "/line/xml/xml_line.txt', " +
+                "file.uri='file:/" + dirUri + "/line/xml/xml_line.txt', " +
                 "action.after.process='delete', " +
                 "tailing='false', " +
                 "@map(type='xml'))" +
@@ -662,9 +662,9 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/xml', " +
+                "dir.uri='file:/" + dirUri + "/line/xml', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "tailing='false', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -722,9 +722,9 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/text', " +
+                "dir.uri='file:/" + dirUri + "/line/text', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "tailing='false', " +
                 "@map(type='text',fail.on.missing.attribute='false', " +
                 "regex.A='(\\w+),([-.0-9]+),([-.0-9]+)', event.grouping.enabled='false', " +
@@ -784,7 +784,7 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "file.uri='" + dirUri + "/line/xml/xml_line.txt', " +
+                "file.uri='file:/" + dirUri + "/line/xml/xml_line.txt', " +
                 "tailing='true', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -881,11 +881,11 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "file.uri='" + dirUri + "/line/xml/xml_line.txt', " +
+                "file.uri='file:/" + dirUri + "/line/xml/xml_line.txt', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "/xml_line.txt', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "/xml_line.txt', " +
                 "action.after.failure='move', " +
-                "move.after.failure='" + moveAfterProcessDir + "/xml_line.txt', " +
+                "move.after.failure='file:/" + moveAfterProcessDir + "/xml_line.txt', " +
                 "tailing='false', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -941,9 +941,9 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='" + dirUri + "/line/text', " +
+                "dir.uri='file:/" + dirUri + "/line/text', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "tailing='true', " +
                 "@map(type='text',fail.on.missing.attribute='false', " +
                 "regex.A='(\\w+),([-.0-9]+),([-.0-9]+)', event.grouping.enabled='false', " +
@@ -969,7 +969,7 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "file.uri='" + dirUri + "/line/xml/xml_line.txt', " +
+                "file.uri='file:/" + dirUri + "/line/xml/xml_line.txt', " +
                 "tailing='true', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
