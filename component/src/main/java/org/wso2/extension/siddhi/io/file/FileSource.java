@@ -72,7 +72,8 @@ import java.util.regex.PatternSyntaxException;
                         description =
                                 "Used to specify a directory to be processed. \n" +
                                 "All the files inside this directory will be processed. \n" +
-                                "Only one of 'dir.uri' and 'file.uri' should be provided.\n",
+                                "Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
+                                "This uri MUST have the respective protocol specified.",
                         type = {DataType.STRING}
                 ),
 
@@ -80,7 +81,8 @@ import java.util.regex.PatternSyntaxException;
                         name = "file.uri",
                         description =
                                 "Used to specify a file to be processed. \n" +
-                                        " Only one of 'dir.uri' and 'file.uri' should be provided.\n",
+                                        " Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
+                                        "This uri MUST have the respective protocol specified.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -140,7 +142,8 @@ import java.util.regex.PatternSyntaxException;
                                 "If action.after.process is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.process' parameter.\n" +
                                 "This should be the absolute path of the file that going to be created after moving " +
-                                "is done.\n",
+                                "is done.\n" +
+                                "This uri MUST have the respective protocol specified.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -150,7 +153,8 @@ import java.util.regex.PatternSyntaxException;
                                 "If action.after.failure is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.failure' parameter.\n" +
                                 "This should be the absolute path of the file that going to be created after moving " +
-                                "is done.\n",
+                                "is done.\n" +
+                                "This uri MUST have the respective protocol specified.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -200,7 +204,7 @@ import java.util.regex.PatternSyntaxException;
                                 "@source(type='file',\n" +
                                 "mode='text.full',\n" +
                                 "tailing='false'\n " +
-                                "dir.uri='/abc/xyz',\n" +
+                                "dir.uri='file://abc/xyz',\n" +
                                 "action.after.process='delete',\n" +
                                 "@map(type='json')) \n" +
                                 "define stream FooStream (symbol string, price float, volume long); \n",
@@ -221,7 +225,7 @@ import java.util.regex.PatternSyntaxException;
                                 "@source(type='file',\n" +
                                 "mode='files.repo.line',\n" +
                                 "tailing='true',\n" +
-                                "dir.uri='/abc/xyz',\n" +
+                                "dir.uri='file://abc/xyz',\n" +
                                 "@map(type='json')) \n" +
                                 "define stream FooStream (symbol string, price float, volume long);\n ",
 
