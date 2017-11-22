@@ -48,7 +48,7 @@ public class FileSourceRegexModeTestCase {
     private static final Logger log = Logger.getLogger(FileSourceRegexModeTestCase.class);
     private AtomicInteger count = new AtomicInteger();
     private int waitTime = 2000;
-    private int timeout = 300000000;
+    private int timeout = 30000;
 
     private String dirUri, moveAfterProcessDir;
     private File sourceRoot, newRoot, movedFiles;

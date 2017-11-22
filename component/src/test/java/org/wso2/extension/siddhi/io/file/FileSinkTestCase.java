@@ -44,8 +44,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FileSinkTestCase {
     private static final Logger log = Logger.getLogger(FileSinkTestCase.class);
     private AtomicInteger count = new AtomicInteger();
-    private int waitTime = 2000;
-    private int timeout = 30000;
 
     private String dirUri, sinkUri;
     private File sourceRoot, fileToAppend, sinkRoot;

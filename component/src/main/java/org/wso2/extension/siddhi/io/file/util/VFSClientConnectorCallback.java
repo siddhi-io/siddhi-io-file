@@ -28,8 +28,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Class for CarbonCall back to be used in VFSClientConnector
- * */
+ * Class for CarbonCall back to be used in VFSClientConnector.
+ */
 public class VFSClientConnectorCallback implements CarbonCallback {
     private static final Logger log = LoggerFactory.getLogger(VFSClientConnectorCallback.class);
     private CountDownLatch latch = new CountDownLatch(1);
