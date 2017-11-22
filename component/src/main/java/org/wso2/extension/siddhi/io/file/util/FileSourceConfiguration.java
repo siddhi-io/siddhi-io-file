@@ -38,6 +38,7 @@ public class FileSourceConfiguration {
     private String sourceProtocol = null;
     private String protocolForMoveAfterFailure = null;
     private String protocolForMoveAfterProcess = null;
+    private long timeout = 5000;
 
     private FileServerConnector fileServerConnector;
     private RemoteFileSystemServerConnector fileSystemServerConnector;
@@ -202,5 +203,13 @@ public class FileSourceConfiguration {
 
     public void setProtocolForMoveAfterProcess(String protocolForMoveAfterProcess) {
         this.protocolForMoveAfterProcess = protocolForMoveAfterProcess;
+    }
+
+    public long getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
     }
 }

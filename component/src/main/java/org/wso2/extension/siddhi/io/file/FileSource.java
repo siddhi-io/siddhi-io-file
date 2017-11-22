@@ -197,6 +197,14 @@ import java.util.regex.PatternSyntaxException;
                         defaultValue = "1000"
                 ),
 
+                @Parameter(
+                        name = "timeout",
+                        description = "This parameter is used to specify the maximum time period (in milliseconds) " +
+                                " for waiting until a file is processed.\n",
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "5000"
+                ),
         },
         examples = {
                 @Example(
@@ -269,6 +277,8 @@ public class FileSource extends Source {
     private String dirPollingInterval;
     private String filePollingInterval;
 
+    private long timeout = 5000;
+
     @Override
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] requiredProperties,
                      ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
@@ -329,6 +339,12 @@ public class FileSource extends Source {
 
         filePollingInterval = optionHolder.validateAndGetStaticValue(Constants.FILE_POLLING_INTERVAL, "1000");
 
+        String timeoutValue = optionHolder.validateAndGetStaticValue(Constants.TIMEOUT, "5000");
+        try {
+            timeout = Long.parseLong(timeoutValue);
+        } catch (NumberFormatException e) {
+            throw new SiddhiAppRuntimeException("Value provided for timeout, " + timeoutValue + " is invalid.", e);
+        }
         beginRegex = optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null);
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
 
@@ -387,7 +403,7 @@ public class FileSource extends Source {
                 fileSourceConfiguration.getFileServerConnector().stop();
             }
         } catch (ServerConnectorException e) {
-            throw new SiddhiAppRuntimeException("Failed to stop the file server : " + e.getMessage());
+            throw new SiddhiAppRuntimeException("Failed to stop the file server.", e);
         }
     }
 
@@ -396,7 +412,7 @@ public class FileSource extends Source {
             updateSourceConf();
             deployServers();
         } catch (ConnectionUnavailableException e) {
-            throw new SiddhiAppRuntimeException("Failed to resume siddhi app runtime due to " + e.getMessage(), e);
+            throw new SiddhiAppRuntimeException("Failed to resume siddhi app runtime.", e);
         }
     }
 
@@ -427,6 +443,7 @@ public class FileSource extends Source {
         fileSourceConfiguration.setRequiredProperties(requiredProperties);
         fileSourceConfiguration.setActionAfterProcess(actionAfterProcess);
         fileSourceConfiguration.setMoveAfterProcess(moveAfterProcess);
+        fileSourceConfiguration.setTimeout(timeout);
     }
 
     private void updateSourceConf() {
@@ -568,7 +585,7 @@ public class FileSource extends Source {
                 Runnable runnableClient = () -> {
                     try {
                         vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
-                        vfsClientConnectorCallback.waitTillDone(2000, fileUri);
+                        vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
                         if (actionAfterProcess != null) {
                             properties.put(Constants.URI, fileUri);
                             properties.put(Constants.ACTION, actionAfterProcess);
@@ -576,7 +593,7 @@ public class FileSource extends Source {
                                 properties.put(Constants.DESTINATION, moveAfterProcess);
                             }
                             vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
-                            vfsClientConnectorCallback.waitTillDone(2000, fileUri);
+                            vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
                         }
                     } catch (ClientConnectorException e) {
                         log.error(String.format("Failure occurred in vfs-client while reading the file '%s'.",

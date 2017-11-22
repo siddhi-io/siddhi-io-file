@@ -87,7 +87,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 try {
                     vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                     try {
-                        carbonCallback.waitTillDone(3000, fileURI);
+                        carbonCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileURI);
                     } catch (InterruptedException e) {
                         log.error(String.format("Failed to wait until file '%s' is processed.", fileURI), e);
                         return false;
@@ -114,7 +114,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 try {
                     vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                     try {
-                        carbonCallback.waitTillDone(3000, fileURI);
+                        carbonCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileURI);
                     } catch (InterruptedException e) {
                         log.error(String.format("Failed to get callback from vfs-client  for file '%s'.", fileURI), e);
                         return false;
@@ -172,7 +172,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     try {
                         vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                         try {
-                            carbonCallback.waitTillDone(3000, fileURI);
+                            carbonCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileURI);
                         } catch (InterruptedException e) {
                             log.error(String.format("Failed to get callback from vfs-client  for file '%s'.",
                                     fileURI), e);
@@ -245,7 +245,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     }
                 }
                 vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, properties);
-                vfsClientConnectorCallback.waitTillDone(3000, fileUri);
+                vfsClientConnectorCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileUri);
             }
         } catch (ClientConnectorException e) {
             log.error(String.format("Failure occurred in vfs-client while reading the file '%s'.", fileUri), e);

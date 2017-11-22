@@ -129,7 +129,7 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
-                            org.wso2.carbon.connector.framework.*,
+                            org.wso2.carbon.connector.framework.server.polling.*,
                             org.wso2.carbon.transport.remotefilesystem.*,
                             org.wso2.carbon.messaging.*,
                             org.apache.commons.vfs2.*,
@@ -146,7 +146,6 @@
                             !org.apache.commons.net.*
                         </Export-Package>
                         <Import-Package>
-                            !org.wso2.carbon.connector.framework.*,
                             !org.wso2.carbon.messaging.*,
                             !org.wso2.carbon.transport.remotefilesystem.*,
                             !org.apache.commons.vfs2.*,

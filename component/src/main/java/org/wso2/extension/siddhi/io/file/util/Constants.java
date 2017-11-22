@@ -41,6 +41,7 @@ public class Constants {
     public static final String FILE_URI = "file.uri";
     public static final String DIRECTORY_POLLING_INTERVAL = "dir.polling.interval";
     public static final String FILE_POLLING_INTERVAL = "file.polling.interval";
+    public static final String TIMEOUT = "timeout";
 
     /* configuration param values*/
     public static final String MOVE = "move";
