@@ -129,20 +129,26 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
-                            org.wso2.carbon.transport.filesystem.*,
+                            org.wso2.carbon.connector.framework.*,
+                            org.wso2.carbon.transport.remotefilesystem.*,
+                            org.wso2.carbon.messaging.*,
                             org.apache.commons.vfs2.*,
                             org.wso2.carbon.transport.file.*,
                             org.apache.commons.net.*
                         </Private-Package>
                         <Export-Package>
                             org.wso2.extension.siddhi.io.file.*,
-                            !org.wso2.carbon.transport.filesystem.*,
+                            !org.wso2.carbon.connector.framework.*,
+                            !org.wso2.carbon.transport.remotefilesystem.*,
+                            !org.wso2.carbon.messaging.*,
                             !org.apache.commons.vfs2.*,
                             !org.wso2.carbon.transport.file.*,
                             !org.apache.commons.net.*
                         </Export-Package>
                         <Import-Package>
-                            !org.wso2.carbon.transport.filesystem.*,
+                            !org.wso2.carbon.connector.framework.*,
+                            !org.wso2.carbon.messaging.*,
+                            !org.wso2.carbon.transport.remotefilesystem.*,
                             !org.apache.commons.vfs2.*,
                             !org.wso2.carbon.transport.file.*,
                             !org.apache.commons.net.*,
