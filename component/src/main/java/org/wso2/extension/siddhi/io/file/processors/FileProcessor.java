@@ -78,7 +78,6 @@ public class FileProcessor implements CarbonMessageProcessor {
                 if (msg.length() > 0) {
                     carbonCallback.done(carbonMessage);
                     sourceEventListener.onEvent(content, requiredPropertyValues);
-                    // todo : handle trps here
                 }
             } else if (Constants.LINE.equalsIgnoreCase(mode)) {
                 if (!fileSourceConfiguration.isTailingEnabled()) {

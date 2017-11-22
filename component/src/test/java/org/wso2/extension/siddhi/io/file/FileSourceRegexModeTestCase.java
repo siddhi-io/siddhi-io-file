@@ -44,7 +44,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Test cases for siddhi-io-file source.
  * */
 public class FileSourceRegexModeTestCase {
-    // TODO: 20/7/17 Improve Thread.sleep() to use SiddhiTestHelper.waitForEvents().
     private static final Logger log = Logger.getLogger(FileSourceRegexModeTestCase.class);
     private AtomicInteger count = new AtomicInteger();
     private int waitTime = 2000;
