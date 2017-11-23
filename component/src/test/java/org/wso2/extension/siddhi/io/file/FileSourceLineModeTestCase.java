@@ -29,6 +29,7 @@ import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.CannotRestoreSiddhiAppStateException;
 import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.output.StreamCallback;
 import org.wso2.siddhi.core.util.EventPrinter;
@@ -964,7 +965,7 @@ public class FileSourceLineModeTestCase {
     }
 
     @Test
-    public void siddhiIoFileTest16() throws InterruptedException {
+    public void siddhiIoFileTest16() throws InterruptedException, CannotRestoreSiddhiAppStateException {
         log.info("test SiddhiIoFile [mode=line] Test 16");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +

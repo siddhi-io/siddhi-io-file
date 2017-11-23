@@ -28,6 +28,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
+import org.wso2.siddhi.core.exception.CannotRestoreSiddhiAppStateException;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 
 import java.io.BufferedReader;
@@ -603,7 +604,7 @@ public class FileSinkTestCase {
     }
 
     @Test
-    public void fileSinkTest10() throws InterruptedException {
+    public void fileSinkTest10() throws InterruptedException, CannotRestoreSiddhiAppStateException {
         log.info("test SiddhiIoFile Sink 10");
 
         String streams = "" +
