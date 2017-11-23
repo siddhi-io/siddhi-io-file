@@ -183,6 +183,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../1.0.1/" title="1.0.1" class="md-nav__link">
+      1.0.1
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../1.0.0-M12/" title="1.0.0-M12" class="md-nav__link">
       1.0.0-M12
     </a>
@@ -398,7 +410,7 @@
               
                 
                 
-                <h1 id="api-docs-v100">API Docs - v1.0.0</h1>
+                <h1 id="api-docs-v101">API Docs - v1.0.1</h1>
 <h2 id="sink">Sink</h2>
 <h3 id="file-sink">file <em><a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#sink">(Sink)</a></em></h3>
 <p style="word-wrap: break-word">File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p>
@@ -446,7 +458,7 @@
 <p style="word-wrap: break-word">File Source provides the functionality for user to feed data to siddhi from files. Both text and binary files are supported by file source.</p>
 
 <p><span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<pre><code>@source(type=&quot;file&quot;, dir.uri=&quot;&lt;STRING&gt;&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, mode=&quot;&lt;STRING&gt;&quot;, tailing=&quot;&lt;BOOL&gt;&quot;, action.after.process=&quot;&lt;STRING&gt;&quot;, action.after.failure=&quot;&lt;STRING&gt;&quot;, move.after.process=&quot;&lt;STRING&gt;&quot;, move.after.failure=&quot;&lt;STRING&gt;&quot;, begin.regex=&quot;&lt;STRING&gt;&quot;, end.regex=&quot;&lt;STRING&gt;&quot;, file.polling.interval=&quot;&lt;STRING&gt;&quot;, dir.polling.interval=&quot;&lt;STRING&gt;&quot;, @map(...)))
+<pre><code>@source(type=&quot;file&quot;, dir.uri=&quot;&lt;STRING&gt;&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, mode=&quot;&lt;STRING&gt;&quot;, tailing=&quot;&lt;BOOL&gt;&quot;, action.after.process=&quot;&lt;STRING&gt;&quot;, action.after.failure=&quot;&lt;STRING&gt;&quot;, move.after.process=&quot;&lt;STRING&gt;&quot;, move.after.failure=&quot;&lt;STRING&gt;&quot;, begin.regex=&quot;&lt;STRING&gt;&quot;, end.regex=&quot;&lt;STRING&gt;&quot;, file.polling.interval=&quot;&lt;STRING&gt;&quot;, dir.polling.interval=&quot;&lt;STRING&gt;&quot;, timeout=&quot;&lt;STRING&gt;&quot;, @map(...)))
 </code></pre>
 
 <p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
@@ -461,7 +473,7 @@
     </tr>
     <tr>
         <td style="vertical-align: top">dir.uri</td>
-        <td style="vertical-align: top; word-wrap: break-word">Used to specify a directory to be processed. <br>All the files inside this directory will be processed. <br>Only one of 'dir.uri' and 'file.uri' should be provided.<br></td>
+        <td style="vertical-align: top; word-wrap: break-word">Used to specify a directory to be processed. <br>All the files inside this directory will be processed. <br>Only one of 'dir.uri' and 'file.uri' should be provided.<br>This uri MUST have the respective protocol specified.</td>
         <td style="vertical-align: top"></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">No</td>
@@ -469,7 +481,7 @@
     </tr>
     <tr>
         <td style="vertical-align: top">file.uri</td>
-        <td style="vertical-align: top; word-wrap: break-word">Used to specify a file to be processed. <br>&nbsp;Only one of 'dir.uri' and 'file.uri' should be provided.<br></td>
+        <td style="vertical-align: top; word-wrap: break-word">Used to specify a file to be processed. <br>&nbsp;Only one of 'dir.uri' and 'file.uri' should be provided.<br>This uri MUST have the respective protocol specified.<br></td>
         <td style="vertical-align: top"></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">No</td>
@@ -509,7 +521,7 @@
     </tr>
     <tr>
         <td style="vertical-align: top">move.after.process</td>
-        <td style="vertical-align: top; word-wrap: break-word">If action.after.process is MOVE, user must specify the location to move consumed files using 'move.after.process' parameter.<br>This should be the absolute path of the file that going to be created after moving is done.<br></td>
+        <td style="vertical-align: top; word-wrap: break-word">If action.after.process is MOVE, user must specify the location to move consumed files using 'move.after.process' parameter.<br>This should be the absolute path of the file that going to be created after moving is done.<br>This uri MUST have the respective protocol specified.<br></td>
         <td style="vertical-align: top"></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">No</td>
@@ -517,7 +529,7 @@
     </tr>
     <tr>
         <td style="vertical-align: top">move.after.failure</td>
-        <td style="vertical-align: top; word-wrap: break-word">If action.after.failure is MOVE, user must specify the location to move consumed files using 'move.after.failure' parameter.<br>This should be the absolute path of the file that going to be created after moving is done.<br></td>
+        <td style="vertical-align: top; word-wrap: break-word">If action.after.failure is MOVE, user must specify the location to move consumed files using 'move.after.failure' parameter.<br>This should be the absolute path of the file that going to be created after moving is done.<br>This uri MUST have the respective protocol specified.<br></td>
         <td style="vertical-align: top"></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">No</td>
@@ -555,13 +567,21 @@
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>
+    <tr>
+        <td style="vertical-align: top">timeout</td>
+        <td style="vertical-align: top; word-wrap: break-word">This parameter is used to specify the maximum time period (in milliseconds)  for waiting until a file is processed.<br></td>
+        <td style="vertical-align: top">5000</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
 <pre><code>@source(type='file',
 mode='text.full',
 tailing='false'
- dir.uri='/abc/xyz',
+ dir.uri='file://abc/xyz',
 action.after.process='delete',
 @map(type='json')) 
 define stream FooStream (symbol string, price float, volume long); 
@@ -574,7 +594,7 @@ define stream FooStream (symbol string, price float, volume long);
 <pre><code>@source(type='file',
 mode='files.repo.line',
 tailing='true',
-dir.uri='/abc/xyz',
+dir.uri='file://abc/xyz',
 @map(type='json')) 
 define stream FooStream (symbol string, price float, volume long);
 
