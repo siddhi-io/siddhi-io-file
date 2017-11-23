@@ -25,9 +25,11 @@ import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
-import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
+import org.wso2.carbon.transport.remotefilesystem.RemoteFileSystemConnectorFactory;
+import org.wso2.carbon.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
+import org.wso2.carbon.transport.remotefilesystem.server.connector.contract.RemoteFileSystemServerConnector;
+import org.wso2.extension.siddhi.io.file.listeners.FileSystemListener;
 import org.wso2.extension.siddhi.io.file.processors.FileProcessor;
-import org.wso2.extension.siddhi.io.file.processors.FileSystemMessageProcessor;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
 import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
@@ -45,6 +47,9 @@ import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -67,7 +72,8 @@ import java.util.regex.PatternSyntaxException;
                         description =
                                 "Used to specify a directory to be processed. \n" +
                                 "All the files inside this directory will be processed. \n" +
-                                "Only one of 'dir.uri' and 'file.uri' should be provided.\n",
+                                "Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
+                                "This uri MUST have the respective protocol specified.",
                         type = {DataType.STRING}
                 ),
 
@@ -75,7 +81,8 @@ import java.util.regex.PatternSyntaxException;
                         name = "file.uri",
                         description =
                                 "Used to specify a file to be processed. \n" +
-                                        " Only one of 'dir.uri' and 'file.uri' should be provided.\n",
+                                        " Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
+                                        "This uri MUST have the respective protocol specified.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -135,7 +142,8 @@ import java.util.regex.PatternSyntaxException;
                                 "If action.after.process is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.process' parameter.\n" +
                                 "This should be the absolute path of the file that going to be created after moving " +
-                                "is done.\n",
+                                "is done.\n" +
+                                "This uri MUST have the respective protocol specified.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -145,7 +153,8 @@ import java.util.regex.PatternSyntaxException;
                                 "If action.after.failure is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.failure' parameter.\n" +
                                 "This should be the absolute path of the file that going to be created after moving " +
-                                "is done.\n",
+                                "is done.\n" +
+                                "This uri MUST have the respective protocol specified.\n",
                         type = {DataType.STRING}
                 ),
 
@@ -188,6 +197,14 @@ import java.util.regex.PatternSyntaxException;
                         defaultValue = "1000"
                 ),
 
+                @Parameter(
+                        name = "timeout",
+                        description = "This parameter is used to specify the maximum time period (in milliseconds) " +
+                                " for waiting until a file is processed.\n",
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "5000"
+                ),
         },
         examples = {
                 @Example(
@@ -195,7 +212,7 @@ import java.util.regex.PatternSyntaxException;
                                 "@source(type='file',\n" +
                                 "mode='text.full',\n" +
                                 "tailing='false'\n " +
-                                "dir.uri='/abc/xyz',\n" +
+                                "dir.uri='file://abc/xyz',\n" +
                                 "action.after.process='delete',\n" +
                                 "@map(type='json')) \n" +
                                 "define stream FooStream (symbol string, price float, volume long); \n",
@@ -216,7 +233,7 @@ import java.util.regex.PatternSyntaxException;
                                 "@source(type='file',\n" +
                                 "mode='files.repo.line',\n" +
                                 "tailing='true',\n" +
-                                "dir.uri='/abc/xyz',\n" +
+                                "dir.uri='file://abc/xyz',\n" +
                                 "@map(type='json')) \n" +
                                 "define stream FooStream (symbol string, price float, volume long);\n ",
 
@@ -238,9 +255,9 @@ public class FileSource extends Source {
 
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
-    private FileSystemServerConnectorProvider fileSystemServerConnectorProvider;
+    private RemoteFileSystemConnectorFactory fileSystemConnectorFactory;
     private FileSourceServiceProvider fileSourceServiceProvider;
-    private ServerConnector fileSystemServerConnector;
+    private RemoteFileSystemServerConnector fileSystemServerConnector;
     private String filePointer = "0";
     private String[] requiredProperties;
     private boolean isTailingEnabled = true;
@@ -260,6 +277,8 @@ public class FileSource extends Source {
     private String dirPollingInterval;
     private String filePollingInterval;
 
+    private long timeout = 5000;
+
     @Override
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] requiredProperties,
                      ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
@@ -269,20 +288,20 @@ public class FileSource extends Source {
         this.fileSourceConfiguration = new FileSourceConfiguration();
 
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
-        fileSystemServerConnectorProvider = fileSourceServiceProvider.getFileSystemServerConnectorProvider();
-
+        this.fileSystemConnectorFactory = fileSourceServiceProvider.getFileSystemConnectorFactory();
         if (optionHolder.isOptionExists(Constants.DIR_URI)) {
             dirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
+            validateURL(dirUri, "dir.uri");
         }
         if (optionHolder.isOptionExists(Constants.FILE_URI)) {
             fileUri = optionHolder.validateAndGetStaticValue(Constants.FILE_URI);
+            validateURL(fileUri, "file.uri");
         }
 
         if (dirUri != null && fileUri != null) {
             throw new SiddhiAppCreationException("Only one of directory uri or file uri should be provided. But both " +
                     "have been provided.");
         }
-
         if (dirUri == null && fileUri == null) {
             throw new SiddhiAppCreationException("Either directory uri or file uri must be provided. But none of them" +
                     "found.");
@@ -309,15 +328,23 @@ public class FileSource extends Source {
         // TODO : Fix this in carbon transport
         if (optionHolder.isOptionExists(Constants.MOVE_AFTER_PROCESS)) {
             moveAfterProcess = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_PROCESS);
+            validateURL(moveAfterProcess, "moveAfterProcess");
         }
         if (optionHolder.isOptionExists(Constants.MOVE_AFTER_FAILURE)) {
             moveAfterFailure = optionHolder.validateAndGetStaticValue(Constants.MOVE_AFTER_FAILURE);
+            validateURL(moveAfterFailure, "moveAfterFailure");
         }
 
         dirPollingInterval = optionHolder.validateAndGetStaticValue(Constants.DIRECTORY_POLLING_INTERVAL, "1000");
 
         filePollingInterval = optionHolder.validateAndGetStaticValue(Constants.FILE_POLLING_INTERVAL, "1000");
 
+        String timeoutValue = optionHolder.validateAndGetStaticValue(Constants.TIMEOUT, "5000");
+        try {
+            timeout = Long.parseLong(timeoutValue);
+        } catch (NumberFormatException e) {
+            throw new SiddhiAppRuntimeException("Value provided for timeout, " + timeoutValue + " is invalid.", e);
+        }
         beginRegex = optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null);
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
 
@@ -348,10 +375,13 @@ public class FileSource extends Source {
                 fileSystemServerConnector.stop();
                 fileSystemServerConnector = null;
             }
-            //fileSystemServerConnector = null;
             if (isTailingEnabled) {
                 fileSourceConfiguration.getFileServerConnector().stop();
                 fileSourceConfiguration.setFileServerConnector(null);
+            }
+            ExecutorService executorService = fileSourceConfiguration.getExecutorService();
+            if (executorService != null && !executorService.isShutdown()) {
+                executorService.shutdown();
             }
         } catch (ServerConnectorException e) {
            throw new SiddhiAppRuntimeException("Failed to stop the file server when shutting down the siddhi app '" +
@@ -373,7 +403,7 @@ public class FileSource extends Source {
                 fileSourceConfiguration.getFileServerConnector().stop();
             }
         } catch (ServerConnectorException e) {
-            throw new SiddhiAppRuntimeException("Failed to stop the file server : " + e.getMessage());
+            throw new SiddhiAppRuntimeException("Failed to stop the file server.", e);
         }
     }
 
@@ -382,7 +412,7 @@ public class FileSource extends Source {
             updateSourceConf();
             deployServers();
         } catch (ConnectionUnavailableException e) {
-            throw new SiddhiAppRuntimeException("Failed to resume siddhi app runtime due to " + e.getMessage(), e);
+            throw new SiddhiAppRuntimeException("Failed to resume siddhi app runtime.", e);
         }
     }
 
@@ -411,6 +441,9 @@ public class FileSource extends Source {
         fileSourceConfiguration.setTailingEnabled(Boolean.parseBoolean(tailing));
         fileSourceConfiguration.setFilePollingInterval(filePollingInterval);
         fileSourceConfiguration.setRequiredProperties(requiredProperties);
+        fileSourceConfiguration.setActionAfterProcess(actionAfterProcess);
+        fileSourceConfiguration.setMoveAfterProcess(moveAfterProcess);
+        fileSourceConfiguration.setTimeout(timeout);
     }
 
     private void updateSourceConf() {
@@ -425,24 +458,24 @@ public class FileSource extends Source {
         if (actionAfterProcess != null) {
             map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase(Locale.ENGLISH));
         }
-        map.put(Constants.MOVE_AFTER_PROCESS_KEY, moveAfterProcess);
+        map.put(Constants.MOVE_AFTER_PROCESS_KEY.toUpperCase(Locale.ENGLISH), moveAfterProcess);
         map.put(Constants.POLLING_INTERVAL, dirPollingInterval);
         map.put(Constants.FILE_SORT_ATTRIBUTE, Constants.NAME);
-        map.put(Constants.FILE_SORT_ASCENDING, Constants.TRUE);
-        map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE);
+        map.put(Constants.FILE_SORT_ASCENDING, Constants.TRUE.toUpperCase(Locale.ENGLISH));
+        map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE.toUpperCase(Locale.ENGLISH));
         map.put(Constants.ACK_TIME_OUT, "5000");
 
         if (Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
                 Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
-            map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
+            map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE.toUpperCase(Locale.ENGLISH));
         } else {
-            map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.FALSE);
+            map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.FALSE.toUpperCase(Locale.ENGLISH));
         }
         if (actionAfterFailure != null) {
-            map.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
+            map.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure.toUpperCase(Locale.ENGLISH));
         }
         if (moveAfterFailure != null) {
-            map.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
+            map.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure.toUpperCase(Locale.ENGLISH));
         }
         return map;
     }
@@ -491,18 +524,15 @@ public class FileSource extends Source {
 
         if (dirUri != null) {
             Map<String, String> properties = getFileSystemServerProperties();
-            fileSystemServerConnector = fileSystemServerConnectorProvider.createConnector("fileSystemServerConnector",
-                    properties);
-            FileSystemMessageProcessor fileSystemMessageProcessor = new FileSystemMessageProcessor(sourceEventListener,
+            FileSystemListener fileSystemListener = new FileSystemListener(sourceEventListener,
                     fileSourceConfiguration);
-            fileSystemServerConnector.setMessageProcessor(fileSystemMessageProcessor);
-            fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
-
             try {
+                fileSystemServerConnector =  fileSystemConnectorFactory.createServerConnector(
+                        siddhiAppContext.getName(), properties, fileSystemListener);
+                fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
                 fileSystemServerConnector.start();
-            } catch (ServerConnectorException e) {
-                throw new ConnectionUnavailableException("Failed to connect to the file system server due to : " +
-                        e.getMessage(), e);
+            } catch (RemoteFileSystemConnectorException e) {
+                throw new ConnectionUnavailableException("Failed to connect to the remote file system server. ", e);
             }
         } else if (fileUri != null) {
             Map<String, String> properties = new HashMap<>();
@@ -534,15 +564,12 @@ public class FileSource extends Source {
                     fileServerConnector.setMessageProcessor(fileProcessor);
                     fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
 
-                    Runnable runnableServer = new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                fileServerConnector.start();
-                            } catch (ServerConnectorException e) {
-                                log.error("Failed to start the server for file " + fileUri + ". " +
-                                        "Hence starting to process next file.");
-                            }
+                    Runnable runnableServer = () -> {
+                        try {
+                            fileServerConnector.start();
+                        } catch (ServerConnectorException e) {
+                            log.error(String.format("Failed to start the server for file '%s'. " +
+                                    "Hence starting to process next file.", fileUri));
                         }
                     };
                     fileSourceConfiguration.getExecutorService().execute(runnableServer);
@@ -555,31 +582,26 @@ public class FileSource extends Source {
                 vfsClientConnector.setMessageProcessor(fileProcessor);
                 VFSClientConnectorCallback vfsClientConnectorCallback = new VFSClientConnectorCallback();
 
-                Runnable runnableClient = new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
-                            vfsClientConnectorCallback.waitTillDone(2000, fileUri);
-                            if (actionAfterProcess != null) {
-                                properties.put(Constants.URI, fileUri);
-                                properties.put(Constants.ACTION, actionAfterProcess);
-                                if (moveAfterProcess != null) {
-                                    properties.put(Constants.DESTINATION, moveAfterProcess);
-                                }
-                                vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
-                                vfsClientConnectorCallback.waitTillDone(2000, fileUri);
+                Runnable runnableClient = () -> {
+                    try {
+                        vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
+                        vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
+                        if (actionAfterProcess != null) {
+                            properties.put(Constants.URI, fileUri);
+                            properties.put(Constants.ACTION, actionAfterProcess);
+                            if (moveAfterProcess != null) {
+                                properties.put(Constants.DESTINATION, moveAfterProcess);
                             }
-                        } catch (ClientConnectorException e) {
-                            log.error("Failure occurred in vfs-client while reading the file " + fileUri +
-                                    "." + e.getMessage());
-                        } catch (InterruptedException e) {
-                            log.error("Failed to get callback from vfs-client  for file " + fileUri +
-                                    ". due to " + e.getMessage());
+                            vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
+                            vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
                         }
+                    } catch (ClientConnectorException e) {
+                        log.error(String.format("Failure occurred in vfs-client while reading the file '%s'.",
+                                fileUri), e);
+                    } catch (InterruptedException e) {
+                        log.error(String.format("Failed to get callback from vfs-client  for file '%s'.", fileUri), e);
                     }
                 };
-
                 fileSourceConfiguration.getExecutorService().execute(runnableClient);
             }
         }
@@ -588,7 +610,7 @@ public class FileSource extends Source {
     private void getPattern() {
         String beginRegex = fileSourceConfiguration.getBeginRegex();
         String endRegex = fileSourceConfiguration.getEndRegex();
-        Pattern pattern = null;
+        Pattern pattern;
         try {
             if (beginRegex != null && endRegex != null) {
                 pattern = Pattern.compile(beginRegex + "((.|\n)*?)" + endRegex);
@@ -604,5 +626,16 @@ public class FileSource extends Source {
                     "' and '" + endRegex + "'. Hence shutting down the siddhiApp. ");
         }
         fileSourceConfiguration.setPattern(pattern);
+    }
+
+    private void validateURL(String uri, String parameterName) {
+        try {
+            new URL(uri);
+            String splitRegex = File.separatorChar == '\\' ? "\\\\" : File.separator;
+            fileSourceConfiguration.setProtocolForMoveAfterProcess(uri.split(splitRegex)[0]);
+        } catch (MalformedURLException e) {
+            throw new SiddhiAppCreationException(String.format("Provided uri for '%s' parameter '%s' is invalid.",
+                    parameterName, uri), e);
+        }
     }
 }

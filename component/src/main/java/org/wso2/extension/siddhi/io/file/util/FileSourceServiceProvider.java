@@ -19,14 +19,15 @@
 package org.wso2.extension.siddhi.io.file.util;
 
 import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
-import org.wso2.carbon.transport.filesystem.connector.server.FileSystemServerConnectorProvider;
+import org.wso2.carbon.transport.remotefilesystem.RemoteFileSystemConnectorFactory;
+import org.wso2.carbon.transport.remotefilesystem.impl.RemoteFileSystemConnectorFactoryImpl;
 
 /**
  * Class for providing server connectors.
  */
 public class FileSourceServiceProvider {
-    private static FileSystemServerConnectorProvider fileSystemServerConnectorProvider =
-            new FileSystemServerConnectorProvider();
+    private static RemoteFileSystemConnectorFactory fileSystemConnectorFactory =
+            new RemoteFileSystemConnectorFactoryImpl();
     private static FileServerConnectorProvider fileServerConnectorProvider =
             new FileServerConnectorProvider();
     private static FileSourceServiceProvider fileSourceServiceProvider = new FileSourceServiceProvider();
@@ -38,8 +39,8 @@ public class FileSourceServiceProvider {
         return fileSourceServiceProvider;
     }
 
-    public FileSystemServerConnectorProvider getFileSystemServerConnectorProvider() {
-        return fileSystemServerConnectorProvider;
+    public RemoteFileSystemConnectorFactory getFileSystemConnectorFactory() {
+        return fileSystemConnectorFactory;
     }
 
     public FileServerConnectorProvider getFileServerConnectorProvider() {

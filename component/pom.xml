@@ -38,7 +38,7 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.transport</groupId>
-            <artifactId>org.wso2.carbon.transport.file-system</artifactId>
+            <artifactId>org.wso2.carbon.transport.remote-file-system</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wso2.siddhi</groupId>
@@ -74,7 +74,6 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -130,20 +129,25 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
-                            org.wso2.carbon.transport.filesystem.*,
+                            org.wso2.carbon.connector.framework.server.polling.*,
+                            org.wso2.carbon.transport.remotefilesystem.*,
+                            org.wso2.carbon.messaging.*,
                             org.apache.commons.vfs2.*,
                             org.wso2.carbon.transport.file.*,
                             org.apache.commons.net.*
                         </Private-Package>
                         <Export-Package>
                             org.wso2.extension.siddhi.io.file.*,
-                            !org.wso2.carbon.transport.filesystem.*,
+                            !org.wso2.carbon.connector.framework.*,
+                            !org.wso2.carbon.transport.remotefilesystem.*,
+                            !org.wso2.carbon.messaging.*,
                             !org.apache.commons.vfs2.*,
                             !org.wso2.carbon.transport.file.*,
                             !org.apache.commons.net.*
                         </Export-Package>
                         <Import-Package>
-                            !org.wso2.carbon.transport.filesystem.*,
+                            !org.wso2.carbon.messaging.*,
+                            !org.wso2.carbon.transport.remotefilesystem.*,
                             !org.apache.commons.vfs2.*,
                             !org.wso2.carbon.transport.file.*,
                             !org.apache.commons.net.*,

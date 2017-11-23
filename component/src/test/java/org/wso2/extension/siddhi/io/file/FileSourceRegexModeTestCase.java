@@ -44,7 +44,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Test cases for siddhi-io-file source.
  * */
 public class FileSourceRegexModeTestCase {
-    // TODO: 20/7/17 Improve Thread.sleep() to use SiddhiTestHelper.waitForEvents().
     private static final Logger log = Logger.getLogger(FileSourceRegexModeTestCase.class);
     private AtomicInteger count = new AtomicInteger();
     private int waitTime = 2000;
@@ -98,7 +97,7 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex', " +
+                "dir.uri='file:/" + dirUri + "/regex/json', " +
                 "begin.regex='(\\{)', " +
                 "end.regex='(}})', " +
                 "tailing='false', " +
@@ -150,7 +149,7 @@ public class FileSourceRegexModeTestCase {
 
         SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
-        File file = new File(dirUri + "/regex");
+        File file = new File(dirUri + "/regex/json");
         AssertJUnit.assertEquals(0, file.list().length);
 
         //assert event count
@@ -164,7 +163,7 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex', " +
+                "dir.uri='file:/" + dirUri + "/regex/json', " +
                 "tailing='false', " +
                 "action.after.process='delete', " +
                 "@map(type='json'))" +
@@ -214,7 +213,7 @@ public class FileSourceRegexModeTestCase {
 
         SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
 
-        File file = new File(dirUri + "/regex");
+        File file = new File(dirUri + "/regex/json");
         AssertJUnit.assertEquals(0, file.list().length);
 
         //assert event count
@@ -228,12 +227,12 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/xml', " +
+                "dir.uri='file:/" + dirUri + "/regex/xml', " +
                 "begin.regex='(<events>)', " +
                 "end.regex='(</events>)', " +
                 "tailing='false', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -295,12 +294,12 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/json', " +
+                "dir.uri='file:/" + dirUri + "/regex/json', " +
                 "begin.regex='(\\{)', " +
                 "end.regex='(}})', " +
                 "tailing='false', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -362,11 +361,11 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/xml', " +
+                "dir.uri='file:/" + dirUri + "/regex/xml', " +
                 "begin.regex='(<events>)', " +
                 "tailing='false', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -429,11 +428,11 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/xml_single/', " +
+                "dir.uri='file:/" + dirUri + "/regex/xml_single/', " +
                 "begin.regex='(<events>)', " +
                 "tailing='false', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -483,11 +482,11 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/xml', " +
+                "dir.uri='file:/" + dirUri + "/regex/xml', " +
                 "end.regex='(</events>)', " +
                 "tailing='false', " +
                 "action.after.process='move', " +
-                "move.after.process='" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -549,7 +548,7 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/xml', " +
+                "dir.uri='file:/" + dirUri + "/regex/xml', " +
                 "begin.regex='(<events>)', " +
                 "end.regex='(</events>)', " +
                 "tailing='true', " +
@@ -655,7 +654,7 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/xml', " +
+                "dir.uri='file:/" + dirUri + "/regex/xml', " +
                 "begin.regex='(<events>)', " +
                 "tailing='false', " +
                 "action.after.process='delete', " +
@@ -756,7 +755,7 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/xml', " +
+                "dir.uri='file:/" + dirUri + "/regex/xml', " +
                 "begin.regex='(<events>)', " +
                 "end.regex='(</events>)', " +
                 "tailing='false', " +
@@ -821,7 +820,7 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/xml', " +
+                "dir.uri='file:/" + dirUri + "/regex/xml', " +
                 "begin.regex='(<events>)', " +
                 "end.regex='(</events>)', " +
                 "action.after.process='move' ," +
@@ -887,7 +886,7 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/invalid', " +
+                "dir.uri='file:/" + dirUri + "/regex/invalid', " +
                 "begin.regex='(<events>)', " +
                 "end.regex='(</events>)', " +
                 "tailing='false', " +
@@ -945,7 +944,7 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/invalid', " +
+                "dir.uri='file:/" + dirUri + "/regex/invalid', " +
                 "begin.regex='(<events>)', " +
                 "tailing='false', " +
                 "@map(type='xml'))" +
@@ -1002,7 +1001,7 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/xml', " +
+                "dir.uri='file:/" + dirUri + "/regex/xml', " +
                 "end.regex='(</events>)', " +
                 "tailing='false', " +
                 "@map(type='xml'))" +
@@ -1066,7 +1065,7 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/xml', " +
+                "dir.uri='file:/" + dirUri + "/regex/xml', " +
                 "begin.regex='(<events>)', " +
                 "tailing='false', " +
                 "@map(type='xml'))" +
@@ -1130,7 +1129,7 @@ public class FileSourceRegexModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
-                "dir.uri='" + dirUri + "/regex/xml', " +
+                "dir.uri='file:/" + dirUri + "/regex/xml', " +
                 "begin.regex='(*<events>)', " +
                 "tailing='false', " +
                 "@map(type='xml'))" +
