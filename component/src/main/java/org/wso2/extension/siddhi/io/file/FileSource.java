@@ -133,7 +133,9 @@ import java.util.regex.PatternSyntaxException;
                                 "It can be either DELETE or MOVE and default value will be 'DELETE'.\n" +
                                 "If the action.after.failure is MOVE, user must specify the location to " +
                                 "move consumed files using 'move.after.failure' parameter.\n",
-                        type = {DataType.STRING}
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "delete"
                 ),
 
                 @Parameter(
@@ -483,7 +485,8 @@ public class FileSource extends Source {
     private void validateParameters() {
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             if (isTailingEnabled) {
-                throw new SiddhiAppCreationException("Tailing can't be enabled in '" + mode + "' mode.");
+                throw new SiddhiAppCreationException("Tailing has been enabled by user or by default." +
+                        "But tailing can't be enabled in '" + mode + "' mode.");
             }
 
             if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
@@ -495,7 +498,8 @@ public class FileSource extends Source {
         }
 
         if (isTailingEnabled && moveAfterProcess != null) {
-            throw new SiddhiAppCreationException("'moveAfterProcess' cannot be used when tailing is enabled. " +
+            throw new SiddhiAppCreationException("Tailing has been enabled by user or by default." +
+                    "'moveAfterProcess' cannot be used when tailing is enabled. " +
                     "Hence stopping the SiddhiApp. ");
         }
 
