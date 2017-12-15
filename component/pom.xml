@@ -134,7 +134,8 @@
                             org.wso2.carbon.messaging.*,
                             org.apache.commons.vfs2.*,
                             org.wso2.carbon.transport.file.*,
-                            org.apache.commons.net.*
+                            org.apache.commons.net.*,
+                            org.quartz.*
                         </Private-Package>
                         <Export-Package>
                             org.wso2.extension.siddhi.io.file.*,
@@ -143,7 +144,8 @@
                             !org.wso2.carbon.messaging.*,
                             !org.apache.commons.vfs2.*,
                             !org.wso2.carbon.transport.file.*,
-                            !org.apache.commons.net.*
+                            !org.apache.commons.net.*,
+                            !org.quartz.*
                         </Export-Package>
                         <Import-Package>
                             !org.wso2.carbon.messaging.*,
