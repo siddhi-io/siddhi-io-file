@@ -18,9 +18,9 @@
 
 package org.wso2.extension.siddhi.io.file.util;
 
-import org.wso2.carbon.transport.file.connector.server.FileServerConnectorProvider;
-import org.wso2.carbon.transport.remotefilesystem.RemoteFileSystemConnectorFactory;
-import org.wso2.carbon.transport.remotefilesystem.impl.RemoteFileSystemConnectorFactoryImpl;
+import org.wso2.transport.file.connector.server.FileServerConnectorProvider;
+import org.wso2.transport.remotefilesystem.RemoteFileSystemConnectorFactory;
+import org.wso2.transport.remotefilesystem.impl.RemoteFileSystemConnectorFactoryImpl;
 
 /**
  * Class for providing server connectors.

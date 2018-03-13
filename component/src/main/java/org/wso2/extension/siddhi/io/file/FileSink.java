@@ -21,7 +21,6 @@ package org.wso2.extension.siddhi.io.file;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
-import org.wso2.carbon.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
@@ -35,6 +34,7 @@ import org.wso2.siddhi.core.util.transport.DynamicOptions;
 import org.wso2.siddhi.core.util.transport.Option;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 import org.wso2.siddhi.query.api.definition.StreamDefinition;
+import org.wso2.transport.file.connector.sender.VFSClientConnector;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
