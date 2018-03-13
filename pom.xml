@@ -57,14 +57,14 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.wso2.carbon.transport</groupId>
-                <artifactId>org.wso2.carbon.transport.file</artifactId>
-                <version>${carbon.transport.version}</version>
+                <groupId>org.wso2.transport.file</groupId>
+                <artifactId>org.wso2.transport.file</artifactId>
+                <version>${wso2.transport.file.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.wso2.carbon.transport</groupId>
-                <artifactId>org.wso2.carbon.transport.remote-file-system</artifactId>
-                <version>${carbon.transport.version}</version>
+                <groupId>org.wso2.transport.file</groupId>
+                <artifactId>org.wso2.transport.remote-file-system</artifactId>
+                <version>${wso2.transport.file.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.siddhi</groupId>
@@ -122,7 +122,7 @@
 
     <properties>
         <siddhi.version>4.0.4</siddhi.version>
-        <carbon.transport.version>6.0.49</carbon.transport.version>
+        <wso2.transport.file.version>6.0.52</wso2.transport.file.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>4.0.15</siddhi.map.json.version>
         <siddhi.map.xml.version>4.0.11</siddhi.map.xml.version>

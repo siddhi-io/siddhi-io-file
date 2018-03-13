@@ -33,12 +33,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.wso2.carbon.transport</groupId>
-            <artifactId>org.wso2.carbon.transport.file</artifactId>
+            <groupId>org.wso2.transport.file</groupId>
+            <artifactId>org.wso2.transport.file</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.carbon.transport</groupId>
-            <artifactId>org.wso2.carbon.transport.remote-file-system</artifactId>
+            <groupId>org.wso2.transport.file</groupId>
+            <artifactId>org.wso2.transport.remote-file-system</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wso2.siddhi</groupId>
@@ -130,28 +130,28 @@
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
                             org.wso2.carbon.connector.framework.server.polling.*,
-                            org.wso2.carbon.transport.remotefilesystem.*,
+                            org.wso2.transport.remotefilesystem.*,
                             org.wso2.carbon.messaging.*,
                             org.apache.commons.vfs2.*,
-                            org.wso2.carbon.transport.file.*,
+                            org.wso2.transport.file.*,
                             org.apache.commons.net.*,
                             org.quartz.*
                         </Private-Package>
                         <Export-Package>
                             org.wso2.extension.siddhi.io.file.*,
                             !org.wso2.carbon.connector.framework.*,
-                            !org.wso2.carbon.transport.remotefilesystem.*,
+                            !org.wso2.transport.remotefilesystem.*,
                             !org.wso2.carbon.messaging.*,
                             !org.apache.commons.vfs2.*,
-                            !org.wso2.carbon.transport.file.*,
+                            !org.wso2.transport.file.*,
                             !org.apache.commons.net.*,
                             !org.quartz.*
                         </Export-Package>
                         <Import-Package>
                             !org.wso2.carbon.messaging.*,
-                            !org.wso2.carbon.transport.remotefilesystem.*,
+                            !org.wso2.transport.remotefilesystem.*,
                             !org.apache.commons.vfs2.*,
-                            !org.wso2.carbon.transport.file.*,
+                            !org.wso2.transport.file.*,
                             !org.apache.commons.net.*,
                             *;resolution:=optional
                         </Import-Package>

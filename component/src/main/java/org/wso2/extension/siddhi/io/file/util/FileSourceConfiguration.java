@@ -18,8 +18,8 @@
 
 package org.wso2.extension.siddhi.io.file.util;
 
-import org.wso2.carbon.transport.file.connector.server.FileServerConnector;
-import org.wso2.carbon.transport.remotefilesystem.server.connector.contract.RemoteFileSystemServerConnector;
+import org.wso2.transport.file.connector.server.FileServerConnector;
+import org.wso2.transport.remotefilesystem.server.connector.contract.RemoteFileSystemServerConnector;
 
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
