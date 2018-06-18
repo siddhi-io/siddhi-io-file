@@ -85,7 +85,7 @@ import java.util.Map;
                                 "then a newline will be added after data is added to the file.",
                         type = {DataType.BOOL},
                         optional = true,
-                        defaultValue = "true. (However, if csv mapper is used, it is ALWAYS false)"
+                        defaultValue = "true. (However, if csv mapper is used, it is false)"
                 )
         },
         examples = {
@@ -141,9 +141,9 @@ public class FileSink extends Sink {
         }
         String mapType = streamDefinition.getAnnotations().get(0).getAnnotations().get(0).getElements().get(0)
                 .getValue();
-        addEventSeparator = !mapType.equalsIgnoreCase("csv") &&
-                Boolean.parseBoolean(optionHolder.validateAndGetStaticValue(Constants.ADD_EVENT_SEPARATOR,
-                        "true"));
+        addEventSeparator = optionHolder.isOptionExists(Constants.ADD_EVENT_SEPARATOR) ?
+                Boolean.parseBoolean(optionHolder.validateAndGetStaticValue(Constants.ADD_EVENT_SEPARATOR)) :
+                !mapType.equalsIgnoreCase("csv");
     }
 
     public void connect() throws ConnectionUnavailableException {
