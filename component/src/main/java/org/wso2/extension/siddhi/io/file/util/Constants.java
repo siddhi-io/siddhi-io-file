@@ -42,7 +42,7 @@ public class Constants {
     public static final String DIRECTORY_POLLING_INTERVAL = "dir.polling.interval";
     public static final String FILE_POLLING_INTERVAL = "file.polling.interval";
     public static final String TIMEOUT = "timeout";
-    public static final String ADD_EVENT_SEPARATOR = "append";
+    public static final String ADD_EVENT_SEPARATOR = "add.line.separator";
 
     /* configuration param values*/
     public static final String MOVE = "move";

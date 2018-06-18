@@ -78,7 +78,7 @@ import java.util.Map;
                         defaultValue = "true"
                 ),
                 @Parameter(
-                        name = "add.event.separator",
+                        name = "add.line.separator",
                         description = "This parameter is used to specify whether events added to the file should " +
                                 "be separated by a newline.\n" +
                                 "If add.event.separator= 'true'," +
