@@ -76,6 +76,16 @@ import java.util.Map;
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "true"
+                ),
+                @Parameter(
+                        name = "add.event.separator",
+                        description = "This parameter is used to specify whether events added to the file should " +
+                                "be separated by a newline.\n" +
+                                "If add.event.separator= 'true'," +
+                                "then a newline will be added after data is added to the file.",
+                        type = {DataType.BOOL},
+                        optional = true,
+                        defaultValue = "true. (However, if csv mapper is used, it is false by default)"
                 )
         },
         examples = {
@@ -107,6 +117,7 @@ public class FileSink extends Sink {
     private Map<String, String> properties = null;
     private Option uriOption;
     private SiddhiAppContext siddhiAppContext;
+    private boolean addEventSeparator;
 
 
     @Override
@@ -127,6 +138,15 @@ public class FileSink extends Sink {
         properties.put(Constants.ACTION, Constants.WRITE);
         if (Constants.TRUE.equalsIgnoreCase(append)) {
             properties.put(Constants.APPEND, append);
+        }
+        String mapType = streamDefinition.getAnnotations().get(0).getAnnotations().get(0).getElements().get(0)
+                .getValue();
+        if (mapType.equalsIgnoreCase("csv")) {
+            addEventSeparator = Boolean.parseBoolean(optionHolder
+                    .validateAndGetStaticValue(Constants.ADD_EVENT_SEPARATOR, "false"));
+        } else {
+            addEventSeparator = Boolean.parseBoolean(optionHolder
+                    .validateAndGetStaticValue(Constants.ADD_EVENT_SEPARATOR, "true"));
         }
     }
 
@@ -150,7 +170,10 @@ public class FileSink extends Sink {
         } else {
             try {
                 StringBuilder sb = new StringBuilder();
-                sb.append(payload.toString()).append("\n");
+                sb.append(payload.toString());
+                if (this.addEventSeparator) {
+                    sb.append("\n");
+                }
                 byteArray = sb.toString().getBytes(Constants.UTF_8);
             } catch (UnsupportedEncodingException e) {
                 canBeWritten = false;
