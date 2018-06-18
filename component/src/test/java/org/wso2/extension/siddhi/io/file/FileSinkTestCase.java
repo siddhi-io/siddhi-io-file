@@ -36,8 +36,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 /**
  * Test cases for siddhi-io-file sink.
@@ -654,6 +657,173 @@ public class FileSinkTestCase {
                 }
             }
             AssertJUnit.assertEquals(4, count.intValue());
+        } else {
+            AssertJUnit.fail(sinkUri + " is not a directory.");
+        }
+
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void fileSinkTest11() throws InterruptedException, CannotRestoreSiddhiAppStateException, IOException {
+        log.info("test SiddhiIoFile Sink 11");
+
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "@sink(type='file', append='true', add.line.separator='false', @map(type='xml'), append='false', " +
+                "file.uri='" + sinkUri + "/test1.xml') " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
+        stockStream.send(new Object[]{"IBM", 57.678f, 100L});
+        stockStream.send(new Object[]{"GOOGLE", 50f, 100L});
+        stockStream.send(new Object[]{"REDHAT", 50f, 100L});
+        Thread.sleep(100);
+
+        File sink = new File(sinkUri);
+        if (sink.isDirectory()) {
+            for (File file : sink.listFiles()) {
+                Stream<String> lines = Files.lines(file.toPath(), StandardCharsets.UTF_8);
+                AssertJUnit.assertEquals(1, lines.count());
+            }
+        } else {
+            AssertJUnit.fail(sinkUri + " is not a directory.");
+        }
+
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void fileSinkTest12() throws InterruptedException, CannotRestoreSiddhiAppStateException, IOException {
+        log.info("test SiddhiIoFile Sink 12");
+
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "@sink(type='file', @map(type='xml'), append='true', " +
+                "file.uri='" + sinkUri + "/test2.xml') " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
+        stockStream.send(new Object[]{"IBM", 57.678f, 100L});
+        stockStream.send(new Object[]{"GOOGLE", 50f, 100L});
+        stockStream.send(new Object[]{"REDHAT", 50f, 100L});
+        Thread.sleep(100);
+
+        File sink = new File(sinkUri);
+        if (sink.isDirectory()) {
+            for (File file : sink.listFiles()) {
+                Stream<String> lines = Files.lines(file.toPath(), StandardCharsets.UTF_8);
+                AssertJUnit.assertEquals(4, lines.count());
+            }
+        } else {
+            AssertJUnit.fail(sinkUri + " is not a directory.");
+        }
+
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void fileSinkTest13() throws InterruptedException, CannotRestoreSiddhiAppStateException, IOException {
+        log.info("test SiddhiIoFile Sink 13");
+
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "@sink(type='file', add.line.separator='false', @map(type='csv'), append='true', " +
+                "file.uri='" + sinkUri + "/test3.xml') " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
+        stockStream.send(new Object[]{"IBM", 57.678f, 100L});
+        stockStream.send(new Object[]{"GOOGLE", 50f, 100L});
+        stockStream.send(new Object[]{"REDHAT", 50f, 100L});
+        Thread.sleep(100);
+
+        File sink = new File(sinkUri);
+        if (sink.isDirectory()) {
+            for (File file : sink.listFiles()) {
+                Stream<String> lines = Files.lines(file.toPath(), StandardCharsets.UTF_8);
+                AssertJUnit.assertEquals(4, lines.count());
+            }
+        } else {
+            AssertJUnit.fail(sinkUri + " is not a directory.");
+        }
+
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void fileSinkTest14() throws InterruptedException, CannotRestoreSiddhiAppStateException, IOException {
+        log.info("test SiddhiIoFile Sink 14");
+
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "@sink(type='file', @map(type='csv'), append='true', " +
+                "file.uri='" + sinkUri + "/test4.xml') " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
+        stockStream.send(new Object[]{"IBM", 57.678f, 100L});
+        stockStream.send(new Object[]{"GOOGLE", 50f, 100L});
+        stockStream.send(new Object[]{"REDHAT", 50f, 100L});
+        Thread.sleep(100);
+
+        File sink = new File(sinkUri);
+        if (sink.isDirectory()) {
+            for (File file : sink.listFiles()) {
+                Stream<String> lines = Files.lines(file.toPath(), StandardCharsets.UTF_8);
+                AssertJUnit.assertEquals(4, lines.count());
+            }
         } else {
             AssertJUnit.fail(sinkUri + " is not a directory.");
         }
