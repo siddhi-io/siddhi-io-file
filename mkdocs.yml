@@ -1,4 +1,4 @@
-site_name: Siddhi-IO-File
+site_name: Siddhi IO File
 site_description: Siddhi IO File Extension
 site_author: WSO2
 site_url: https://wso2-extensions.github.io/siddhi-io-file/
@@ -47,4 +47,4 @@ pages:
   - 1.0.0: api/1.0.0.md
   - latest: api/latest.md
 - License: about/license.md
-theme: material
+
