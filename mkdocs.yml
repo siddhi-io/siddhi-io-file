@@ -10,7 +10,7 @@ repo_name: Siddhi-IO-file
 repo_url: https://github.com/wso2-extensions/siddhi-io-file
 copyright: Copyright &copy; 2011 - 2018 WSO2
 theme:
-  name: 'material'
+  name: material
   logo: images/siddhi-logo-w.svg
   favicon: images/favicon.ico
   palette:
@@ -26,12 +26,13 @@ extra:
   - type: linkedin
     link: https://www.linkedin.com/groups/13553064
 markdown_extensions:
-  - admonition
-  - toc(permalink=true)
-  - codehilite(guess_lang=false)
+- admonition
+- toc(permalink=true)
+- codehilite(guess_lang=false)
 pages:
 - Welcome: index.md
 - API Docs:
+  - 1.0.10: api/1.0.10.md
   - 1.0.9: api/1.0.9.md
   - 1.0.8: api/1.0.8.md
   - 1.0.7: api/1.0.7.md
@@ -47,4 +48,3 @@ pages:
   - 1.0.0: api/1.0.0.md
   - latest: api/latest.md
 - License: about/license.md
-
