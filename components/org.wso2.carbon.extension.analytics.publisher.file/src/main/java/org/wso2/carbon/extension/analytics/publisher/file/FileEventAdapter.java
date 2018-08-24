@@ -84,7 +84,7 @@ public class FileEventAdapter implements OutputEventAdapter {
         try {
             buffer = ByteBuffer.allocate(Integer.parseInt(dynamicProperties
                     .get(FileEventAdapterConstants.ADAPTER_BUFFER_SIZE)));
-            buffer.put(message.toString().getBytes());
+            buffer.put((message.toString() + "\n").getBytes());
             buffer.flip();
             if (fileChannelMap.get(file) == null) {
                 createNewChannel(file);
