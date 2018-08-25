@@ -405,7 +405,8 @@ public class FileSource extends Source {
                 fileSourceConfiguration.getFileServerConnector().stop();
             }
         } catch (ServerConnectorException e) {
-            throw new SiddhiAppRuntimeException("Failed to stop the file server.", e);
+            throw new SiddhiAppRuntimeException("Failed to stop the file server when pausing the siddhi app '" +
+                    siddhiAppContext.getName() + "'.",  e);
         }
     }
 
@@ -485,14 +486,16 @@ public class FileSource extends Source {
     private void validateParameters() {
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             if (isTailingEnabled) {
-                throw new SiddhiAppCreationException("Tailing has been enabled by user or by default." +
+                throw new SiddhiAppCreationException("In 'file' source of the siddhi app '" +
+                        siddhiAppContext.getName() + "', tailing has been enabled by user or by default. " +
                         "But tailing can't be enabled in '" + mode + "' mode.");
             }
 
             if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                 if (beginRegex != null && endRegex != null) {
                     throw new SiddhiAppCreationException("'begin.regex' and 'end.regex' can be only provided if the" +
-                            " mode is 'regex'. But provided mode is '" + mode + "'.");
+                            " mode is 'regex'. But in 'file' source of the siddhi app '" +
+                            siddhiAppContext.getName() + "', provided mode is '" + mode + "'.");
                 }
             }
         }
@@ -500,18 +503,19 @@ public class FileSource extends Source {
         if (isTailingEnabled && moveAfterProcess != null) {
             throw new SiddhiAppCreationException("Tailing has been enabled by user or by default." +
                     "'moveAfterProcess' cannot be used when tailing is enabled. " +
-                    "Hence stopping the SiddhiApp. ");
+                    "Hence stopping the siddhi app '" + siddhiAppContext.getName() + "'.");
         }
 
         if (Constants.DELETE.equalsIgnoreCase(actionAfterProcess) && moveAfterProcess != null) {
             throw new SiddhiAppCreationException("'moveAfterProcess' can only be used when " +
                     "'action.after.process' is 'move'. But it has been used when 'action.after.process' is 'delete'." +
-                    "Hence stopping the SiddhiApp. ");
+                    "Hence stopping the siddhi app '" + siddhiAppContext.getName() + "'.");
         }
 
         if (Constants.MOVE.equalsIgnoreCase(actionAfterProcess) && (moveAfterProcess == null)) {
             throw new SiddhiAppCreationException("'moveAfterProcess' has not been provided where it is mandatory when" +
-                    " 'actionAfterProcess' is 'move'. Hence stopping the SiddhiApp. ");
+                    " 'actionAfterProcess' is 'move'. Hence stopping the siddhi app '" +
+                    siddhiAppContext.getName() + "'.");
         }
 
         if (Constants.REGEX.equalsIgnoreCase(mode)) {
@@ -536,7 +540,8 @@ public class FileSource extends Source {
                 fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
                 fileSystemServerConnector.start();
             } catch (RemoteFileSystemConnectorException e) {
-                throw new ConnectionUnavailableException("Failed to connect to the remote file system server. ", e);
+                throw new ConnectionUnavailableException("Failed to connect to the remote file system server through " +
+                        "the siddhi app '" + siddhiAppContext.getName() + "'. ", e);
             }
         } else if (fileUri != null) {
             Map<String, String> properties = new HashMap<>();
@@ -572,7 +577,8 @@ public class FileSource extends Source {
                         try {
                             fileServerConnector.start();
                         } catch (ServerConnectorException e) {
-                            log.error(String.format("Failed to start the server for file '%s'. " +
+                            log.error(String.format("For the siddhi app '" + siddhiAppContext.getName() +
+                                    ",' failed to start the server for file '%s'." +
                                     "Hence starting to process next file.", fileUri));
                         }
                     };
@@ -600,10 +606,11 @@ public class FileSource extends Source {
                             vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
                         }
                     } catch (ClientConnectorException e) {
-                        log.error(String.format("Failure occurred in vfs-client while reading the file '%s'.",
-                                fileUri), e);
+                        log.error(String.format("Failure occurred in vfs-client while reading the file '%s' through " +
+                                        "siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
                     } catch (InterruptedException e) {
-                        log.error(String.format("Failed to get callback from vfs-client  for file '%s'.", fileUri), e);
+                        log.error(String.format("Failed to get callback from vfs-client  for file '%s' through " +
+                                "siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
                     }
                 };
                 fileSourceConfiguration.getExecutorService().execute(runnableClient);
@@ -627,7 +634,8 @@ public class FileSource extends Source {
             }
         } catch (PatternSyntaxException e) {
             throw new SiddhiAppCreationException("Cannot compile the regex '" + beginRegex +
-                    "' and '" + endRegex + "'. Hence shutting down the siddhiApp. ");
+                    "' and '" + endRegex + "'. Hence shutting down the siddhi app '" +
+                    siddhiAppContext.getName() + "'.");
         }
         fileSourceConfiguration.setPattern(pattern);
     }
@@ -638,7 +646,8 @@ public class FileSource extends Source {
             String splitRegex = File.separatorChar == '\\' ? "\\\\" : File.separator;
             fileSourceConfiguration.setProtocolForMoveAfterProcess(uri.split(splitRegex)[0]);
         } catch (MalformedURLException e) {
-            throw new SiddhiAppCreationException(String.format("Provided uri for '%s' parameter '%s' is invalid.",
+            throw new SiddhiAppCreationException(String.format("In 'file' source of siddhi app '" +
+                    siddhiAppContext.getName() + "', provided uri for '%s' parameter '%s' is invalid.",
                     parameterName, uri), e);
         }
     }
