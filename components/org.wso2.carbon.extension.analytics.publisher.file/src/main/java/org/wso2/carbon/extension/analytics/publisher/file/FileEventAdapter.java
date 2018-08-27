@@ -35,11 +35,10 @@ import java.util.Map;
 
 public class FileEventAdapter implements OutputEventAdapter {
     private static final Log log = LogFactory.getLog(FileEventAdapter.class);
-    private OutputEventAdapterConfiguration eventAdapterConfiguration;
     private Map<String, FileChannel> fileChannelMap = new HashMap<>();
 
     public FileEventAdapter(OutputEventAdapterConfiguration eventAdapterConfiguration) {
-        this.eventAdapterConfiguration = eventAdapterConfiguration;
+
     }
 
     /**
@@ -90,7 +89,6 @@ public class FileEventAdapter implements OutputEventAdapter {
                 createNewChannel(file);
             }
             fileChannelMap.get(file).write(buffer);
-
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         } finally {
