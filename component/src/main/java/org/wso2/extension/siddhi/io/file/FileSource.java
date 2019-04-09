@@ -18,6 +18,18 @@
 
 package org.wso2.extension.siddhi.io.file;
 
+import io.siddhi.annotation.Example;
+import io.siddhi.annotation.Extension;
+import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.exception.SiddhiAppCreationException;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.stream.input.source.Source;
+import io.siddhi.core.stream.input.source.SourceEventListener;
+import io.siddhi.core.util.config.ConfigReader;
+import io.siddhi.core.util.transport.OptionHolder;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
@@ -28,18 +40,6 @@ import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
 import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
 import org.wso2.extension.siddhi.io.file.util.VFSClientConnectorCallback;
-import org.wso2.siddhi.annotation.Example;
-import org.wso2.siddhi.annotation.Extension;
-import org.wso2.siddhi.annotation.Parameter;
-import org.wso2.siddhi.annotation.util.DataType;
-import org.wso2.siddhi.core.config.SiddhiAppContext;
-import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
-import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
-import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
-import org.wso2.siddhi.core.stream.input.source.Source;
-import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
-import org.wso2.siddhi.core.util.config.ConfigReader;
-import org.wso2.siddhi.core.util.transport.OptionHolder;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.transport.file.connector.server.FileServerConnector;
 import org.wso2.transport.file.connector.server.FileServerConnectorProvider;
@@ -355,7 +355,7 @@ public class FileSource extends Source {
         updateSourceConf();
         getPattern();
 
-        siddhiAppContext.getSnapshotService().addSnapshotable("siddhi-io-file", this);
+        //siddhiAppContext.getSnapshotService().addSnapshotable("siddhi-io-file", this);
     }
 
 

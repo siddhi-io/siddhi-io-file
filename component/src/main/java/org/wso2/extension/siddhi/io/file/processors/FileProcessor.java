@@ -18,6 +18,7 @@
 
 package org.wso2.extension.siddhi.io.file.processors;
 
+import io.siddhi.core.stream.input.source.SourceEventListener;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
@@ -27,7 +28,6 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TransportSender;
 import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
-import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

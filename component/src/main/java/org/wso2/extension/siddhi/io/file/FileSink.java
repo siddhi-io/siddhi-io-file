@@ -18,22 +18,22 @@
 
 package org.wso2.extension.siddhi.io.file;
 
+import io.siddhi.annotation.Example;
+import io.siddhi.annotation.Extension;
+import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.stream.output.sink.Sink;
+import io.siddhi.core.util.config.ConfigReader;
+import io.siddhi.core.util.transport.DynamicOptions;
+import io.siddhi.core.util.transport.Option;
+import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.query.api.definition.StreamDefinition;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.extension.siddhi.io.file.util.Constants;
-import org.wso2.siddhi.annotation.Example;
-import org.wso2.siddhi.annotation.Extension;
-import org.wso2.siddhi.annotation.Parameter;
-import org.wso2.siddhi.annotation.util.DataType;
-import org.wso2.siddhi.core.config.SiddhiAppContext;
-import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
-import org.wso2.siddhi.core.stream.output.sink.Sink;
-import org.wso2.siddhi.core.util.config.ConfigReader;
-import org.wso2.siddhi.core.util.transport.DynamicOptions;
-import org.wso2.siddhi.core.util.transport.Option;
-import org.wso2.siddhi.core.util.transport.OptionHolder;
-import org.wso2.siddhi.query.api.definition.StreamDefinition;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 
 import java.io.UnsupportedEncodingException;
