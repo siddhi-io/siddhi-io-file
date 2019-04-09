@@ -126,13 +126,14 @@
     </dependencyManagement>
 
     <properties>
-        <siddhi.version>4.4.8</siddhi.version>
+        <siddhi.version>4.5.0</siddhi.version>
+        <siddhi.version.range>[4.0.0,5.0.0)</siddhi.version.range>
         <wso2.transport.file.version>6.0.52</wso2.transport.file.version>
         <testng.version>6.8</testng.version>
-        <siddhi.map.json.version>4.0.31</siddhi.map.json.version>
-        <siddhi.map.xml.version>4.0.18</siddhi.map.xml.version>
-        <siddhi.map.text.version>1.0.22</siddhi.map.text.version>
-        <siddhi.map.csv.version>1.0.12</siddhi.map.csv.version>
+        <siddhi.map.json.version>4.1.1</siddhi.map.json.version>
+        <siddhi.map.xml.version>4.1.2</siddhi.map.xml.version>
+        <siddhi.map.text.version>1.1.2</siddhi.map.text.version>
+        <siddhi.map.csv.version>1.1.1</siddhi.map.csv.version>
         <jacoco.version>0.7.9</jacoco.version>
         <commons-net.version>3.6</commons-net.version>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
