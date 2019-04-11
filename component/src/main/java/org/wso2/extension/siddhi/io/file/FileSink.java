@@ -24,8 +24,11 @@ import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.output.sink.Sink;
 import io.siddhi.core.util.config.ConfigReader;
+import io.siddhi.core.util.snapshot.state.State;
+import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
@@ -129,8 +132,8 @@ public class FileSink extends Sink {
         return new String[]{Constants.FILE_URI};
     }
 
-    protected void init(StreamDefinition streamDefinition, OptionHolder optionHolder,
-                        ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
+    protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder,
+                                ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
         uriOption = optionHolder.validateAndGetOption(Constants.FILE_URI);
         String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
@@ -144,6 +147,12 @@ public class FileSink extends Sink {
         addEventSeparator = optionHolder.isOptionExists(Constants.ADD_EVENT_SEPARATOR) ?
                 Boolean.parseBoolean(optionHolder.validateAndGetStaticValue(Constants.ADD_EVENT_SEPARATOR)) :
                 !mapType.equalsIgnoreCase("csv");
+        return null;
+    }
+
+    @Override
+    protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
+        return null;
     }
 
     public void connect() throws ConnectionUnavailableException {
@@ -151,14 +160,13 @@ public class FileSink extends Sink {
     }
 
     public void disconnect() {
-
     }
 
     public void destroy() {
-
     }
 
-    public void publish(Object payload, DynamicOptions dynamicOptions) throws ConnectionUnavailableException {
+    public void publish(Object payload, DynamicOptions dynamicOptions, State state)
+            throws ConnectionUnavailableException {
         byte[] byteArray = new byte[0];
         boolean canBeWritten = true;
         if (payload instanceof byte[]) {
@@ -189,13 +197,5 @@ public class FileSink extends Sink {
                         e.getMessage(), e);
             }
         }
-    }
-
-    public Map<String, Object> currentState() {
-        return new HashMap<>();
-    }
-
-    public void restoreState(Map<String, Object> map) {
-        //do nothing
     }
 }

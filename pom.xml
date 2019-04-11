@@ -126,7 +126,8 @@
     </dependencyManagement>
 
     <properties>
-        <siddhi.version>5.0.0-m7</siddhi.version>
+        <siddhi.version>5.0.0</siddhi.version>
+        <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
         <wso2.transport.file.version>6.0.52</wso2.transport.file.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>5.0.1</siddhi.map.json.version>

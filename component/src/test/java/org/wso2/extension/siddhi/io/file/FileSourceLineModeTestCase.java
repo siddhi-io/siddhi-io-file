@@ -1042,7 +1042,6 @@ public class FileSourceLineModeTestCase {
         byte[] snapshot = siddhiAppRuntime.snapshot();
         siddhiAppRuntime.shutdown();
 
-        count.set(0);
         File file = new File(dirUri + "/line/xml/xml_line.txt");
         try {
             StringBuilder sb = new StringBuilder();
