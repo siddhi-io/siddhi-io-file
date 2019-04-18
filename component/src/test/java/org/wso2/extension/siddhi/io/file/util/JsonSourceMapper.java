@@ -17,7 +17,6 @@
  */
 package org.wso2.extension.siddhi.io.file.util;
 
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -27,21 +26,21 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.jayway.jsonpath.ReadContext;
+import io.siddhi.annotation.Example;
+import io.siddhi.annotation.Extension;
+import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.event.Event;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.stream.input.source.AttributeMapping;
+import io.siddhi.core.stream.input.source.InputEventHandler;
+import io.siddhi.core.stream.input.source.SourceMapper;
+import io.siddhi.core.util.AttributeConverter;
+import io.siddhi.core.util.config.ConfigReader;
+import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.query.api.definition.Attribute;
+import io.siddhi.query.api.definition.StreamDefinition;
 import net.minidev.json.JSONArray;
 import org.apache.log4j.Logger;
-import org.wso2.siddhi.annotation.Example;
-import org.wso2.siddhi.annotation.Extension;
-import org.wso2.siddhi.core.config.SiddhiAppContext;
-import org.wso2.siddhi.core.event.Event;
-import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
-import org.wso2.siddhi.core.stream.input.source.AttributeMapping;
-import org.wso2.siddhi.core.stream.input.source.InputEventHandler;
-import org.wso2.siddhi.core.stream.input.source.SourceMapper;
-import org.wso2.siddhi.core.util.AttributeConverter;
-import org.wso2.siddhi.core.util.config.ConfigReader;
-import org.wso2.siddhi.core.util.transport.OptionHolder;
-import org.wso2.siddhi.query.api.definition.Attribute;
-import org.wso2.siddhi.query.api.definition.StreamDefinition;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,7 +51,7 @@ import java.util.List;
 
 /**
  * This mapper converts binary data related to json strings to
- * {@link org.wso2.siddhi.core.event.ComplexEventChunk}.
+ * {@link io.siddhi.core.event.ComplexEventChunk}.
  * This is only for testing purposes.
  */
 

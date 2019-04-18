@@ -18,6 +18,7 @@
 
 package org.wso2.extension.siddhi.io.file.listeners;
 
+import io.siddhi.core.stream.input.source.SourceEventListener;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
@@ -31,7 +32,6 @@ import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
 import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
 import org.wso2.extension.siddhi.io.file.util.VFSClientConnectorCallback;
-import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.transport.file.connector.server.FileServerConnector;
 import org.wso2.transport.file.connector.server.FileServerConnectorProvider;

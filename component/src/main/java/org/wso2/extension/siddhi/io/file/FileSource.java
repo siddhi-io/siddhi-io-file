@@ -18,6 +18,21 @@
 
 package org.wso2.extension.siddhi.io.file;
 
+import io.siddhi.annotation.Example;
+import io.siddhi.annotation.Extension;
+import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.exception.SiddhiAppCreationException;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.stream.ServiceDeploymentInfo;
+import io.siddhi.core.stream.input.source.Source;
+import io.siddhi.core.stream.input.source.SourceEventListener;
+import io.siddhi.core.util.config.ConfigReader;
+import io.siddhi.core.util.snapshot.state.State;
+import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.core.util.transport.OptionHolder;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
@@ -28,18 +43,6 @@ import org.wso2.extension.siddhi.io.file.util.Constants;
 import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
 import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
 import org.wso2.extension.siddhi.io.file.util.VFSClientConnectorCallback;
-import org.wso2.siddhi.annotation.Example;
-import org.wso2.siddhi.annotation.Extension;
-import org.wso2.siddhi.annotation.Parameter;
-import org.wso2.siddhi.annotation.util.DataType;
-import org.wso2.siddhi.core.config.SiddhiAppContext;
-import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
-import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
-import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
-import org.wso2.siddhi.core.stream.input.source.Source;
-import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
-import org.wso2.siddhi.core.util.config.ConfigReader;
-import org.wso2.siddhi.core.util.transport.OptionHolder;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.transport.file.connector.server.FileServerConnector;
 import org.wso2.transport.file.connector.server.FileServerConnectorProvider;
@@ -252,7 +255,7 @@ import java.util.regex.PatternSyntaxException;
                 )
         }
 )
-public class FileSource extends Source {
+public class FileSource extends Source<FileSource.FileSourceState> {
     private static final Logger log = Logger.getLogger(FileSource.class);
 
     private SourceEventListener sourceEventListener;
@@ -282,8 +285,16 @@ public class FileSource extends Source {
     private long timeout = 5000;
 
     @Override
-    public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder, String[] requiredProperties,
-                     ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
+    protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
+        return null;
+    }
+
+    @Override
+    public StateFactory<FileSourceState> init(SourceEventListener sourceEventListener,
+                                              OptionHolder optionHolder,
+                                              String[] requiredProperties,
+                                              ConfigReader configReader,
+                                              SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
         this.siddhiAppContext = siddhiAppContext;
         this.requiredProperties = requiredProperties.clone();
@@ -337,9 +348,10 @@ public class FileSource extends Source {
             validateURL(moveAfterFailure, "moveAfterFailure");
         }
 
-        dirPollingInterval = optionHolder.validateAndGetStaticValue(Constants.DIRECTORY_POLLING_INTERVAL, "1000");
-
-        filePollingInterval = optionHolder.validateAndGetStaticValue(Constants.FILE_POLLING_INTERVAL, "1000");
+        dirPollingInterval = optionHolder.validateAndGetStaticValue(Constants.DIRECTORY_POLLING_INTERVAL,
+                "1000");
+        filePollingInterval = optionHolder.validateAndGetStaticValue(Constants.FILE_POLLING_INTERVAL,
+                "1000");
 
         String timeoutValue = optionHolder.validateAndGetStaticValue(Constants.TIMEOUT, "5000");
         try {
@@ -355,9 +367,8 @@ public class FileSource extends Source {
         updateSourceConf();
         getPattern();
 
-        siddhiAppContext.getSnapshotService().addSnapshotable("siddhi-io-file", this);
+        return () -> new FileSourceState();
     }
-
 
     @Override
     public Class[] getOutputEventClasses() {
@@ -365,7 +376,8 @@ public class FileSource extends Source {
     }
 
     @Override
-    public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
+    public void connect(ConnectionCallback connectionCallback, FileSourceState fileSourceState)
+            throws ConnectionUnavailableException {
         updateSourceConf();
         deployServers();
     }
@@ -391,9 +403,7 @@ public class FileSource extends Source {
         }
     }
 
-
     public void destroy() {
-
     }
 
     public void pause() {
@@ -649,6 +659,39 @@ public class FileSource extends Source {
             throw new SiddhiAppCreationException(String.format("In 'file' source of siddhi app '" +
                     siddhiAppContext.getName() + "', provided uri for '%s' parameter '%s' is invalid.",
                     parameterName, uri), e);
+        }
+    }
+
+    class FileSourceState extends State {
+
+        private final Map<String, Object> state;
+
+        private FileSourceState() {
+            state = new HashMap<>();
+        }
+
+        @Override
+        public boolean canDestroy() {
+            return false;
+        }
+
+        @Override
+        public Map<String, Object> snapshot() {
+            state.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
+            state.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURI());
+            state.put(Constants.TAILING_REGEX_STRING_BUILDER,
+                    fileSourceConfiguration.getTailingRegexStringBuilder());
+            return state;
+        }
+
+        @Override
+        public void restore(Map<String, Object> map) {
+            filePointer = map.get(Constants.FILE_POINTER).toString();
+            tailedFileURI = map.get(Constants.TAILED_FILE).toString();
+            fileSourceConfiguration.setFilePointer(filePointer);
+            fileSourceConfiguration.setTailedFileURI(tailedFileURI);
+            fileSourceConfiguration.updateTailingRegexStringBuilder(
+                    (StringBuilder) map.get(Constants.TAILING_REGEX_STRING_BUILDER));
         }
     }
 }
