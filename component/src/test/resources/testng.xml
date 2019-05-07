@@ -22,11 +22,11 @@
 <suite name="File-IO-Test-Suite">
     <test name="file-io-tests" enabled="true" preserve-order="true">
         <classes>
-            <class name="org.wso2.extension.siddhi.io.file.FileSourceTextFullModeTestCase"/>
-            <class name="org.wso2.extension.siddhi.io.file.FileSourceRegexModeTestCase"/>
-            <class name="org.wso2.extension.siddhi.io.file.FileSourceLineModeTestCase"/>
-            <class name="org.wso2.extension.siddhi.io.file.FileSourceBinaryModeTestCase"/>
-            <class name="org.wso2.extension.siddhi.io.file.FileSinkTestCase"/>
+            <class name="io.siddhi.extension.io.file.FileSourceTextFullModeTestCase"/>
+            <class name="io.siddhi.extension.io.file.FileSourceRegexModeTestCase"/>
+            <class name="io.siddhi.extension.io.file.FileSourceLineModeTestCase"/>
+            <class name="io.siddhi.extension.io.file.FileSourceBinaryModeTestCase"/>
+            <class name="io.siddhi.extension.io.file.FileSinkTestCase"/>
         </classes>
     </test>
 </suite>

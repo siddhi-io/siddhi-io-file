@@ -31,7 +31,7 @@ extension you can replace the component <a target="_blank" href="https://github
 
 ```
      <dependency>
-        <groupId>org.wso2.extension.siddhi.io.file</groupId>
+        <groupId>io.siddhi.extension.io.file</groupId>
         <artifactId>siddhi-io-file</artifactId>
         <version>x.x.x</version>
      </dependency>

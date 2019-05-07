@@ -16,9 +16,14 @@
  * under the License.
  */
 
-package org.wso2.extension.siddhi.io.file.listeners;
+package io.siddhi.extension.io.file.listeners;
 
 import io.siddhi.core.stream.input.source.SourceEventListener;
+import io.siddhi.extension.io.file.processors.FileProcessor;
+import io.siddhi.extension.io.file.util.Constants;
+import io.siddhi.extension.io.file.util.FileSourceConfiguration;
+import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
+import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
@@ -27,11 +32,6 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
-import org.wso2.extension.siddhi.io.file.processors.FileProcessor;
-import org.wso2.extension.siddhi.io.file.util.Constants;
-import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
-import org.wso2.extension.siddhi.io.file.util.FileSourceServiceProvider;
-import org.wso2.extension.siddhi.io.file.util.VFSClientConnectorCallback;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.transport.file.connector.server.FileServerConnector;
 import org.wso2.transport.file.connector.server.FileServerConnectorProvider;

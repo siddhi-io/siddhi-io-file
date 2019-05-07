@@ -21,7 +21,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>siddhi-io-file-parent</artifactId>
-        <groupId>org.wso2.extension.siddhi.io.file</groupId>
+        <groupId>io.siddhi.extension.io.file</groupId>
         <version>2.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -53,22 +53,22 @@
             <artifactId>siddhi-annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.extension.siddhi.map.xml</groupId>
+            <groupId>io.siddhi.extension.map.xml</groupId>
             <artifactId>siddhi-map-xml</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.wso2.extension.siddhi.map.json</groupId>
+            <groupId>io.siddhi.extension.map.json</groupId>
             <artifactId>siddhi-map-json</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.wso2.extension.siddhi.map.text</groupId>
+            <groupId>io.siddhi.extension.map.text</groupId>
             <artifactId>siddhi-map-text</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.wso2.extension.siddhi.map.csv</groupId>
+            <groupId>io.siddhi.extension.map.csv</groupId>
             <artifactId>siddhi-map-csv</artifactId>
             <scope>test</scope>
         </dependency>
@@ -143,7 +143,7 @@
                             org.quartz.*
                         </Private-Package>
                         <Export-Package>
-                            org.wso2.extension.siddhi.io.file.*,
+                            io.siddhi.extension.io.file.*,
                             !org.wso2.carbon.connector.framework.*,
                             !org.wso2.transport.remotefilesystem.*,
                             !org.wso2.carbon.messaging.*,
