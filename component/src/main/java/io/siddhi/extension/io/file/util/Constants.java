@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.extension.siddhi.io.file.util;
+package io.siddhi.extension.io.file.util;
 
 /**
  * Constants used in siddhi-io-file extension.

@@ -16,9 +16,11 @@
  * under the License.
  */
 
-package org.wso2.extension.siddhi.io.file.processors;
+package io.siddhi.extension.io.file.processors;
 
 import io.siddhi.core.stream.input.source.SourceEventListener;
+import io.siddhi.extension.io.file.util.Constants;
+import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
@@ -26,8 +28,6 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TransportSender;
-import org.wso2.extension.siddhi.io.file.util.Constants;
-import org.wso2.extension.siddhi.io.file.util.FileSourceConfiguration;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
