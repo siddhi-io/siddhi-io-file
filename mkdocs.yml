@@ -26,9 +26,14 @@ extra:
   - type: linkedin
     link: https://www.linkedin.com/groups/13553064
 markdown_extensions:
-- admonition
-- toc(permalink=true)
-- codehilite(guess_lang=false)
+  - admonition
+  - toc:
+      permalink: true
+  - codehilite:
+      guess_lang: false
+  - pymdownx.tasklist:
+        custom_checkbox: true
+  - markdown.extensions.attr_list:
 pages:
 - Welcome: index.md
 - API Docs:
