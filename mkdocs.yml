@@ -1,13 +1,13 @@
 site_name: Siddhi IO File
 site_description: Siddhi IO File Extension
 site_author: WSO2
-site_url: https://wso2-extensions.github.io/siddhi-io-file/
+site_url: https://siddhi-io.github.io/siddhi-io-file/
 extra_css:
 - stylesheets/extra.css
 extra_javascript:
 - javascripts/extra.js
 repo_name: Siddhi-IO-file
-repo_url: https://github.com/wso2-extensions/siddhi-io-file
+repo_url: https://github.com/siddhi-io/siddhi-io-file
 copyright: Copyright &copy; 2011 - 2018 WSO2
 theme:
   name: material
