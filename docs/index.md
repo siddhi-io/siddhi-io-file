@@ -7,13 +7,13 @@ It supports both binary and text formats.
 
 Find some useful links below:
 
-* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-io-file">Source code</a>
-* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-io-file/releases">Releases</a>
-* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-io-file/issues">Issue tracker</a>
+* <a target="_blank" href="https://github.com/siddhi-io/siddhi-io-file">Source code</a>
+* <a target="_blank" href="https://github.com/siddhi-io/siddhi-io-file/releases">Releases</a>
+* <a target="_blank" href="https://github.com/siddhi-io/siddhi-io-file/issues">Issue tracker</a>
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-file/api/2.0.0">2.0.0</a>.
+Latest API Docs is <a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.0">2.0.0</a>.
 
 ## How to use 
 
@@ -23,7 +23,7 @@ Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/si
 
 * This extension is shipped by default with WSO2 Stream Processor, if you wish to use an alternative version of this 
 extension you can replace the component <a target="_blank" href="https://github
-.com/wso2-extensions/siddhi-io-file/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` directory.
+.com/siddhi-io/siddhi-io-file/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` directory.
 
 **Using the extension as a <a target="_blank" href="https://wso2.github.io/siddhi/documentation/running-as-a-java-library">java library</a>**
 
@@ -49,17 +49,17 @@ extension you can replace the component <a target="_blank" href="https://github
 
 ## Features
 
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-file/api/2.0.0/#file-sink">file</a> *<a target="_blank" href="http://siddhi.io/documentation/siddhi-5.x/query-guide-5.x/#sink">(Sink)</a>*<br><div style="padding-left: 1em;"><p>File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p></div>
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-file/api/2.0.0/#file-source">file</a> *<a target="_blank" href="http://siddhi.io/documentation/siddhi-5.x/query-guide-5.x/#source">(Source)</a>*<br><div style="padding-left: 1em;"><p>File Source provides the functionality for user to feed data to siddhi from files. Both text and binary files are supported by file source.</p></div>
+* <a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.0/#file-sink">file</a> *<a target="_blank" href="http://siddhi.io/documentation/siddhi-5.x/query-guide-5.x/#sink">(Sink)</a>*<br><div style="padding-left: 1em;"><p>File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p></div>
+* <a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.0/#file-source">file</a> *<a target="_blank" href="http://siddhi.io/documentation/siddhi-5.x/query-guide-5.x/#source">(Source)</a>*<br><div style="padding-left: 1em;"><p>File Source provides the functionality for user to feed data to siddhi from files. Both text and binary files are supported by file source.</p></div>
 
 ## How to Contribute
  
-  * Please report issues at <a target="_blank" href="https://github.com/wso2-extensions/siddhi-io-file/issues">GitHub 
+  * Please report issues at <a target="_blank" href="https://github.com/siddhi-io/siddhi-io-file/issues">GitHub 
   Issue
    Tracker</a>.
   
   * Send your contributions as pull requests to <a target="_blank" href="https://github
-  .com/wso2-extensions/siddhi-io-file/tree/master">master branch</a>. 
+  .com/siddhi-io/siddhi-io-file/tree/master">master branch</a>. 
  
 ## Contact us 
 
