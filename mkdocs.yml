@@ -26,17 +26,18 @@ extra:
   - type: linkedin
     link: https://www.linkedin.com/groups/13553064
 markdown_extensions:
-  - admonition
-  - toc:
-      permalink: true
-  - codehilite:
-      guess_lang: false
-  - pymdownx.tasklist:
-        custom_checkbox: true
-  - markdown.extensions.attr_list:
+- admonition
+- toc:
+    permalink: true
+- codehilite:
+    guess_lang: false
+- pymdownx.tasklist:
+    custom_checkbox: true
+- markdown.extensions.attr_list: null
 pages:
 - Welcome: index.md
 - API Docs:
+  - 2.0.1: api/2.0.1.md
   - 2.0.0: api/2.0.0.md
   - 1.1.1: api/1.1.1.md
   - 1.1.0: api/1.1.0.md
