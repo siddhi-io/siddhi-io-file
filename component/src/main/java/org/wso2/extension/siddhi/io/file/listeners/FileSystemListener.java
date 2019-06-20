@@ -47,6 +47,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 /**
  * Test {@link RemoteFileSystemListener} implementation for testing purpose.
@@ -56,12 +57,14 @@ public class FileSystemListener implements RemoteFileSystemListener {
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private FileSourceServiceProvider fileSourceServiceProvider;
+    private Semaphore flowController;
 
     public FileSystemListener(SourceEventListener sourceEventListener,
-                       FileSourceConfiguration fileSourceConfiguration) {
+                              FileSourceConfiguration fileSourceConfiguration, Semaphore flowController) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSourceConfiguration;
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
+        this.flowController = flowController;
     }
 
     @Override
@@ -73,7 +76,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
             FileProcessor fileProcessor;
             if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                 vfsClientConnector = new VFSClientConnector();
-                fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, flowController);
                 vfsClientConnector.setMessageProcessor(fileProcessor);
 
                 Map<String, String> properties = new HashMap<>();
@@ -99,7 +102,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 }
             } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                 vfsClientConnector = new VFSClientConnector();
-                fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, flowController);
                 vfsClientConnector.setMessageProcessor(fileProcessor);
 
                 Map<String, String> properties = new HashMap<>();
@@ -147,7 +150,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                         FileServerConnectorProvider fileServerConnectorProvider =
                                 fileSourceServiceProvider.getFileServerConnectorProvider();
                         fileProcessor = new FileProcessor(sourceEventListener,
-                                fileSourceConfiguration);
+                                fileSourceConfiguration, flowController);
                         final ServerConnector fileServerConnector = fileServerConnectorProvider
                                 .createConnector("file-server-connector", properties);
                         fileServerConnector.setMessageProcessor(fileProcessor);
@@ -164,7 +167,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 } else {
                     properties.put(Constants.URI, fileURI);
                     vfsClientConnector = new VFSClientConnector();
-                    fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                    fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, flowController);
                     vfsClientConnector.setMessageProcessor(fileProcessor);
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                     BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(

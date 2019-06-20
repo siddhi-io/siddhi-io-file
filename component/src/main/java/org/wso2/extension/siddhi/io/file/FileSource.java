@@ -54,6 +54,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -264,6 +265,7 @@ public class FileSource extends Source {
     private String[] requiredProperties;
     private boolean isTailingEnabled = true;
     private SiddhiAppContext siddhiAppContext;
+    private Semaphore flowController;
 
     private String mode;
     private String actionAfterProcess;
@@ -350,6 +352,7 @@ public class FileSource extends Source {
         beginRegex = optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null);
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
 
+        flowController = new Semaphore(1);
         validateParameters();
         createInitialSourceConf();
         updateSourceConf();
@@ -378,7 +381,9 @@ public class FileSource extends Source {
                 fileSystemServerConnector = null;
             }
             if (isTailingEnabled) {
-                fileSourceConfiguration.getFileServerConnector().stop();
+                if (fileSourceConfiguration.getFileServerConnector() != null) {
+                    fileSourceConfiguration.getFileServerConnector().stop();
+                }
                 fileSourceConfiguration.setFileServerConnector(null);
             }
             ExecutorService executorService = fileSourceConfiguration.getExecutorService();
@@ -398,25 +403,13 @@ public class FileSource extends Source {
 
     public void pause() {
         try {
-            if (fileSystemServerConnector != null) {
-                fileSystemServerConnector.stop();
-            }
-            if (isTailingEnabled && fileSourceConfiguration.getFileServerConnector() != null) {
-                fileSourceConfiguration.getFileServerConnector().stop();
-            }
-        } catch (ServerConnectorException e) {
-            throw new SiddhiAppRuntimeException("Failed to stop the file server when pausing the siddhi app '" +
-                    siddhiAppContext.getName() + "'.",  e);
+            flowController.acquire();
+        } catch (InterruptedException e) {
         }
     }
 
     public void resume() {
-        try {
-            updateSourceConf();
-            deployServers();
-        } catch (ConnectionUnavailableException e) {
-            throw new SiddhiAppRuntimeException("Failed to resume siddhi app runtime.", e);
-        }
+        flowController.release();
     }
 
     public Map<String, Object> currentState() {
@@ -533,7 +526,7 @@ public class FileSource extends Source {
         if (dirUri != null) {
             Map<String, String> properties = getFileSystemServerProperties();
             FileSystemListener fileSystemListener = new FileSystemListener(sourceEventListener,
-                    fileSourceConfiguration);
+                    fileSourceConfiguration, flowController);
             try {
                 fileSystemServerConnector =  fileSystemConnectorFactory.createServerConnector(
                         siddhiAppContext.getName(), properties, fileSystemListener);
@@ -567,9 +560,10 @@ public class FileSource extends Source {
                     FileServerConnectorProvider fileServerConnectorProvider =
                             fileSourceServiceProvider.getFileServerConnectorProvider();
                     FileProcessor fileProcessor = new FileProcessor(sourceEventListener,
-                            fileSourceConfiguration);
+                            fileSourceConfiguration, flowController);
                     final ServerConnector fileServerConnector = fileServerConnectorProvider
-                            .createConnector("file-server-connector", properties);
+                            .createConnector("file-server-connector-" +
+                                    sourceEventListener.getStreamDefinition().getId(), properties);
                     fileServerConnector.setMessageProcessor(fileProcessor);
                     fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
 
@@ -588,7 +582,8 @@ public class FileSource extends Source {
                 properties.put(Constants.URI, fileUri);
                 properties.put(Constants.ACK_TIME_OUT, "1000");
                 VFSClientConnector vfsClientConnector = new VFSClientConnector();
-                FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration,
+                        flowController);
                 vfsClientConnector.setMessageProcessor(fileProcessor);
                 VFSClientConnectorCallback vfsClientConnectorCallback = new VFSClientConnectorCallback();
 
