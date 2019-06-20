@@ -33,6 +33,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,10 +50,13 @@ public class FileProcessor implements CarbonMessageProcessor {
     private int readBytes;
     private StringBuilder sb;
     private String[] requiredProperties;
+    private Semaphore flowController;
 
-    public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
+    public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration,
+                         Semaphore flowController) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSourceConfiguration;
+        this.flowController = flowController;
         this.requiredProperties = fileSourceConfiguration.getRequiredProperties();
         this.mode = fileSourceConfiguration.getMode();
         if (Constants.REGEX.equalsIgnoreCase(mode) && fileSourceConfiguration.isTailingEnabled()) {
@@ -64,62 +68,107 @@ public class FileProcessor implements CarbonMessageProcessor {
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-        if (carbonMessage instanceof BinaryCarbonMessage) {
-            byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
-            String msg = new String(content, Constants.UTF_8);
-            String[] requiredPropertyValues = getRequiredPropertyValues(carbonMessage);
-            if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
-                if (msg.length() > 0) {
-                    carbonCallback.done(carbonMessage);
-                    sourceEventListener.onEvent(new String(content, Constants.UTF_8),
-                            requiredPropertyValues);
-                }
-            } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
-                if (msg.length() > 0) {
-                    carbonCallback.done(carbonMessage);
-                    sourceEventListener.onEvent(content, requiredPropertyValues);
-                }
-            } else if (Constants.LINE.equalsIgnoreCase(mode)) {
-                if (!fileSourceConfiguration.isTailingEnabled()) {
-                    InputStream is = new ByteArrayInputStream(content);
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
-                    String line;
-                    while ((line = bufferedReader.readLine()) != null) {
-                        if (line.length() > 0) {
-                            readBytes = line.length();
-                            sourceEventListener.onEvent(line.trim(), requiredPropertyValues);
+        try {
+            flowController.acquire();
+            if (carbonMessage instanceof BinaryCarbonMessage) {
+                byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
+                String msg = new String(content, Constants.UTF_8);
+                String[] requiredPropertyValues = getRequiredPropertyValues(carbonMessage);
+                if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
+                    if (msg.length() > 0) {
+                        carbonCallback.done(carbonMessage);
+                        sourceEventListener.onEvent(new String(content, Constants.UTF_8),
+                                requiredPropertyValues);
+                    }
+                } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+                    if (msg.length() > 0) {
+                        carbonCallback.done(carbonMessage);
+                        sourceEventListener.onEvent(content, requiredPropertyValues);
+                    }
+                } else if (Constants.LINE.equalsIgnoreCase(mode)) {
+                    if (!fileSourceConfiguration.isTailingEnabled()) {
+                        InputStream is = new ByteArrayInputStream(content);
+                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
+                        String line;
+                        while ((line = bufferedReader.readLine()) != null) {
+                            if (line.length() > 0) {
+                                readBytes = line.length();
+                                sourceEventListener.onEvent(line.trim(), requiredPropertyValues);
+                            }
+                        }
+                        carbonCallback.done(carbonMessage);
+                    } else {
+                        if (msg.length() > 0) {
+                            readBytes = msg.getBytes(Constants.UTF_8).length;
+                            fileSourceConfiguration.updateFilePointer(readBytes);
+                            sourceEventListener.onEvent(msg, requiredPropertyValues);
                         }
                     }
-                    carbonCallback.done(carbonMessage);
-                } else {
-                    if (msg.length() > 0) {
-                        readBytes = msg.getBytes(Constants.UTF_8).length;
-                        fileSourceConfiguration.updateFilePointer(readBytes);
-                        sourceEventListener.onEvent(msg, requiredPropertyValues);
-                    }
-                }
-            } else if (Constants.REGEX.equalsIgnoreCase(mode)) {
-                int lastMatchedIndex = 0;
-                int remainedLength = 0;
-                if (!fileSourceConfiguration.isTailingEnabled()) {
-                    char[] buf = new char[10];
-                    InputStream is = new ByteArrayInputStream(content);
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
+                } else if (Constants.REGEX.equalsIgnoreCase(mode)) {
+                    int lastMatchedIndex = 0;
+                    int remainedLength = 0;
+                    if (!fileSourceConfiguration.isTailingEnabled()) {
+                        char[] buf = new char[10];
+                        InputStream is = new ByteArrayInputStream(content);
+                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
 
-                    while (bufferedReader.read(buf) != -1) {
-                        lastMatchedIndex = 0;
-                        sb.append(new String(buf));
+                        while (bufferedReader.read(buf) != -1) {
+                            lastMatchedIndex = 0;
+                            sb.append(new String(buf));
+                            Matcher matcher = pattern.matcher(sb.toString().trim());
+                            while (matcher.find()) {
+                                String event = matcher.group(0);
+                                lastMatchedIndex = matcher.end();
+                                if (fileSourceConfiguration.getEndRegex() == null) {
+                                    try {
+                                        lastMatchedIndex -= (fileSourceConfiguration.getBeginRegex().length() - 2);
+                                        event = event.substring(0, lastMatchedIndex);
+                                    } catch (StringIndexOutOfBoundsException e) {
+                                        log.error(e.getMessage());
+                                    }
+                                } else if (fileSourceConfiguration.getBeginRegex() == null) {
+                                    if (remainedLength < lastMatchedIndex) {
+                                        lastMatchedIndex += remainedLength;
+                                    }
+                                    remainedLength = sb.length() - event.length() - remainedLength - 1;
+                                }
+                                sourceEventListener.onEvent(event, requiredPropertyValues);
+                            }
+                            String tmp;
+                            tmp = sb.substring(lastMatchedIndex);
+
+                            sb.setLength(0);
+                            sb.append(tmp);
+                            buf = new char[10]; // to clean existing content of buffer
+                        }
+
+                    /*
+                    Handling last regex match since it will be having only one begin regex
+                    instead of two to match.
+                    */
+                        if (fileSourceConfiguration.getBeginRegex() != null &&
+                                fileSourceConfiguration.getEndRegex() == null) {
+                            Pattern p = Pattern.compile(fileSourceConfiguration.getBeginRegex() + "((.|\n)*?)");
+                            Matcher m = p.matcher(sb.toString());
+                            while (m.find()) {
+                                String event = m.group(0);
+                                sourceEventListener.onEvent(sb.substring(sb.indexOf(event)), requiredPropertyValues);
+                            }
+                        }
+                        if (carbonCallback != null) {
+                            carbonCallback.done(carbonMessage);
+                        }
+                    } else {
+                        fileSourceConfiguration.updateFilePointer(readBytes);
+
+                        sb.append(new String(content, Constants.UTF_8));
                         Matcher matcher = pattern.matcher(sb.toString().trim());
                         while (matcher.find()) {
                             String event = matcher.group(0);
                             lastMatchedIndex = matcher.end();
                             if (fileSourceConfiguration.getEndRegex() == null) {
-                                try {
-                                    lastMatchedIndex -= (fileSourceConfiguration.getBeginRegex().length() - 2);
-                                    event = event.substring(0, lastMatchedIndex);
-                                } catch (StringIndexOutOfBoundsException e) {
-                                    log.error(e.getMessage());
-                                }
+                                lastMatchedIndex -= (fileSourceConfiguration.getBeginRegex().length() - 2);
+                                event = event.substring(0, lastMatchedIndex);
                             } else if (fileSourceConfiguration.getBeginRegex() == null) {
                                 if (remainedLength < lastMatchedIndex) {
                                     lastMatchedIndex += remainedLength;
@@ -127,65 +176,26 @@ public class FileProcessor implements CarbonMessageProcessor {
                                 remainedLength = sb.length() - event.length() - remainedLength - 1;
                             }
                             sourceEventListener.onEvent(event, requiredPropertyValues);
+                            readBytes += content.length;
                         }
                         String tmp;
                         tmp = sb.substring(lastMatchedIndex);
-
                         sb.setLength(0);
                         sb.append(tmp);
-                        buf = new char[10]; // to clean existing content of buffer
-                    }
 
-                    /*
-                    Handling last regex match since it will be having only one begin regex
-                    instead of two to match.
-                    */
-                    if (fileSourceConfiguration.getBeginRegex() != null &&
-                            fileSourceConfiguration.getEndRegex() == null) {
-                        Pattern p = Pattern.compile(fileSourceConfiguration.getBeginRegex() + "((.|\n)*?)");
-                        Matcher m = p.matcher(sb.toString());
-                        while (m.find()) {
-                            String event = m.group(0);
-                            sourceEventListener.onEvent(sb.substring(sb.indexOf(event)), requiredPropertyValues);
+                        if (carbonCallback != null) {
+                            carbonCallback.done(carbonMessage);
                         }
-                    }
-                    if (carbonCallback != null) {
-                        carbonCallback.done(carbonMessage);
-                    }
-                } else {
-                    fileSourceConfiguration.updateFilePointer(readBytes);
-
-                    sb.append(new String(content, Constants.UTF_8));
-                    Matcher matcher = pattern.matcher(sb.toString().trim());
-                    while (matcher.find()) {
-                        String event = matcher.group(0);
-                        lastMatchedIndex = matcher.end();
-                        if (fileSourceConfiguration.getEndRegex() == null) {
-                            lastMatchedIndex -= (fileSourceConfiguration.getBeginRegex().length() - 2);
-                            event = event.substring(0, lastMatchedIndex);
-                        } else if (fileSourceConfiguration.getBeginRegex() == null) {
-                            if (remainedLength < lastMatchedIndex) {
-                                lastMatchedIndex += remainedLength;
-                            }
-                            remainedLength = sb.length() - event.length() - remainedLength - 1;
-                        }
-                        sourceEventListener.onEvent(event, requiredPropertyValues);
-                        readBytes += content.length;
-                    }
-                    String tmp;
-                    tmp = sb.substring(lastMatchedIndex);
-                    sb.setLength(0);
-                    sb.append(tmp);
-
-                    if (carbonCallback != null) {
-                        carbonCallback.done(carbonMessage);
                     }
                 }
+                return true;
+            } else {
+                return false;
             }
-            return true;
-        } else {
-            return false;
+        } finally {
+            flowController.release();
         }
+
     }
 
     public void setTransportSender(TransportSender transportSender) {
