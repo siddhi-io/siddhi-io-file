@@ -35,7 +35,6 @@ import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.transport.file.connector.server.FileServerConnector;
 import org.wso2.transport.file.connector.server.FileServerConnectorProvider;
-import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 import org.wso2.transport.remotefilesystem.listener.RemoteFileSystemListener;
 import org.wso2.transport.remotefilesystem.message.RemoteFileSystemBaseMessage;
 import org.wso2.transport.remotefilesystem.message.RemoteFileSystemEvent;
@@ -65,17 +64,18 @@ public class FileSystemListener implements RemoteFileSystemListener {
     }
 
     @Override
-    public boolean onMessage(RemoteFileSystemBaseMessage remoteFileSystemEvent) {
-        if (remoteFileSystemEvent instanceof RemoteFileSystemEvent) {
+    public boolean onMessage(RemoteFileSystemBaseMessage remoteFileSystemBaseEvent) {
+        if (remoteFileSystemBaseEvent instanceof RemoteFileSystemEvent) {
             String mode = fileSourceConfiguration.getMode();
-            String fileURI = ((RemoteFileSystemEvent) remoteFileSystemEvent).getUri();
+            RemoteFileSystemEvent remoteFileSystemEvent = (RemoteFileSystemEvent) remoteFileSystemBaseEvent;
+            File a = new File(remoteFileSystemEvent.getAddedFiles().get(0).getPath());
+            String fileURI = a.toURI().toString();
             VFSClientConnector vfsClientConnector;
             FileProcessor fileProcessor;
             if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                 vfsClientConnector = new VFSClientConnector();
                 fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
                 vfsClientConnector.setMessageProcessor(fileProcessor);
-
                 Map<String, String> properties = new HashMap<>();
                 properties.put(Constants.URI, fileURI);
                 properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
@@ -135,12 +135,6 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     }
 
                     if (fileSourceConfiguration.getTailedFileURI().equalsIgnoreCase(fileURI)) {
-                        try {
-                            fileSourceConfiguration.getFileSystemServerConnector().stop();
-                        } catch (RemoteFileSystemConnectorException e) {
-                            log.error(String.format("Failed to stop file system server while processing " +
-                                    "the file '%s' with tailing enabled.", fileURI), e);
-                        }
                         properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
                         properties.put(Constants.PATH, fileURI);
 

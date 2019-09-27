@@ -57,6 +57,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -283,6 +285,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String filePollingInterval;
 
     private long timeout = 5000;
+    private boolean fileServerConnectorStarted = false;
+    private ScheduledFuture scheduledFuture;
+    private ConnectionCallback connectionCallback;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -378,6 +383,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     @Override
     public void connect(ConnectionCallback connectionCallback, FileSourceState fileSourceState)
             throws ConnectionUnavailableException {
+        this.connectionCallback = connectionCallback;
         updateSourceConf();
         deployServers();
     }
@@ -385,10 +391,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     @Override
     public void disconnect() {
         try {
-            if (fileSystemServerConnector != null) {
-                fileSystemServerConnector.stop();
-                fileSystemServerConnector = null;
-            }
+            fileSystemServerConnector = null;
             if (isTailingEnabled) {
                 fileSourceConfiguration.getFileServerConnector().stop();
                 fileSourceConfiguration.setFileServerConnector(null);
@@ -408,12 +411,11 @@ public class FileSource extends Source<FileSource.FileSourceState> {
 
     public void pause() {
         try {
-            if (fileSystemServerConnector != null) {
-                fileSystemServerConnector.stop();
-            }
             if (isTailingEnabled && fileSourceConfiguration.getFileServerConnector() != null) {
                 fileSourceConfiguration.getFileServerConnector().stop();
+                this.fileServerConnectorStarted = false;
             }
+            scheduledFuture.cancel(true);
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Failed to stop the file server when pausing the siddhi app '" +
                     siddhiAppContext.getName() + "'.",  e);
@@ -466,8 +468,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
 
     private Map<String, String> getFileSystemServerProperties() {
         Map<String, String> map = new HashMap<>();
-
-        map.put(Constants.TRANSPORT_FILE_DIR_URI, dirUri);
+        map.put(Constants.TRANSPORT_FILE_URI, dirUri);
         if (actionAfterProcess != null) {
             map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase(Locale.ENGLISH));
         }
@@ -548,12 +549,24 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 fileSystemServerConnector =  fileSystemConnectorFactory.createServerConnector(
                         siddhiAppContext.getName(), properties, fileSystemListener);
                 fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
-                fileSystemServerConnector.start();
+                FileSourcePoller.CompletionCallback fileSourceCompletionCallback = (Throwable error) ->
+                {
+                    if (error.getClass().equals(RemoteFileSystemConnectorException.class)) {
+                        connectionCallback.onError(new ConnectionUnavailableException(
+                                "Connection to the file directory is lost.", error));
+                    } else {
+                        throw new SiddhiAppRuntimeException("File Polling mode run failed.", error);
+                    }
+                };
+                FileSourcePoller fileSourcePoller =
+                        new FileSourcePoller(fileSystemServerConnector, siddhiAppContext.getName());
+                fileSourcePoller.setCompletionCallback(fileSourceCompletionCallback);
+                this.scheduledFuture = siddhiAppContext.getScheduledExecutorService().
+                        scheduleAtFixedRate(fileSourcePoller, 0, 1, TimeUnit.SECONDS);
             } catch (RemoteFileSystemConnectorException e) {
-                throw new ConnectionUnavailableException("Failed to connect to the remote file system server through " +
-                        "the siddhi app '" + siddhiAppContext.getName() + "'. ", e);
+                throw new ConnectionUnavailableException("Connection to the file directory is lost.", e);
             }
-        } else if (fileUri != null) {
+        } else if (fileUri != null && !this.fileServerConnectorStarted) {
             Map<String, String> properties = new HashMap<>();
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.MAX_LINES_PER_POLL, "10");
@@ -593,6 +606,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                         }
                     };
                     fileSourceConfiguration.getExecutorService().execute(runnableServer);
+                    this.fileServerConnectorStarted = true;
                 }
             } else {
                 properties.put(Constants.URI, fileUri);
@@ -677,6 +691,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
 
         @Override
         public Map<String, Object> snapshot() {
+            filePointer = FileSource.this.fileSourceConfiguration.getFilePointer();
             state.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
             state.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURI());
             state.put(Constants.TAILING_REGEX_STRING_BUILDER,

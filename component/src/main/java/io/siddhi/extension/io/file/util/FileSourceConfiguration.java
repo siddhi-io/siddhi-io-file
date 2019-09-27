@@ -95,10 +95,8 @@ public class FileSourceConfiguration {
         this.filePointer = filePointer;
     }
 
-    public void updateFilePointer(int valueToAdd) {
-        long filePointer = Long.parseLong(this.filePointer);
-        filePointer += valueToAdd;
-        this.filePointer = Long.toString(filePointer);
+    public void updateFilePointer(long valueToAdd) {
+        this.filePointer = Long.toString(valueToAdd);
     }
 
     public FileServerConnector getFileServerConnector() {
@@ -122,7 +120,9 @@ public class FileSourceConfiguration {
     }
 
     public void setTailedFileURI(String tailedFileURI) {
-        this.tailedFileURI = tailedFileURI;
+        if (tailedFileURI != null) {
+            this.tailedFileURI = tailedFileURI;
+        }
     }
 
     public ExecutorService getExecutorService() {
