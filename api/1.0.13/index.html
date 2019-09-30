@@ -13,6 +13,10 @@
         <meta name="description" content="Siddhi IO File Extension">
       
       
+        <link rel="canonical" href="https://siddhi-io.github.io/siddhi-io-file/api/1.0.13/">
+      
+      
+        <meta name="author" content="WSO2">
       
       
         <meta name="lang:clipboard.copy" content="Copy to clipboard">
@@ -65,7 +69,7 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
     
       
@@ -123,9 +127,9 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="Siddhi IO File" class="md-header-nav__button md-logo">
+        <a href="https://siddhi-io.github.io/siddhi-io-file/" title="Siddhi IO File" class="md-header-nav__button md-logo">
           
-            <img src="../../images/siddhi-logo.svg" width="24" height="24">
+            <img src="../../images/siddhi-logo-w.svg" width="24" height="24">
           
         </a>
       </div>
@@ -191,7 +195,7 @@
     </div>
   
   <div class="md-source__repository">
-    Siddhi IO File
+    Siddhi-IO-file
   </div>
 </a>
           </div>
@@ -215,9 +219,9 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="Siddhi IO File" class="md-nav__button md-logo">
+    <a href="https://siddhi-io.github.io/siddhi-io-file/" title="Siddhi IO File" class="md-nav__button md-logo">
       
-        <img src="../../images/siddhi-logo.svg" width="48" height="48">
+        <img src="../../images/siddhi-logo-w.svg" width="48" height="48">
       
     </a>
     Siddhi IO File
@@ -238,7 +242,7 @@
     </div>
   
   <div class="md-source__repository">
-    Siddhi IO File
+    Siddhi-IO-file
   </div>
 </a>
     </div>
@@ -251,8 +255,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../.." title="Information" class="md-nav__link">
-      Information
+    <a href="../.." title="Welcome" class="md-nav__link">
+      Welcome
     </a>
   </li>
 
@@ -286,6 +290,18 @@
   <li class="md-nav__item">
     <a href="../latest/" title="latest" class="md-nav__link">
       latest
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../2.0.2/" title="2.0.2" class="md-nav__link">
+      2.0.2
     </a>
   </li>
 
@@ -583,6 +599,42 @@
 
 
   <li class="md-nav__item">
+    <a href="../1.0.0-M12/" title="1.0.0-M12" class="md-nav__link">
+      1.0.0-M12
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../1.0.0-M11/" title="1.0.0-M11" class="md-nav__link">
+      1.0.0-M11
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../1.0.0-M10/" title="1.0.0-M10" class="md-nav__link">
+      1.0.0-M10
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../1.0.0/" title="1.0.0" class="md-nav__link">
       1.0.0
     </a>
@@ -682,17 +734,18 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/siddhi-io/siddhi-io-file/blob/master/api/1.0.13.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/siddhi-io/siddhi-io-file/edit/master/docs/api/1.0.13.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="api-docs-v1013">API Docs - v1.0.13</h1>
-<h2 id="sink">Sink</h2>
-<h3 id="file-sink">file <em><a target="_blank" href="https://siddhi.io/en/v4.x/docs/query-guide/#sink">(Sink)</a></em></h3>
+                <h1 id="api-docs-v1013">API Docs - v1.0.13<a class="headerlink" href="#api-docs-v1013" title="Permanent link">&para;</a></h1>
+<h2 id="sink">Sink<a class="headerlink" href="#sink" title="Permanent link">&para;</a></h2>
+<h3 id="file-sink">file <em><a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#sink">(Sink)</a></em><a class="headerlink" href="#file-sink" title="Permanent link">&para;</a></h3>
 <p style="word-wrap: break-word">File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p>
 
 <p><span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<pre><code>@sink(type=&quot;file&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, append=&quot;&lt;BOOL&gt;&quot;, add.line.separator=&quot;&lt;BOOL&gt;&quot;, @map(...)))
-</code></pre>
+<div class="codehilite"><pre><span></span>@sink(type=&quot;file&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, append=&quot;&lt;BOOL&gt;&quot;, add.line.separator=&quot;&lt;BOOL&gt;&quot;, @map(...)))
+</pre></div>
+
 
 <p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
 <table>
@@ -731,18 +784,20 @@
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
-<pre><code>@sink(type='file', @map(type='json'), append='false', file.uri='/abc/{{symbol}}.txt') define stream BarStream (symbol string, price float, volume long); 
-</code></pre>
+<div class="codehilite"><pre><span></span>@sink(type=&#39;file&#39;, @map(type=&#39;json&#39;), append=&#39;false&#39;, file.uri=&#39;/abc/{{symbol}}.txt&#39;) define stream BarStream (symbol string, price float, volume long); 
+</pre></div>
+
 
 <p style="word-wrap: break-word">Under above configuration, for each event, a file will be generated if there's no such a file,and then data will be written to that file as json messagesoutput will looks like below.<br>{<br>&nbsp;&nbsp;&nbsp;&nbsp;"event":{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"symbol":"WSO2",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"price":55.6,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"volume":100<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></p>
 
-<h2 id="source">Source</h2>
-<h3 id="file-source">file <em><a target="_blank" href="https://siddhi.io/en/v4.x/docs/query-guide/#source">(Source)</a></em></h3>
+<h2 id="source">Source<a class="headerlink" href="#source" title="Permanent link">&para;</a></h2>
+<h3 id="file-source">file <em><a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#source">(Source)</a></em><a class="headerlink" href="#file-source" title="Permanent link">&para;</a></h3>
 <p style="word-wrap: break-word">File Source provides the functionality for user to feed data to siddhi from files. Both text and binary files are supported by file source.</p>
 
 <p><span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<pre><code>@source(type=&quot;file&quot;, dir.uri=&quot;&lt;STRING&gt;&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, mode=&quot;&lt;STRING&gt;&quot;, tailing=&quot;&lt;BOOL&gt;&quot;, action.after.process=&quot;&lt;STRING&gt;&quot;, action.after.failure=&quot;&lt;STRING&gt;&quot;, move.after.process=&quot;&lt;STRING&gt;&quot;, move.after.failure=&quot;&lt;STRING&gt;&quot;, begin.regex=&quot;&lt;STRING&gt;&quot;, end.regex=&quot;&lt;STRING&gt;&quot;, file.polling.interval=&quot;&lt;STRING&gt;&quot;, dir.polling.interval=&quot;&lt;STRING&gt;&quot;, timeout=&quot;&lt;STRING&gt;&quot;, @map(...)))
-</code></pre>
+<div class="codehilite"><pre><span></span>@source(type=&quot;file&quot;, dir.uri=&quot;&lt;STRING&gt;&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, mode=&quot;&lt;STRING&gt;&quot;, tailing=&quot;&lt;BOOL&gt;&quot;, action.after.process=&quot;&lt;STRING&gt;&quot;, action.after.failure=&quot;&lt;STRING&gt;&quot;, move.after.process=&quot;&lt;STRING&gt;&quot;, move.after.failure=&quot;&lt;STRING&gt;&quot;, begin.regex=&quot;&lt;STRING&gt;&quot;, end.regex=&quot;&lt;STRING&gt;&quot;, file.polling.interval=&quot;&lt;STRING&gt;&quot;, dir.polling.interval=&quot;&lt;STRING&gt;&quot;, timeout=&quot;&lt;STRING&gt;&quot;, @map(...)))
+</pre></div>
+
 
 <p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
 <table>
@@ -861,27 +916,27 @@
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
-<pre><code>@source(type='file',
-mode='text.full',
-tailing='false'
- dir.uri='file://abc/xyz',
-action.after.process='delete',
-@map(type='json')) 
+<div class="codehilite"><pre><span></span>@source(type=&#39;file&#39;,
+mode=&#39;text.full&#39;,
+tailing=&#39;false&#39;
+ dir.uri=&#39;file://abc/xyz&#39;,
+action.after.process=&#39;delete&#39;,
+@map(type=&#39;json&#39;)) 
 define stream FooStream (symbol string, price float, volume long); 
+</pre></div>
 
-</code></pre>
 
 <p style="word-wrap: break-word">Under above configuration, all the files in directory will be picked and read one by one.<br>In this case, it's assumed that all the files contains json valid json strings with keys 'symbol','price' and 'volume'.<br>Once a file is read, its content will be converted to an event using siddhi-map-json extension and then, that event will be received to the FooStream.<br>Finally, after reading is finished, the file will be deleted.<br></p>
 
 <p><span id="example-2" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 2</span></p>
-<pre><code>@source(type='file',
-mode='files.repo.line',
-tailing='true',
-dir.uri='file://abc/xyz',
-@map(type='json')) 
+<div class="codehilite"><pre><span></span>@source(type=&#39;file&#39;,
+mode=&#39;files.repo.line&#39;,
+tailing=&#39;true&#39;,
+dir.uri=&#39;file://abc/xyz&#39;,
+@map(type=&#39;json&#39;)) 
 define stream FooStream (symbol string, price float, volume long);
+</pre></div>
 
-</code></pre>
 
 <p style="word-wrap: break-word">Under above configuration, the first file in directory '/abc/xyz'  will be picked and read line by line.<br>In this case, it is assumed that the file contains lines json strings.<br>For each line, line content will be converted to an event using siddhi-map-json extension and then, that event will be received to the FooStream.<br>Once file content is completely read, it will keep checking whether a new entry is added to the file or not.<br>If such entry is added, it will be immediately picked up and processed.<br></p>
                 
@@ -941,7 +996,7 @@ define stream FooStream (symbol string, price float, volume long);
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Siddhi - Documentation
+            Copyright &copy; 2011 - 2018 WSO2
           </div>
         
         powered by
@@ -954,11 +1009,7 @@ define stream FooStream (symbol string, price float, volume long);
   <div class="md-footer-social">
     <link rel="stylesheet" href="../../assets/fonts/font-awesome.css">
     
-      <a href="https://github.com/siddhi-io/siddhi" class="md-footer-social__link fa fa-github"></a>
-    
-      <a href="https://medium.com/siddhi-io" class="md-footer-social__link fa fa-medium"></a>
-    
-      <a href="https://twitter.com/siddhi_io" class="md-footer-social__link fa fa-twitter"></a>
+      <a href="https://github.com/wso2/siddhi" class="md-footer-social__link fa fa-github"></a>
     
       <a href="https://www.linkedin.com/groups/13553064" class="md-footer-social__link fa fa-linkedin"></a>
     
@@ -974,7 +1025,7 @@ define stream FooStream (symbol string, price float, volume long);
       
       <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
       
-        <script src="../../assets/javascripts/extra.js"></script>
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>
