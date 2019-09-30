@@ -36,6 +36,8 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -49,6 +51,8 @@ public class FileSourceBinaryModeTestCase {
 
     private String dirUri, moveAfterProcessDir;
     private File sourceRoot, newRoot, movedFiles;
+    private List<String> companies = new ArrayList<>();
+    private List<String> companies2 = new ArrayList<>();
 
     @BeforeClass
     public void init() {
@@ -58,6 +62,19 @@ public class FileSourceBinaryModeTestCase {
         dirUri = rootPath + "/new";
         newRoot = new File(dirUri);
         moveAfterProcessDir = rootPath + "/moved_files";
+        companies.add("redhat");
+        companies.add("apache");
+        companies.add("cloudbees");
+        companies.add("ibm");
+        companies.add("intel");
+        companies.add("microsoft");
+        companies.add("google");
+        companies.add("wso2");
+
+        companies2.add("intel");
+        companies2.add("microsoft");
+        companies2.add("google");
+        companies2.add("wso2");
     }
 
     @BeforeMethod
@@ -106,7 +123,6 @@ public class FileSourceBinaryModeTestCase {
                 "from FooStream " +
                 "select * " +
                 "insert into BarStream; ";
-
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
@@ -115,34 +131,7 @@ public class FileSourceBinaryModeTestCase {
                 EventPrinter.print(events);
                 int n = count.incrementAndGet();
                 for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals("apache", event.getData(0));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals("cloudbees", event.getData(0));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals("google", event.getData(0));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals("ibm", event.getData(0));
-                            break;
-                        case 5:
-                            AssertJUnit.assertEquals("intel", event.getData(0));
-                            break;
-                        case 6:
-                            AssertJUnit.assertEquals("microsoft", event.getData(0));
-                            break;
-                        case 7:
-                            AssertJUnit.assertEquals("redhat", event.getData(0));
-                            break;
-                        case 8:
-                            AssertJUnit.assertEquals("wso2", event.getData(0));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
+                    AssertJUnit.assertEquals(true, companies.contains(event.getData(0).toString()));
                 }
             }
         });
@@ -181,34 +170,7 @@ public class FileSourceBinaryModeTestCase {
                 EventPrinter.print(events);
                 int n = count.incrementAndGet();
                 for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals("apache", event.getData(0));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals("cloudbees", event.getData(0));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals("google", event.getData(0));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals("ibm", event.getData(0));
-                            break;
-                        case 5:
-                            AssertJUnit.assertEquals("intel", event.getData(0));
-                            break;
-                        case 6:
-                            AssertJUnit.assertEquals("microsoft", event.getData(0));
-                            break;
-                        case 7:
-                            AssertJUnit.assertEquals("redhat", event.getData(0));
-                            break;
-                        case 8:
-                            AssertJUnit.assertEquals("wso2", event.getData(0));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
+                    AssertJUnit.assertEquals(true, companies.contains(event.getData(0).toString()));
                 }
             }
         });
@@ -339,34 +301,7 @@ public class FileSourceBinaryModeTestCase {
                 EventPrinter.print(events);
                 int n = count.incrementAndGet();
                 for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals("apache", event.getData(0));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals("cloudbees", event.getData(0));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals("google", event.getData(0));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals("ibm", event.getData(0));
-                            break;
-                        case 5:
-                            AssertJUnit.assertEquals("intel", event.getData(0));
-                            break;
-                        case 6:
-                            AssertJUnit.assertEquals("microsoft", event.getData(0));
-                            break;
-                        case 7:
-                            AssertJUnit.assertEquals("redhat", event.getData(0));
-                            break;
-                        case 8:
-                            AssertJUnit.assertEquals("wso2", event.getData(0));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
+                    AssertJUnit.assertEquals(true, companies.contains(event.getData(0).toString()));
                 }
             }
         });
@@ -406,34 +341,7 @@ public class FileSourceBinaryModeTestCase {
                 EventPrinter.print(events);
                 int n = count.incrementAndGet();
                 for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals("apache", event.getData(0));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals("cloudbees", event.getData(0));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals("google", event.getData(0));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals("ibm", event.getData(0));
-                            break;
-                        case 5:
-                            AssertJUnit.assertEquals("intel", event.getData(0));
-                            break;
-                        case 6:
-                            AssertJUnit.assertEquals("microsoft", event.getData(0));
-                            break;
-                        case 7:
-                            AssertJUnit.assertEquals("redhat", event.getData(0));
-                            break;
-                        case 8:
-                            AssertJUnit.assertEquals("wso2", event.getData(0));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
+                    AssertJUnit.assertEquals(true, companies.contains(event.getData(0).toString()));
                 }
             }
         });
@@ -472,40 +380,13 @@ public class FileSourceBinaryModeTestCase {
                 EventPrinter.print(events);
                 int n = count.incrementAndGet();
                 for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals("apache", event.getData(0));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals("cloudbees", event.getData(0));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals("google", event.getData(0));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals("ibm", event.getData(0));
-                            break;
-                        case 5:
-                            AssertJUnit.assertEquals("intel", event.getData(0));
-                            break;
-                        case 6:
-                            AssertJUnit.assertEquals("microsoft", event.getData(0));
-                            break;
-                        case 7:
-                            AssertJUnit.assertEquals("redhat", event.getData(0));
-                            break;
-                        case 8:
-                            AssertJUnit.assertEquals("wso2", event.getData(0));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
+                    AssertJUnit.assertEquals(true, companies.contains(event.getData(0).toString()));
                 }
             }
         });
 
         siddhiAppRuntime.start();
-        Thread.sleep(3000);
+        Thread.sleep(10000);
         File file = new File(dirUri + "/binary");
         AssertJUnit.assertEquals(0, file.list().length);
         //assert event count
@@ -536,34 +417,7 @@ public class FileSourceBinaryModeTestCase {
                 EventPrinter.print(events);
                 int n = count.incrementAndGet();
                 for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals("apache", event.getData(0));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals("cloudbees", event.getData(0));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals("google", event.getData(0));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals("ibm", event.getData(0));
-                            break;
-                        case 5:
-                            AssertJUnit.assertEquals("intel", event.getData(0));
-                            break;
-                        case 6:
-                            AssertJUnit.assertEquals("microsoft", event.getData(0));
-                            break;
-                        case 7:
-                            AssertJUnit.assertEquals("redhat", event.getData(0));
-                            break;
-                        case 8:
-                            AssertJUnit.assertEquals("wso2", event.getData(0));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
+                    AssertJUnit.assertEquals(true, companies.contains(event.getData(0).toString()));
                 }
             }
         });
@@ -601,22 +455,7 @@ public class FileSourceBinaryModeTestCase {
                 EventPrinter.print(events);
                 int n = count.incrementAndGet();
                 for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals("google", event.getData(0));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals("intel", event.getData(0));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals("microsoft", event.getData(0));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals("wso2", event.getData(0));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
+                    AssertJUnit.assertEquals(true, companies2.contains(event.getData(0).toString()));
                 }
             }
         });
@@ -654,40 +493,13 @@ public class FileSourceBinaryModeTestCase {
                 EventPrinter.print(events);
                 int n = count.incrementAndGet();
                 for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals("apache", event.getData(0));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals("cloudbees", event.getData(0));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals("google", event.getData(0));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals("ibm", event.getData(0));
-                            break;
-                        case 5:
-                            AssertJUnit.assertEquals("intel", event.getData(0));
-                            break;
-                        case 6:
-                            AssertJUnit.assertEquals("microsoft", event.getData(0));
-                            break;
-                        case 7:
-                            AssertJUnit.assertEquals("redhat", event.getData(0));
-                            break;
-                        case 8:
-                            AssertJUnit.assertEquals("wso2", event.getData(0));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
+                    AssertJUnit.assertEquals(true, companies.contains(event.getData(0).toString()));
                 }
             }
         });
 
         siddhiAppRuntime.start();
-        Thread.sleep(2000);
+        Thread.sleep(10000);
         File file = new File(dirUri + "/binary");
         AssertJUnit.assertEquals(0, file.list().length);
         //assert event count
@@ -722,34 +534,7 @@ public class FileSourceBinaryModeTestCase {
                 EventPrinter.print(events);
                 int n = count.incrementAndGet();
                 for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals("apache", event.getData(0));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals("cloudbees", event.getData(0));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals("google", event.getData(0));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals("ibm", event.getData(0));
-                            break;
-                        case 5:
-                            AssertJUnit.assertEquals("intel", event.getData(0));
-                            break;
-                        case 6:
-                            AssertJUnit.assertEquals("microsoft", event.getData(0));
-                            break;
-                        case 7:
-                            AssertJUnit.assertEquals("redhat", event.getData(0));
-                            break;
-                        case 8:
-                            AssertJUnit.assertEquals("wso2", event.getData(0));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
+                    AssertJUnit.assertEquals(true, companies.contains(event.getData(0).toString()));
                 }
             }
         });
@@ -791,34 +576,7 @@ public class FileSourceBinaryModeTestCase {
                 EventPrinter.print(events);
                 int n = count.incrementAndGet();
                 for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals("apache", event.getData(0));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals("cloudbees", event.getData(0));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals("google", event.getData(0));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals("ibm", event.getData(0));
-                            break;
-                        case 5:
-                            AssertJUnit.assertEquals("intel", event.getData(0));
-                            break;
-                        case 6:
-                            AssertJUnit.assertEquals("microsoft", event.getData(0));
-                            break;
-                        case 7:
-                            AssertJUnit.assertEquals("redhat", event.getData(0));
-                            break;
-                        case 8:
-                            AssertJUnit.assertEquals("wso2", event.getData(0));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
+                    AssertJUnit.assertEquals(true, companies.contains(event.getData(0).toString()));
                 }
             }
         });
@@ -861,34 +619,7 @@ public class FileSourceBinaryModeTestCase {
                 EventPrinter.print(events);
                 int n = count.incrementAndGet();
                 for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals("apache", event.getData(0));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals("cloudbees", event.getData(0));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals("google", event.getData(0));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals("ibm", event.getData(0));
-                            break;
-                        case 5:
-                            AssertJUnit.assertEquals("intel", event.getData(0));
-                            break;
-                        case 6:
-                            AssertJUnit.assertEquals("microsoft", event.getData(0));
-                            break;
-                        case 7:
-                            AssertJUnit.assertEquals("redhat", event.getData(0));
-                            break;
-                        case 8:
-                            AssertJUnit.assertEquals("wso2", event.getData(0));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
+                    AssertJUnit.assertEquals(true, companies.contains(event.getData(0).toString()));
                 }
             }
         });

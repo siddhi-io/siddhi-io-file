@@ -54,9 +54,12 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -276,13 +279,16 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String tailing;
     private String beginRegex;
     private String endRegex;
-    private String tailedFileURI;
+    private List<String> tailedFileURIMap;
     private String dirUri;
     private String fileUri;
     private String dirPollingInterval;
     private String filePollingInterval;
 
     private long timeout = 5000;
+    private boolean fileServerConnectorStarted = false;
+    private ScheduledFuture scheduledFuture;
+    private ConnectionCallback connectionCallback;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -378,6 +384,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     @Override
     public void connect(ConnectionCallback connectionCallback, FileSourceState fileSourceState)
             throws ConnectionUnavailableException {
+        this.connectionCallback = connectionCallback;
         updateSourceConf();
         deployServers();
     }
@@ -385,11 +392,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     @Override
     public void disconnect() {
         try {
-            if (fileSystemServerConnector != null) {
-                fileSystemServerConnector.stop();
-                fileSystemServerConnector = null;
-            }
-            if (isTailingEnabled && fileSourceConfiguration.getFileServerConnector() != null) {
+            fileSystemServerConnector = null;
+            if (isTailingEnabled) {
                 fileSourceConfiguration.getFileServerConnector().stop();
                 fileSourceConfiguration.setFileServerConnector(null);
             }
@@ -398,8 +402,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 executorService.shutdown();
             }
         } catch (ServerConnectorException e) {
-           throw new SiddhiAppRuntimeException("Failed to stop the file server when shutting down the siddhi app '" +
-                   siddhiAppContext.getName() + "' due to " + e.getMessage(), e);
+            throw new SiddhiAppRuntimeException("Failed to stop the file server when shutting down the siddhi app '" +
+                    siddhiAppContext.getName() + "' due to " + e.getMessage(), e);
         }
     }
 
@@ -408,11 +412,12 @@ public class FileSource extends Source<FileSource.FileSourceState> {
 
     public void pause() {
         try {
-            if (fileSystemServerConnector != null) {
-                fileSystemServerConnector.stop();
-            }
             if (isTailingEnabled && fileSourceConfiguration.getFileServerConnector() != null) {
                 fileSourceConfiguration.getFileServerConnector().stop();
+                this.fileServerConnectorStarted = false;
+            }
+            if (dirUri != null && scheduledFuture != null) {
+                scheduledFuture.cancel(true);
             }
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Failed to stop the file server when pausing the siddhi app '" +
@@ -429,24 +434,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         }
     }
 
-    public Map<String, Object> currentState() {
-        Map<String, Object> currentState = new HashMap<>();
-        currentState.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
-        currentState.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURI());
-        currentState.put(Constants.TAILING_REGEX_STRING_BUILDER,
-                fileSourceConfiguration.getTailingRegexStringBuilder());
-        return currentState;
-    }
-
-    public void restoreState(Map<String, Object> map) {
-        this.filePointer = map.get(Constants.FILE_POINTER).toString();
-        this.tailedFileURI = map.get(Constants.TAILED_FILE).toString();
-        fileSourceConfiguration.setFilePointer(filePointer);
-        fileSourceConfiguration.setTailedFileURI(tailedFileURI);
-        fileSourceConfiguration.updateTailingRegexStringBuilder(
-                (StringBuilder) map.get(Constants.TAILING_REGEX_STRING_BUILDER));
-    }
-
     private void createInitialSourceConf() {
         fileSourceConfiguration.setBeginRegex(beginRegex);
         fileSourceConfiguration.setEndRegex(endRegex);
@@ -461,13 +448,12 @@ public class FileSource extends Source<FileSource.FileSourceState> {
 
     private void updateSourceConf() {
         fileSourceConfiguration.setFilePointer(filePointer);
-        fileSourceConfiguration.setTailedFileURI(tailedFileURI);
+        fileSourceConfiguration.setTailedFileURIMap(tailedFileURIMap);
     }
 
     private Map<String, String> getFileSystemServerProperties() {
         Map<String, String> map = new HashMap<>();
-
-        map.put(Constants.TRANSPORT_FILE_DIR_URI, dirUri);
+        map.put(Constants.TRANSPORT_FILE_URI, dirUri);
         if (actionAfterProcess != null) {
             map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase(Locale.ENGLISH));
         }
@@ -548,12 +534,24 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 fileSystemServerConnector =  fileSystemConnectorFactory.createServerConnector(
                         siddhiAppContext.getName(), properties, fileSystemListener);
                 fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
-                fileSystemServerConnector.start();
+                FileSourcePoller.CompletionCallback fileSourceCompletionCallback = (Throwable error) ->
+                {
+                    if (error.getClass().equals(RemoteFileSystemConnectorException.class)) {
+                        connectionCallback.onError(new ConnectionUnavailableException(
+                                "Connection to the file directory is lost.", error));
+                    } else {
+                        throw new SiddhiAppRuntimeException("File Polling mode run failed.", error);
+                    }
+                };
+                FileSourcePoller fileSourcePoller =
+                        new FileSourcePoller(fileSystemServerConnector, siddhiAppContext.getName());
+                fileSourcePoller.setCompletionCallback(fileSourceCompletionCallback);
+                this.scheduledFuture = siddhiAppContext.getScheduledExecutorService().
+                        scheduleAtFixedRate(fileSourcePoller, 0, 1, TimeUnit.SECONDS);
             } catch (RemoteFileSystemConnectorException e) {
-                throw new ConnectionUnavailableException("Failed to connect to the remote file system server through " +
-                        "the siddhi app '" + siddhiAppContext.getName() + "'. ", e);
+                throw new ConnectionUnavailableException("Connection to the file directory is lost.", e);
             }
-        } else if (fileUri != null) {
+        } else if (fileUri != null && !fileServerConnectorStarted) {
             Map<String, String> properties = new HashMap<>();
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.MAX_LINES_PER_POLL, "10");
@@ -564,13 +562,12 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             if (moveAfterFailure != null) {
                 properties.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
             }
-
             if (fileSourceConfiguration.isTailingEnabled()) {
-                if (fileSourceConfiguration.getTailedFileURI() == null) {
+                if (fileSourceConfiguration.getTailedFileURIMap() == null) {
                     fileSourceConfiguration.setTailedFileURI(fileUri);
                 }
 
-                if (fileSourceConfiguration.getTailedFileURI().equalsIgnoreCase(fileUri)) {
+                if (fileSourceConfiguration.getTailedFileURIMap().get(0).toString().equalsIgnoreCase(fileUri)) {
                     properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
                     properties.put(Constants.PATH, fileUri);
 
@@ -593,6 +590,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                         }
                     };
                     fileSourceConfiguration.getExecutorService().execute(runnableServer);
+                    this.fileServerConnectorStarted = true;
                 }
             } else {
                 properties.put(Constants.URI, fileUri);
@@ -657,7 +655,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             fileSourceConfiguration.setProtocolForMoveAfterProcess(uri.split(splitRegex)[0]);
         } catch (MalformedURLException e) {
             throw new SiddhiAppCreationException(String.format("In 'file' source of siddhi app '" +
-                    siddhiAppContext.getName() + "', provided uri for '%s' parameter '%s' is invalid.",
+                            siddhiAppContext.getName() + "', provided uri for '%s' parameter '%s' is invalid.",
                     parameterName, uri), e);
         }
     }
@@ -677,8 +675,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
 
         @Override
         public Map<String, Object> snapshot() {
+            filePointer = FileSource.this.fileSourceConfiguration.getFilePointer();
             state.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
-            state.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURI());
+            state.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURIMap());
             state.put(Constants.TAILING_REGEX_STRING_BUILDER,
                     fileSourceConfiguration.getTailingRegexStringBuilder());
             return state;
@@ -687,9 +686,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         @Override
         public void restore(Map<String, Object> map) {
             filePointer = map.get(Constants.FILE_POINTER).toString();
-            tailedFileURI = map.get(Constants.TAILED_FILE).toString();
+            tailedFileURIMap = (List<String>) map.get(Constants.TAILED_FILE);
             fileSourceConfiguration.setFilePointer(filePointer);
-            fileSourceConfiguration.setTailedFileURI(tailedFileURI);
+            fileSourceConfiguration.setTailedFileURIMap(tailedFileURIMap);
             fileSourceConfiguration.updateTailingRegexStringBuilder(
                     (StringBuilder) map.get(Constants.TAILING_REGEX_STRING_BUILDER));
         }

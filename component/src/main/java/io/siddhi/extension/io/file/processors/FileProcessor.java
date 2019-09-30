@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
 
 /**
  * Message processor for handling data retrieved from consumed files.
- * */
+ */
 public class FileProcessor implements CarbonMessageProcessor {
     private static final Logger log = Logger.getLogger(FileProcessor.class);
 
@@ -94,7 +94,8 @@ public class FileProcessor implements CarbonMessageProcessor {
                 } else {
                     if (msg.length() > 0) {
                         readBytes = msg.getBytes(Constants.UTF_8).length;
-                        fileSourceConfiguration.updateFilePointer(readBytes);
+                        fileSourceConfiguration.updateFilePointer(
+                                (Long) carbonMessage.getProperties().get(Constants.CURRENT_POSITION));
                         sourceEventListener.onEvent(msg, requiredPropertyValues);
                     }
                 }
@@ -211,6 +212,6 @@ public class FileProcessor implements CarbonMessageProcessor {
                 log.error("Failed to find required transport property '" + propertyKey + "'");
             }
         }
-        return  values;
+        return values;
     }
 }
