@@ -58,7 +58,7 @@ public class FileSourcePoller implements Runnable {
      */
     public interface CompletionCallback {
         /**
-         * Handle errors from FileSystemServerConnector pooling}.
+         * Handle errors from FileSystemServerConnector polling}.
          *
          * @param error the error.
          */
