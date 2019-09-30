@@ -69,6 +69,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
         if (remoteFileSystemEvent instanceof RemoteFileSystemEvent) {
             String mode = fileSourceConfiguration.getMode();
             String fileURI = ((RemoteFileSystemEvent) remoteFileSystemEvent).getUri();
+            log.error("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+            log.error(fileURI);
             VFSClientConnector vfsClientConnector;
             FileProcessor fileProcessor;
             if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
