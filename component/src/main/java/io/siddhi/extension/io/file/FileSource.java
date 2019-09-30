@@ -54,6 +54,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -278,7 +279,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String tailing;
     private String beginRegex;
     private String endRegex;
-    private String tailedFileURI;
+    private List<String> tailedFileURIMap;
     private String dirUri;
     private String fileUri;
     private String dirPollingInterval;
@@ -415,7 +416,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 fileSourceConfiguration.getFileServerConnector().stop();
                 this.fileServerConnectorStarted = false;
             }
-            scheduledFuture.cancel(true);
+            if (dirUri != null) {
+                scheduledFuture.cancel(true);
+            }
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Failed to stop the file server when pausing the siddhi app '" +
                     siddhiAppContext.getName() + "'.",  e);
@@ -429,24 +432,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         } catch (ConnectionUnavailableException e) {
             throw new SiddhiAppRuntimeException("Failed to resume siddhi app runtime.", e);
         }
-    }
-
-    public Map<String, Object> currentState() {
-        Map<String, Object> currentState = new HashMap<>();
-        currentState.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
-        currentState.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURI());
-        currentState.put(Constants.TAILING_REGEX_STRING_BUILDER,
-                fileSourceConfiguration.getTailingRegexStringBuilder());
-        return currentState;
-    }
-
-    public void restoreState(Map<String, Object> map) {
-        this.filePointer = map.get(Constants.FILE_POINTER).toString();
-        this.tailedFileURI = map.get(Constants.TAILED_FILE).toString();
-        fileSourceConfiguration.setFilePointer(filePointer);
-        fileSourceConfiguration.setTailedFileURI(tailedFileURI);
-        fileSourceConfiguration.updateTailingRegexStringBuilder(
-                (StringBuilder) map.get(Constants.TAILING_REGEX_STRING_BUILDER));
     }
 
     private void createInitialSourceConf() {
@@ -463,7 +448,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
 
     private void updateSourceConf() {
         fileSourceConfiguration.setFilePointer(filePointer);
-        fileSourceConfiguration.setTailedFileURI(tailedFileURI);
+        fileSourceConfiguration.setTailedFileURIMap(tailedFileURIMap);
     }
 
     private Map<String, String> getFileSystemServerProperties() {
@@ -566,7 +551,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             } catch (RemoteFileSystemConnectorException e) {
                 throw new ConnectionUnavailableException("Connection to the file directory is lost.", e);
             }
-        } else if (fileUri != null && !this.fileServerConnectorStarted) {
+        } else if (fileUri != null && !fileServerConnectorStarted) {
             Map<String, String> properties = new HashMap<>();
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.MAX_LINES_PER_POLL, "10");
@@ -577,13 +562,12 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             if (moveAfterFailure != null) {
                 properties.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
             }
-
             if (fileSourceConfiguration.isTailingEnabled()) {
-                if (fileSourceConfiguration.getTailedFileURI() == null) {
+                if (fileSourceConfiguration.getTailedFileURIMap() == null) {
                     fileSourceConfiguration.setTailedFileURI(fileUri);
                 }
 
-                if (fileSourceConfiguration.getTailedFileURI().equalsIgnoreCase(fileUri)) {
+                if (fileSourceConfiguration.getTailedFileURIMap().get(0).toString().equalsIgnoreCase(fileUri)) {
                     properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
                     properties.put(Constants.PATH, fileUri);
 
@@ -693,7 +677,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         public Map<String, Object> snapshot() {
             filePointer = FileSource.this.fileSourceConfiguration.getFilePointer();
             state.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
-            state.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURI());
+            state.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURIMap());
             state.put(Constants.TAILING_REGEX_STRING_BUILDER,
                     fileSourceConfiguration.getTailingRegexStringBuilder());
             return state;
@@ -702,9 +686,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         @Override
         public void restore(Map<String, Object> map) {
             filePointer = map.get(Constants.FILE_POINTER).toString();
-            tailedFileURI = map.get(Constants.TAILED_FILE).toString();
+            tailedFileURIMap = (List<String>) map.get(Constants.TAILED_FILE);
             fileSourceConfiguration.setFilePointer(filePointer);
-            fileSourceConfiguration.setTailedFileURI(tailedFileURI);
+            fileSourceConfiguration.setTailedFileURIMap(tailedFileURIMap);
             fileSourceConfiguration.updateTailingRegexStringBuilder(
                     (StringBuilder) map.get(Constants.TAILING_REGEX_STRING_BUILDER));
         }

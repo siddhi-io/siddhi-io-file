@@ -21,6 +21,8 @@ package io.siddhi.extension.io.file.util;
 import org.wso2.transport.file.connector.server.FileServerConnector;
 import org.wso2.transport.remotefilesystem.server.connector.contract.RemoteFileSystemServerConnector;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
@@ -42,7 +44,7 @@ public class FileSourceConfiguration {
 
     private FileServerConnector fileServerConnector;
     private RemoteFileSystemServerConnector fileSystemServerConnector;
-    private String tailedFileURI = null;
+    private List<String> tailedFileURIMap;
     private ExecutorService executorService = null;
     private String[] requiredProperties = null;
     private StringBuilder tailingRegexStringBuilder = null;
@@ -115,13 +117,22 @@ public class FileSourceConfiguration {
         this.fileSystemServerConnector = fileSystemServerConnector;
     }
 
-    public String getTailedFileURI() {
-        return tailedFileURI;
+    public List getTailedFileURIMap() {
+        return tailedFileURIMap;
+    }
+
+    public void setTailedFileURIMap(List<String> tailedFileURIMap) {
+        this.tailedFileURIMap = tailedFileURIMap;
     }
 
     public void setTailedFileURI(String tailedFileURI) {
         if (tailedFileURI != null) {
-            this.tailedFileURI = tailedFileURI;
+            if (tailedFileURIMap == null) {
+                tailedFileURIMap = new ArrayList<>();
+            }
+            if (!tailedFileURIMap.contains(tailedFileURI)) {
+                this.tailedFileURIMap.add(tailedFileURI);
+            }
         }
     }
 
