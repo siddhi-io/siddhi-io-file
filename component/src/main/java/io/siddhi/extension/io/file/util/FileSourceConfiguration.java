@@ -51,7 +51,9 @@ public class FileSourceConfiguration {
     private Pattern pattern;
 
     private String actionAfterProcess = null;
+    private String actionAfterFailure = null;
     private String moveAfterProcess = null;
+    private String fileReadWaitTimeout;
 
     public FileSourceConfiguration() {
         tailingRegexStringBuilder = new StringBuilder();
@@ -222,5 +224,25 @@ public class FileSourceConfiguration {
 
     public void setTimeout(long timeout) {
         this.timeout = timeout;
+    }
+
+    public String getFileReadWaitTimeout() {
+
+        return fileReadWaitTimeout;
+    }
+
+    public void setFileReadWaitTimeout(String fileReadWaitTimeout) {
+
+        this.fileReadWaitTimeout = fileReadWaitTimeout;
+    }
+
+    public String getActionAfterFailure() {
+
+        return actionAfterFailure;
+    }
+
+    public void setActionAfterFailure(String actionAfterFailure) {
+
+        this.actionAfterFailure = actionAfterFailure;
     }
 }

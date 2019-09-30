@@ -213,6 +213,14 @@ import java.util.regex.PatternSyntaxException;
                         optional = true,
                         defaultValue = "5000"
                 ),
+                @Parameter(
+                        name = "file.read.wait.timeout",
+                        description = "This parameter is used to specify the maximum time period (in milliseconds) " +
+                                " till it waits before retrying to read the full file content.",
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "1000"
+                )
         },
         examples = {
                 @Example(
@@ -284,6 +292,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String fileUri;
     private String dirPollingInterval;
     private String filePollingInterval;
+    private String fileReadWaitTimeout;
 
     private long timeout = 5000;
     private boolean fileServerConnectorStarted = false;
@@ -367,6 +376,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         }
         beginRegex = optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null);
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
+        fileReadWaitTimeout = optionHolder.validateAndGetStaticValue(Constants.FILE_READ_WAIT_TIMEOUT, "1000");
 
         validateParameters();
         createInitialSourceConf();
@@ -442,8 +452,10 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setFilePollingInterval(filePollingInterval);
         fileSourceConfiguration.setRequiredProperties(requiredProperties);
         fileSourceConfiguration.setActionAfterProcess(actionAfterProcess);
+        fileSourceConfiguration.setActionAfterFailure(actionAfterFailure);
         fileSourceConfiguration.setMoveAfterProcess(moveAfterProcess);
         fileSourceConfiguration.setTimeout(timeout);
+        fileSourceConfiguration.setFileReadWaitTimeout(fileReadWaitTimeout);
     }
 
     private void updateSourceConf() {
@@ -463,6 +475,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         map.put(Constants.FILE_SORT_ASCENDING, Constants.TRUE.toUpperCase(Locale.ENGLISH));
         map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE.toUpperCase(Locale.ENGLISH));
         map.put(Constants.ACK_TIME_OUT, "5000");
+        map.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY, fileReadWaitTimeout);
 
         if (Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
                 Constants.TEXT_FULL.equalsIgnoreCase(mode)) {

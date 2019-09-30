@@ -82,6 +82,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
                     properties.put(Constants.ACTION, Constants.READ);
                     properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
+                    properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
+                            fileSourceConfiguration.getFileReadWaitTimeout());
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                     BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(fileURI.getBytes(Charset
                             .forName("UTF-8"))), true);
@@ -108,7 +110,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
                     properties.put(Constants.ACTION, Constants.READ);
                     properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
-
+                    properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
+                            fileSourceConfiguration.getFileReadWaitTimeout());
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                     BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(fileURI.getBytes(Charset
                             .forName("UTF-8"))), true);
@@ -130,6 +133,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.ACTION, Constants.READ);
                     properties.put(Constants.MAX_LINES_PER_POLL, "10");
                     properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
+                    properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
+                            fileSourceConfiguration.getFileReadWaitTimeout());
                     if (fileSourceConfiguration.isTailingEnabled()) {
                         fileSourceConfiguration.setTailedFileURI(fileURI);
                         if (fileSourceConfiguration.getTailedFileURIMap().contains(fileURI)) {
