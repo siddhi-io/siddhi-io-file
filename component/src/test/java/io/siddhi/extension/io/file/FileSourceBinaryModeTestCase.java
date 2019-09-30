@@ -463,6 +463,7 @@ public class FileSourceBinaryModeTestCase {
         siddhiAppRuntime.start();
         SiddhiTestHelper.waitForEvents(waitTime, 4, count, timeout);
         File file = new File(dirUri + "/malformed_binary");
+        Thread.sleep(10000);
         AssertJUnit.assertEquals(0, file.list().length);
         //assert event count
         AssertJUnit.assertEquals("Number of events", 4, count.get());
