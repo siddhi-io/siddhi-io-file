@@ -278,13 +278,13 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
+        SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
 
         File file = new File(moveAfterProcessDir);
-        AssertJUnit.assertEquals(8, file.list().length);
+        AssertJUnit.assertEquals(1, file.list().length);
 
         //assert event count
-        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        AssertJUnit.assertEquals("Number of events", 5, count.get());
         siddhiAppRuntime.shutdown();
     }
 
@@ -411,14 +411,14 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
+        SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
         Thread.sleep(1000);
 
         File file = new File(moveAfterProcessDir);
-        AssertJUnit.assertEquals(8, file.list().length);
+        AssertJUnit.assertEquals(1, file.list().length);
 
         //assert event count
-        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        AssertJUnit.assertEquals("Number of events", 5, count.get());
         siddhiAppRuntime.shutdown();
     }
 
@@ -533,12 +533,12 @@ public class FileSourceRegexModeTestCase {
         siddhiAppRuntime.start();
 
         SiddhiTestHelper.waitForEvents(waitTime, 8, count, timeout);
-
+        Thread.sleep(10000);
         File file = new File(moveAfterProcessDir);
-        AssertJUnit.assertEquals(8, file.list().length);
+        AssertJUnit.assertEquals(1, file.list().length);
 
         //assert event count
-        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        AssertJUnit.assertEquals("Number of events", 5, count.get());
         siddhiAppRuntime.shutdown();
     }
 
@@ -613,7 +613,7 @@ public class FileSourceRegexModeTestCase {
         Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                File file = new File(dirUri + "/regex/xml/xml_logs (3rd copy).txt");
+                File file = new File(dirUri + "/regex/xml/xml_logs.txt");
                 try {
                     StringBuilder sb = new StringBuilder();
                     sb.append("<events>\n")
@@ -703,13 +703,13 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
+        SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
 
         File file = new File(dirUri + "/regex/xml");
         AssertJUnit.assertEquals(0, file.list().length);
 
         //assert event count
-        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        AssertJUnit.assertEquals("Number of events", 5, count.get());
         siddhiAppRuntime.shutdown();
     }
 
@@ -804,13 +804,13 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
+        SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
 
         File file = new File(dirUri + "/regex/xml");
         AssertJUnit.assertEquals(0, file.list().length);
 
         //assert event count
-        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        AssertJUnit.assertEquals("Number of events", 5, count.get());
         siddhiAppRuntime.shutdown();
     }
 
@@ -1049,13 +1049,13 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
+        SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
 
         File file = new File(dirUri + "/regex/xml");
         AssertJUnit.assertEquals(0, file.list().length);
 
         //assert event count
-        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        AssertJUnit.assertEquals("Number of events", 5, count.get());
         siddhiAppRuntime.shutdown();
     }
 
@@ -1113,13 +1113,13 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        SiddhiTestHelper.waitForEvents(waitTime, 40, count, timeout);
+        SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
 
         File file = new File(dirUri + "/regex/xml");
         AssertJUnit.assertEquals(0, file.list().length);
 
         //assert event count
-        AssertJUnit.assertEquals("Number of events", 40, count.get());
+        AssertJUnit.assertEquals("Number of events", 5, count.get());
         siddhiAppRuntime.shutdown();
     }
 
