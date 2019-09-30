@@ -389,7 +389,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 fileSystemServerConnector.stop();
                 fileSystemServerConnector = null;
             }
-            if (isTailingEnabled) {
+            if (isTailingEnabled && fileSourceConfiguration.getFileServerConnector() != null) {
                 fileSourceConfiguration.getFileServerConnector().stop();
                 fileSourceConfiguration.setFileServerConnector(null);
             }
