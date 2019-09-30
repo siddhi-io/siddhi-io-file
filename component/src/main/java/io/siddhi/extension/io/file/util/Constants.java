@@ -43,6 +43,7 @@ public class Constants {
     public static final String FILE_POLLING_INTERVAL = "file.polling.interval";
     public static final String TIMEOUT = "timeout";
     public static final String ADD_EVENT_SEPARATOR = "add.line.separator";
+    public static final String FILE_READ_WAIT_TIMEOUT = "file.read.wait.timeout";
 
     /* configuration param values*/
     public static final String MOVE = "move";
@@ -61,6 +62,7 @@ public class Constants {
     public static final String FILE_POINTER_MAP = "filePointerMap";
     public static final String TRANSPORT_FILE_FILE_URI = "fileURI";
     public static final String TRANSPORT_FILE_DIR_URI = "dirURI";
+    public static final String TRANSPORT_FILE_URI = "uri";
     public static final String POLLING_INTERVAL = "pollingInterval";
     public static final String READ_FILE_FROM_BEGINNING = "readFromBeginning";
     public static final String ACTION_AFTER_PROCESS_KEY = "actionAfterProcess";
@@ -74,6 +76,8 @@ public class Constants {
     public static final String CREATE_MOVE_DIR = "createMoveDir";
     public static final String ACK_TIME_OUT = "ackTimeOut";
     public static final String DESTINATION = "destination";
+    public static final String FILE_READ_WAIT_TIMEOUT_KEY = "fileReadWaitTimeout";
+    public static final String CURRENT_POSITION = "currentPosition";
 
     /*source property keys*/
     public static final String TAILED_FILE = "tailedFile";

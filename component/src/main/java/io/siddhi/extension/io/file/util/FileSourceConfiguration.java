@@ -21,6 +21,8 @@ package io.siddhi.extension.io.file.util;
 import org.wso2.transport.file.connector.server.FileServerConnector;
 import org.wso2.transport.remotefilesystem.server.connector.contract.RemoteFileSystemServerConnector;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
@@ -42,14 +44,16 @@ public class FileSourceConfiguration {
 
     private FileServerConnector fileServerConnector;
     private RemoteFileSystemServerConnector fileSystemServerConnector;
-    private String tailedFileURI = null;
+    private List<String> tailedFileURIMap;
     private ExecutorService executorService = null;
     private String[] requiredProperties = null;
     private StringBuilder tailingRegexStringBuilder = null;
     private Pattern pattern;
 
     private String actionAfterProcess = null;
+    private String actionAfterFailure = null;
     private String moveAfterProcess = null;
+    private String fileReadWaitTimeout;
 
     public FileSourceConfiguration() {
         tailingRegexStringBuilder = new StringBuilder();
@@ -95,10 +99,8 @@ public class FileSourceConfiguration {
         this.filePointer = filePointer;
     }
 
-    public void updateFilePointer(int valueToAdd) {
-        long filePointer = Long.parseLong(this.filePointer);
-        filePointer += valueToAdd;
-        this.filePointer = Long.toString(filePointer);
+    public void updateFilePointer(long valueToAdd) {
+        this.filePointer = Long.toString(valueToAdd);
     }
 
     public FileServerConnector getFileServerConnector() {
@@ -117,12 +119,23 @@ public class FileSourceConfiguration {
         this.fileSystemServerConnector = fileSystemServerConnector;
     }
 
-    public String getTailedFileURI() {
-        return tailedFileURI;
+    public List getTailedFileURIMap() {
+        return tailedFileURIMap;
+    }
+
+    public void setTailedFileURIMap(List<String> tailedFileURIMap) {
+        this.tailedFileURIMap = tailedFileURIMap;
     }
 
     public void setTailedFileURI(String tailedFileURI) {
-        this.tailedFileURI = tailedFileURI;
+        if (tailedFileURI != null) {
+            if (tailedFileURIMap == null) {
+                tailedFileURIMap = new ArrayList<>();
+            }
+            if (!tailedFileURIMap.contains(tailedFileURI)) {
+                this.tailedFileURIMap.add(tailedFileURI);
+            }
+        }
     }
 
     public ExecutorService getExecutorService() {
@@ -211,5 +224,25 @@ public class FileSourceConfiguration {
 
     public void setTimeout(long timeout) {
         this.timeout = timeout;
+    }
+
+    public String getFileReadWaitTimeout() {
+
+        return fileReadWaitTimeout;
+    }
+
+    public void setFileReadWaitTimeout(String fileReadWaitTimeout) {
+
+        this.fileReadWaitTimeout = fileReadWaitTimeout;
+    }
+
+    public String getActionAfterFailure() {
+
+        return actionAfterFailure;
+    }
+
+    public void setActionAfterFailure(String actionAfterFailure) {
+
+        this.actionAfterFailure = actionAfterFailure;
     }
 }
