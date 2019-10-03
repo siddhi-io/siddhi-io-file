@@ -65,8 +65,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import static io.siddhi.extension.io.file.util.Constants.BINARY_FULL;
-
 /**
  * Implementation of siddhi-io-file source.
  */
@@ -353,7 +351,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                                         && mode.equalsIgnoreCase(Constants.LINE)) {
                                     throw new SiddhiAppCreationException(
                                             "'Binary' file mapping cannot be used with file mode '" +
-                                                    BINARY_FULL + "'");
+                                                    Constants.BINARY_FULL + "'");
                                 }
                             }
                         });
@@ -362,7 +360,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             }
         });
 
-        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || BINARY_FULL.equalsIgnoreCase(mode)) {
+        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.FALSE);
         } else {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
@@ -502,7 +500,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         map.put(Constants.ACK_TIME_OUT, "5000");
         map.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY, fileReadWaitTimeout);
 
-        if (BINARY_FULL.equalsIgnoreCase(mode) ||
+        if (Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
                 Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE.toUpperCase(Locale.ENGLISH));
         } else {
@@ -518,14 +516,14 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     }
 
     private void validateParameters() {
-        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || BINARY_FULL.equalsIgnoreCase(mode)) {
+        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             if (isTailingEnabled) {
                 throw new SiddhiAppCreationException("In 'file' source of the siddhi app '" +
                         siddhiAppContext.getName() + "', tailing has been enabled by user or by default. " +
                         "But tailing can't be enabled in '" + mode + "' mode.");
             }
 
-            if (BINARY_FULL.equalsIgnoreCase(mode)) {
+            if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                 if (beginRegex != null && endRegex != null) {
                     throw new SiddhiAppCreationException("'begin.regex' and 'end.regex' can be only provided if the" +
                             " mode is 'regex'. But in 'file' source of the siddhi app '" +
