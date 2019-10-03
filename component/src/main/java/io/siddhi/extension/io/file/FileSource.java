@@ -338,23 +338,33 @@ public class FileSource extends Source<FileSource.FileSourceState> {
 
         mode = optionHolder.validateAndGetStaticValue(Constants.MODE, Constants.LINE);
         List<Annotation> annotations = getMapper().getStreamDefinition().getAnnotations();
-        annotations.forEach((annotation) -> {
+        annotations.forEach((Annotation annotation) -> {
             if (annotation.getName().equalsIgnoreCase(Constants.STREAM_DEFINITION_SOURCE_ANNOTATION_NAME)) {
-                List<Annotation> sourceAnnotations = annotation.getAnnotations();
-                sourceAnnotations.forEach((sourceAnnotation) -> {
-                    if (sourceAnnotation.getName().equalsIgnoreCase(Constants.STREAM_DEFINITION_MAP_ANNOTATION_NAME)) {
-                        List<Element> mapElements = sourceAnnotation.getElements();
-                        mapElements.forEach((element) -> {
-                            if (element.getKey().equalsIgnoreCase(Constants.MAP_ANNOTATION_TYPE_ELEMENT_NAME)) {
-                                String mapType = element.getValue();
-                                if (mapType.equalsIgnoreCase(Constants.MAP_ANNOTATION_BINARY_TYPE)
-                                        && mode.equalsIgnoreCase(Constants.LINE)) {
-                                    throw new SiddhiAppCreationException(
-                                            "'Binary' file mapping cannot be used with file mode '" +
-                                                    Constants.BINARY_FULL + "'");
+                List<Element> sourceElements = annotation.getElements();
+                sourceElements.forEach((element) -> {
+                    if (element.getKey().equalsIgnoreCase(Constants.ANNOTATION_TYPE_ELEMENT_NAME)) {
+                        String sourceType = element.getValue();
+                        if (sourceType.equalsIgnoreCase(Constants.SOURCE_ANNOTATION_FILE_TYPE_NAME)) {
+                            List<Annotation> sourceAnnotations = annotation.getAnnotations();
+                            sourceAnnotations.forEach((sourceAnnotation) -> {
+                                if (sourceAnnotation.getName().
+                                        equalsIgnoreCase(Constants.STREAM_DEFINITION_MAP_ANNOTATION_NAME)) {
+                                    List<Element> mapElements = sourceAnnotation.getElements();
+                                    mapElements.forEach((mapElement) -> {
+                                        if (mapElement.getKey().
+                                                equalsIgnoreCase(Constants.ANNOTATION_TYPE_ELEMENT_NAME)) {
+                                            String mapType = mapElement.getValue();
+                                            if (mapType.equalsIgnoreCase(Constants.MAP_ANNOTATION_BINARY_TYPE)
+                                                    && mode.equalsIgnoreCase(Constants.LINE)) {
+                                                throw new SiddhiAppCreationException(
+                                                        "'Binary' file mapping cannot be used with file mode '" +
+                                                                Constants.BINARY_FULL + "'");
+                                            }
+                                        }
+                                    });
                                 }
-                            }
-                        });
+                            });
+                        }
                     }
                 });
             }

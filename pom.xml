@@ -118,6 +118,12 @@
                 <version>${testng.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.siddhi.extension.io.http</groupId>
+                <artifactId>siddhi-io-http</artifactId>
+                <scope>test</scope>
+                <version>${siddhi.io.http.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-net</groupId>
                 <artifactId>commons-net</artifactId>
                 <version>${commons-net.version}</version>
@@ -131,6 +137,7 @@
         <wso2.transport.file.version>6.0.60</wso2.transport.file.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>5.0.2</siddhi.map.json.version>
+        <siddhi.io.http.version>2.1.2</siddhi.io.http.version>
         <siddhi.map.xml.version>5.0.2</siddhi.map.xml.version>
         <siddhi.map.text.version>2.0.1</siddhi.map.text.version>
         <siddhi.map.csv.version>2.0.1</siddhi.map.csv.version>

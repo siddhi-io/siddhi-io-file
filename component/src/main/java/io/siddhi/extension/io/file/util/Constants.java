@@ -80,8 +80,9 @@ public class Constants {
     public static final String CURRENT_POSITION = "currentPosition";
     public static final String STREAM_DEFINITION_SOURCE_ANNOTATION_NAME = "source";
     public static final String STREAM_DEFINITION_MAP_ANNOTATION_NAME = "map";
-    public static final String MAP_ANNOTATION_TYPE_ELEMENT_NAME = "type";
+    public static final String ANNOTATION_TYPE_ELEMENT_NAME = "type";
     public static final String MAP_ANNOTATION_BINARY_TYPE = "binary";
+    public static final String SOURCE_ANNOTATION_FILE_TYPE_NAME = "file";
 
     /*source property keys*/
     public static final String TAILED_FILE = "tailedFile";
