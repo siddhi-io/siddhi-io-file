@@ -1070,4 +1070,25 @@ public class FileSourceLineModeTestCase {
         AssertJUnit.assertEquals("Number of events", 7, count.get());
         siddhiAppRuntime.shutdown();
     }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void siddhiIoFileReadLineInBinaryFileTest() {
+        log.info("test SiddhiIoFile [mode = line] when mapping is binary");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file',mode='line'," +
+                "dir.uri='file:/" + dirUri + "/binary', " +
+                "action.after.process='move', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
+                "@map(type='binary'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.start();
+    }
 }
