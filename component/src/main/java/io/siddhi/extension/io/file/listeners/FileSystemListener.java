@@ -84,6 +84,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
                     properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
                             fileSourceConfiguration.getFileReadWaitTimeout());
+                    properties.put(Constants.MODE, mode);
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                     BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(fileURI.getBytes(Charset
                             .forName("UTF-8"))), true);
@@ -112,6 +113,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
                     properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
                             fileSourceConfiguration.getFileReadWaitTimeout());
+                    properties.put(Constants.MODE, mode);
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                     BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(fileURI.getBytes(Charset
                             .forName("UTF-8"))), true);
@@ -135,6 +137,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
                     properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
                             fileSourceConfiguration.getFileReadWaitTimeout());
+                    properties.put(Constants.MODE, mode);
                     if (fileSourceConfiguration.isTailingEnabled()) {
                         fileSourceConfiguration.setTailedFileURI(fileURI);
                         if (fileSourceConfiguration.getTailedFileURIMap().contains(fileURI)) {

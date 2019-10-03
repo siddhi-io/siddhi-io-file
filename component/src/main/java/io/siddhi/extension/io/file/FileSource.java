@@ -39,6 +39,8 @@ import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
+import io.siddhi.query.api.annotation.Annotation;
+import io.siddhi.query.api.annotation.Element;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
@@ -65,7 +67,7 @@ import java.util.regex.PatternSyntaxException;
 
 /**
  * Implementation of siddhi-io-file source.
- * */
+ */
 @Extension(
         name = "file",
         namespace = "source",
@@ -77,9 +79,9 @@ import java.util.regex.PatternSyntaxException;
                         name = "dir.uri",
                         description =
                                 "Used to specify a directory to be processed. \n" +
-                                "All the files inside this directory will be processed. \n" +
-                                "Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
-                                "This uri MUST have the respective protocol specified.",
+                                        "All the files inside this directory will be processed. \n" +
+                                        "Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
+                                        "This uri MUST have the respective protocol specified.",
                         type = {DataType.STRING}
                 ),
 
@@ -96,7 +98,7 @@ import java.util.regex.PatternSyntaxException;
                         name = "mode",
                         description =
                                 "This parameter is used to specify how files in given directory should." +
-                                "Possible values for this parameter are,\n" +
+                                        "Possible values for this parameter are,\n" +
                                         "1. TEXT.FULL : to read a text file completely at once.\n" +
                                         "2. BINARY.FULL : to read a binary file completely at once.\n" +
                                         "3. LINE : to read a text file line by line.\n" +
@@ -314,7 +316,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         this.siddhiAppContext = siddhiAppContext;
         this.requiredProperties = requiredProperties.clone();
         this.fileSourceConfiguration = new FileSourceConfiguration();
-
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         this.fileSystemConnectorFactory = fileSourceServiceProvider.getFileSystemConnectorFactory();
         if (optionHolder.isOptionExists(Constants.DIR_URI)) {
@@ -336,6 +337,38 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         }
 
         mode = optionHolder.validateAndGetStaticValue(Constants.MODE, Constants.LINE);
+        List<Annotation> annotations = getMapper().getStreamDefinition().getAnnotations();
+        annotations.forEach((Annotation annotation) -> {
+            if (annotation.getName().equalsIgnoreCase(Constants.STREAM_DEFINITION_SOURCE_ANNOTATION_NAME)) {
+                List<Element> sourceElements = annotation.getElements();
+                sourceElements.forEach((element) -> {
+                    if (element.getKey().equalsIgnoreCase(Constants.ANNOTATION_TYPE_ELEMENT_NAME)) {
+                        String sourceType = element.getValue();
+                        if (sourceType.equalsIgnoreCase(Constants.SOURCE_ANNOTATION_FILE_TYPE_NAME)) {
+                            List<Annotation> sourceAnnotations = annotation.getAnnotations();
+                            sourceAnnotations.forEach((sourceAnnotation) -> {
+                                if (sourceAnnotation.getName().
+                                        equalsIgnoreCase(Constants.STREAM_DEFINITION_MAP_ANNOTATION_NAME)) {
+                                    List<Element> mapElements = sourceAnnotation.getElements();
+                                    mapElements.forEach((mapElement) -> {
+                                        if (mapElement.getKey().
+                                                equalsIgnoreCase(Constants.ANNOTATION_TYPE_ELEMENT_NAME)) {
+                                            String mapType = mapElement.getValue();
+                                            if (mapType.equalsIgnoreCase(Constants.MAP_ANNOTATION_BINARY_TYPE)
+                                                    && mode.equalsIgnoreCase(Constants.LINE)) {
+                                                throw new SiddhiAppCreationException(
+                                                        "'Binary' file mapping cannot be used with file mode '" +
+                                                                Constants.BINARY_FULL + "'");
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        });
 
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.FALSE);
@@ -431,7 +464,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             }
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Failed to stop the file server when pausing the siddhi app '" +
-                    siddhiAppContext.getName() + "'.",  e);
+                    siddhiAppContext.getName() + "'.", e);
         }
     }
 
@@ -544,7 +577,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             FileSystemListener fileSystemListener = new FileSystemListener(sourceEventListener,
                     fileSourceConfiguration);
             try {
-                fileSystemServerConnector =  fileSystemConnectorFactory.createServerConnector(
+                fileSystemServerConnector = fileSystemConnectorFactory.createServerConnector(
                         siddhiAppContext.getName(), properties, fileSystemListener);
                 fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
                 FileSourcePoller.CompletionCallback fileSourceCompletionCallback = (Throwable error) ->
@@ -608,11 +641,11 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             } else {
                 properties.put(Constants.URI, fileUri);
                 properties.put(Constants.ACK_TIME_OUT, "1000");
+                properties.put(Constants.MODE, mode);
                 VFSClientConnector vfsClientConnector = new VFSClientConnector();
                 FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
                 vfsClientConnector.setMessageProcessor(fileProcessor);
                 VFSClientConnectorCallback vfsClientConnectorCallback = new VFSClientConnectorCallback();
-
                 Runnable runnableClient = () -> {
                     try {
                         vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
@@ -628,7 +661,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                         }
                     } catch (ClientConnectorException e) {
                         log.error(String.format("Failure occurred in vfs-client while reading the file '%s' through " +
-                                        "siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
+                                "siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
                     } catch (InterruptedException e) {
                         log.error(String.format("Failed to get callback from vfs-client  for file '%s' through " +
                                 "siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);

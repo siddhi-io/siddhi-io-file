@@ -355,8 +355,8 @@ public class FileSourceBinaryModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test
-    public void siddhiIoFileTest7() throws InterruptedException {
+    @Test (expectedExceptions = SiddhiAppCreationException.class)
+    public void siddhiIoFileTest7() {
         log.info("test SiddhiIoFile [mode = binary.full] 7");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
@@ -374,24 +374,7 @@ public class FileSourceBinaryModeTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-                int n = count.incrementAndGet();
-                for (Event event : events) {
-                    AssertJUnit.assertEquals(true, companies.contains(event.getData(0).toString()));
-                }
-            }
-        });
-
         siddhiAppRuntime.start();
-        Thread.sleep(10000);
-        File file = new File(dirUri + "/binary");
-        AssertJUnit.assertEquals(0, file.list().length);
-        //assert event count
-        AssertJUnit.assertEquals("Number of events", 0, count.get());
-        siddhiAppRuntime.shutdown();
     }
 
     @Test(expectedExceptions = SiddhiAppCreationException.class)
@@ -631,6 +614,30 @@ public class FileSourceBinaryModeTestCase {
         AssertJUnit.assertEquals(8, file.list().length);
         //assert event count
         AssertJUnit.assertEquals("Number of events", 8, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIoFileWithAdditionalDifferentSourceTest() throws InterruptedException {
+        log.info("test SiddhiIoFile [mode = binary.full] when mapping is binary and having another source type");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file',mode='binary.full'," +
+                "dir.uri='file:/" + dirUri + "/binary', " +
+                "action.after.process='move', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
+                "@map(type='binary'))" +
+                "@source(type='inMemory', topic='Stocks', @map(type='passThrough'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(waitTime, 0, 0, timeout);
         siddhiAppRuntime.shutdown();
     }
 }
