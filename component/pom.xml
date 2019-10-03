@@ -85,11 +85,6 @@
             <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>io.siddhi.extension.io.http</groupId>
-            <artifactId>siddhi-io-http</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
     <profiles>
         <profile>

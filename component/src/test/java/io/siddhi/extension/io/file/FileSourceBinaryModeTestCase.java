@@ -627,7 +627,7 @@ public class FileSourceBinaryModeTestCase {
                 "action.after.process='move', " +
                 "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "@map(type='binary'))" +
-                "@source(type='http', @map(type='xml') )" +
+                "@source(type='inMemory', topic='Stocks', @map(type='passThrough'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
         String query = "" +
