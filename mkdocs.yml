@@ -37,6 +37,8 @@ markdown_extensions:
 pages:
 - Welcome: index.md
 - API Docs:
+  - latest: api/latest.md
+  - 2.0.2: api/2.0.2.md
   - 2.0.1: api/2.0.1.md
   - 2.0.0: api/2.0.0.md
   - 1.1.1: api/1.1.1.md
@@ -59,5 +61,4 @@ pages:
   - 1.0.0-M11: api/1.0.0-M11.md
   - 1.0.0-M10: api/1.0.0-M10.md
   - 1.0.0: api/1.0.0.md
-  - latest: api/latest.md
 - License: about/license.md
