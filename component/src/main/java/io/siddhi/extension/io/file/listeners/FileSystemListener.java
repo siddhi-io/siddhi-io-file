@@ -156,7 +156,9 @@ public class FileSystemListener implements RemoteFileSystemListener {
                                     fileURI.getBytes(Charset.forName("UTF-8"))), true);
                             FileServerExecutor fileServerExecutor = new FileServerExecutor(carbonMessage,
                                     carbonCallback, fileServerConnector, fileURI);
-                            log.error("fileServerExecutor started: " + fileURI);
+                            if (log.isDebugEnabled()) {
+                                log.debug("fileServerExecutor started with file tailing for file: " + fileURI);
+                            }
                             fileSourceConfiguration.getExecutorService().execute(fileServerExecutor);
                         }
                     } else {
