@@ -43,7 +43,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,8 +86,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             fileSourceConfiguration.getFileReadWaitTimeout());
                     properties.put(Constants.MODE, mode);
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
-                    BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(fileURI.getBytes(Charset
-                            .forName("UTF-8"))), true);
+                    BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(
+                            ByteBuffer.wrap(fileURI.getBytes(StandardCharsets.UTF_8)), true);
                     try {
                         vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                         try {
@@ -115,8 +115,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             fileSourceConfiguration.getFileReadWaitTimeout());
                     properties.put(Constants.MODE, mode);
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
-                    BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(fileURI.getBytes(Charset
-                            .forName("UTF-8"))), true);
+                    BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(
+                            ByteBuffer.wrap(fileURI.getBytes(StandardCharsets.UTF_8)), true);
                     try {
                         vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                         try {
@@ -153,7 +153,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
                             VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                             BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
-                                    fileURI.getBytes(Charset.forName("UTF-8"))), true);
+                                    fileURI.getBytes(StandardCharsets.UTF_8)), true);
                             FileServerExecutor fileServerExecutor = new FileServerExecutor(carbonMessage,
                                     carbonCallback, fileServerConnector, fileURI);
                             if (log.isDebugEnabled()) {
@@ -168,7 +168,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                         vfsClientConnector.setMessageProcessor(fileProcessor);
                         VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                         BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
-                                fileURI.getBytes(Charset.forName("UTF-8"))), true);
+                                fileURI.getBytes(StandardCharsets.UTF_8)), true);
                         try {
                             vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                             try {
@@ -230,7 +230,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
         properties.put(Constants.URI, fileUri);
         properties.put(Constants.ACK_TIME_OUT, "1000");
         BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
-                fileUri.getBytes(Charset.forName("UTF-8"))), true);
+                fileUri.getBytes(StandardCharsets.UTF_8)), true);
 
         String actionAfterProcess = fileSourceConfiguration.getActionAfterProcess();
         String moveAfterProcess = fileSourceConfiguration.getMoveAfterProcess();

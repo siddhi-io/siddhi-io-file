@@ -6,3 +6,8 @@
 <events><event><symbol>GOOGLE</symbol><price>38.0</price><volume>192</volume></event></events>
 <events><event><symbol>GOOGLE</symbol><price>39.0</price><volume>192</volume></event></events>
 <events><event><symbol>GOOGLE</symbol><price>42.0</price><volume>192</volume></event></events>
+<events><event><symbol>GOOGLE</symbol><price>52.0</price><volume>192</volume></event></events>
+<events><event><symbol>GOOGLE</symbol><price>62.0</price><volume>192</volume></event></events>
+<events><event><symbol>GOOGLE</symbol><price>22.0</price><volume>192</volume></event></events>
+<events><event><symbol>GOOGLE</symbol><price>82.0</price><volume>192</volume></event></events>
+<events><event><symbol>GOOGLE</symbol><price>92.0</price><volume>192</volume></event></events>

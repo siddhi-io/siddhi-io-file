@@ -15,11 +15,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.siddhi.extension.io.file.function;
+package io.siddhi.extension.function.file;
 
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
@@ -29,13 +30,11 @@ import io.siddhi.core.executor.function.FunctionExecutor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.Attribute;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.FileSystemOptions;
-import org.apache.commons.vfs2.VFS;
 import org.apache.log4j.Logger;
 
 import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
@@ -50,24 +49,44 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
         description = "This function checks whether a file or a folder exists in a given path",
         parameters = {
                 @Parameter(
-                        name = "file.path",
-                        description = "The file path to check for existence.",
+                        name = "uri",
+                        description = "File path to check for existence.",
                         type = DataType.STRING
+                ),
+                @Parameter(
+                        name = "is.directory",
+                        description = "File type of the existence is a directory.\n" +
+                                "Note: Existence will be be checked for both file and directory if this option is " +
+                                "NOT given.",
+                        type = DataType.BOOL,
+                        optional = true,
+                        defaultValue = "false"
+                )
+        },
+        parameterOverloads = {
+                @ParameterOverload(
+                        parameterNames = {"uri"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "is.directory"}
                 )
         },
         returnAttributes = {
                 @ReturnAttribute(
-                        description = "The value of the return parameter will contain whether the path exists or not.",
+                        description = "Value will be set to true if the path exists. False if otherwise.",
                         type = DataType.BOOL
                 )
         },
         examples = {
                 @Example(
-                        syntax = "from CheckExistsFileStream\n" +
-                                "select file:isExist('/User/wso2/source/test.txt') as exists\n" +
-                                "insert into  ResultStream;",
-                        description = "This query checks for the existence of a file in the given path. " +
-                                "Result will be returned as an boolean to the stream named 'RecordStream'."
+                        syntax = "file:isExist('/User/wso2/source/test.txt') as exists",
+                        description = "Checks existence of a file in the given path. Result will be returned " +
+                                "as an boolean ."
+                ),
+                @Example(
+                        syntax = "file:isExist('/User/wso2/source/') as exists",
+                        description = "Checks existence of a folder in the given path. Result will be returned " +
+                                "as an boolean ."
                 )
         }
 )
@@ -78,33 +97,50 @@ public class FileExistsExtension extends FunctionExecutor {
     protected StateFactory init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
                                 SiddhiQueryContext siddhiQueryContext) {
         int executorsCount = attributeExpressionExecutors.length;
-        if (executorsCount != 1) {
+        if (executorsCount == 1 || executorsCount == 2) {
+            ExpressionExecutor executor1 = attributeExpressionExecutors[0];
+            if (executor1.getReturnType() != STRING) {
+                throw new SiddhiAppValidationException("Invalid parameter type found for the uri " +
+                        "(first argument) of file:isExist() function, required " + STRING.toString() + ", but found "
+                        + executor1.getReturnType().toString());
+            }
+            if (executorsCount == 2) {
+                ExpressionExecutor executor2 = attributeExpressionExecutors[1];
+                if (executor2.getReturnType() != BOOL) {
+                    throw new SiddhiAppValidationException("Invalid parameter type found for the is.directory " +
+                            "(second argument) of file:isExist() function,required " + BOOL.toString() +
+                            ", but found " + executor2.getReturnType().toString());
+                }
+            }
+        } else {
             throw new SiddhiAppValidationException("Invalid no of arguments passed to file:isExist() function, "
-                    + "required 1, but found " + executorsCount);
-        }
-        ExpressionExecutor executor1 = attributeExpressionExecutors[0];
-        if (executor1.getReturnType() != STRING) {
-            throw new SiddhiAppValidationException("Invalid parameter type found for the fileExistPath " +
-                    "(first argument) of file:isExist() function, required " + STRING.toString() + ", but found "
-                    + executor1.getReturnType().toString());
+                    + "required 1 or 2, but found " + executorsCount);
         }
         return null;
     }
 
     @Override
     protected Object execute(Object[] data, State state) {
-        return null;
+        String fileExistPathUri = (String) data[0];
+        boolean isDirectory = (Boolean) data[1];
+        try {
+            FileObject fileObj = Utils.getFileObject(fileExistPathUri);
+            if (isDirectory) {
+                return fileObj.isFolder();
+            } else {
+                return fileObj.isFile();
+            }
+        } catch (FileSystemException e) {
+            throw new SiddhiAppRuntimeException("Exception occurred when checking the existence of  " +
+                    fileExistPathUri, e);
+        }
     }
 
     @Override
     protected Object execute(Object data, State state) {
-        FileSystemOptions opts = new FileSystemOptions();
-        FileSystemManager fsManager;
         String fileExistPathUri = (String) data;
         try {
-            fsManager = VFS.getManager();
-            FileObject fileObj = fsManager.resolveFile(fileExistPathUri, opts);
-            return fileObj.exists();
+            return Utils.getFileObject((String) data).exists();
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when checking the existence of  " +
                     fileExistPathUri, e);

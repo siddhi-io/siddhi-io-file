@@ -16,11 +16,12 @@
  * under the License.
  */
 
-package io.siddhi.extension.io.file.stream.processor.function;
+package io.siddhi.extension.execution.file;
 
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
@@ -38,19 +39,22 @@ import io.siddhi.core.query.processor.stream.StreamProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.extension.util.Constant;
+import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.FileSystemOptions;
-import org.apache.commons.vfs2.VFS;
 import org.apache.log4j.Logger;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -58,35 +62,52 @@ import java.util.zip.ZipInputStream;
  * This class provides implementation to list files in a compressed file.
  */
 @Extension(
-        name = "listFilesInZip",
+        name = "listFilesInArchive",
         namespace = "file",
         description = "This.",
         parameters = {
                 @Parameter(
-                        name = "zip.file.path",
-                        description = "The file path of the zip file.",
+                        name = "uri",
+                        description = "Absolute file path of the zip or tar file.",
                         type = {DataType.STRING},
-                        dynamic = true)
+                        dynamic = true
+                ),
+                @Parameter(
+                        name = "regexp",
+                        description = "Regex pattern to be matched with file base name before listing the file.",
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "<Empty_String>"
+                )
+        },
+        parameterOverloads = {
+                @ParameterOverload(
+                        parameterNames = {"uri"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "regexp"}
+                )
         },
         returnAttributes = {
                 @ReturnAttribute(
                         name = "fileName",
-                        description = "The file names in the zip file.",
+                        description = "The file names in the archived file.",
                         type = {DataType.STRING})},
         examples = {
                 @Example(
-                        syntax = "define stream ListArchivedFileStream (filePath string);\n\n" +
-                                "@info(name = 'query1')\n" +
-                                "from ListArchivedFileStream#file:listFilesInZip(filePath)\n" +
-                                "select fileName\n" +
-                                "insert into ResultStream;",
-                        description = "This query will be used list the files inside a compressed file in a given " +
-                                "path. The file names will be returned to the 'RecordStream'."
+                        syntax = "ListArchivedFileStream#file:listFilesInArchive(filePath)",
+                        description = "Lists the files inside the compressed file in the given path."
+                ),
+                @Example(
+                        syntax = "ListArchivedFileStream#file:listFilesInArchive(filePath, '.*test3.txt$')",
+                        description = "Filters file names adheres to the given regex and lists the files inside the " +
+                                "compressed file in the given path."
                 )
         }
 )
-public class FileListInZipExtension extends StreamProcessor<State> {
-    private static final Logger log = Logger.getLogger(FileListInZipExtension.class);
+public class FileListInArchiveExtension extends StreamProcessor<State> {
+    private static final Logger log = Logger.getLogger(FileListInArchiveExtension.class);
+
     @Override
     protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
                            StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater,
@@ -94,26 +115,44 @@ public class FileListInZipExtension extends StreamProcessor<State> {
         while (streamEventChunk.hasNext()) {
             StreamEvent streamEvent = streamEventChunk.next();
             String zipFilePathUri = (String) attributeExpressionExecutors[0].execute(streamEvent);
-            FileSystemOptions opts = new FileSystemOptions();
-            FileSystemManager fsManager;
+            String regex = "";
+            if (attributeExpressionExecutors.length == 2) {
+                regex = (String) attributeExpressionExecutors[0].execute(streamEvent);
+            }
+            Pattern pattern = Pattern.compile(regex);
             ZipInputStream zip = null;
+            TarArchiveInputStream tarInput = null;
             try {
-                fsManager = VFS.getManager();
-                FileObject fileObj = fsManager.resolveFile(zipFilePathUri, opts);
-                if (fileObj.exists()) {
-                    InputStream input = fileObj.getContent().getInputStream();
-                    zip = new ZipInputStream(input);
-                    ZipEntry zipEntry;
-                    // iterates over entries in the zip file
-                    while ((zipEntry = zip.getNextEntry()) != null) {
-                        if (!zipEntry.isDirectory()) {
-                            //add the entries
-                            Object[] data = {zipEntry.getName()};
-                            sendEvents(streamEvent, data, streamEventChunk);
+                FileObject fileObj = Utils.getFileObject(zipFilePathUri);
+                if (fileObj.isFile()) {
+                    if (zipFilePathUri.endsWith(Constant.ZIP_FILE_EXTENSION)) {
+                        InputStream input = fileObj.getContent().getInputStream();
+                        zip = new ZipInputStream(input);
+                        ZipEntry zipEntry;
+                        // iterates over entries in the zip file
+                        while ((zipEntry = zip.getNextEntry()) != null) {
+                            if (!zipEntry.isDirectory()) {
+                                //add the entries
+                                if (pattern.matcher(zipEntry.getName()).lookingAt()) {
+                                    Object[] data = {zipEntry.getName()};
+                                    sendEvents(streamEvent, data, streamEventChunk);
+                                }
+                            }
+                        }
+                    } else if (zipFilePathUri.endsWith(Constant.TAR_FILE_EXTENSION)) {
+                        tarInput = new TarArchiveInputStream(new FileInputStream(zipFilePathUri));
+                        TarArchiveEntry tarEntry;
+                        while ((tarEntry = tarInput.getNextTarEntry()) != null) {
+                            if (!tarEntry.isDirectory()) {
+                                if (pattern.matcher(tarEntry.getName()).lookingAt()) {
+                                    Object[] data = {tarEntry.getName()};
+                                    sendEvents(streamEvent, data, streamEventChunk);
+                                }
+                            }
                         }
                     }
                 }
-            }  catch (IOException e) {
+            } catch (IOException e) {
                 throw new SiddhiAppRuntimeException("Error while processing file: " + zipFilePathUri + ". " +
                         e.getMessage(), e);
             } finally {
@@ -121,7 +160,16 @@ public class FileListInZipExtension extends StreamProcessor<State> {
                     try {
                         zip.close();
                     } catch (IOException e) {
-                        log.error("IO exception occurred when closing file input stream for file path:");
+                        log.error("IO exception occurred when closing zip input stream for file path:" +
+                                zipFilePathUri, e);
+                    }
+                }
+                if (tarInput != null) {
+                    try {
+                        tarInput.close();
+                    } catch (IOException e) {
+                        log.error("IO exception occurred when closing tar input stream for file path:" +
+                                zipFilePathUri, e);
                     }
                 }
             }
@@ -147,20 +195,32 @@ public class FileListInZipExtension extends StreamProcessor<State> {
                                        StreamEventClonerHolder streamEventClonerHolder,
                                        boolean outputExpectsExpiredEvents, boolean findToBeExecuted,
                                        SiddhiQueryContext siddhiQueryContext) {
-        if (attributeExpressionExecutors.length == 1) {
+        if (attributeExpressionExecutors.length == 1 || attributeExpressionExecutors.length == 2) {
             if (attributeExpressionExecutors[0] == null) {
                 throw new SiddhiAppValidationException("Invalid input given to sourceFileUri (first argument) " +
-                        "file:listFilesInZip() function. Argument cannot be null");
+                        "file:listFilesInArchive() function. Argument cannot be null");
             }
             Attribute.Type firstAttributeType = attributeExpressionExecutors[0].getReturnType();
             if (!(firstAttributeType == Attribute.Type.STRING)) {
                 throw new SiddhiAppValidationException("Invalid parameter type found for sourceFileUri " +
-                        "(first argument) of file:listFilesInZip() function, required " + Attribute.Type.STRING +
+                        "(first argument) of file:listFilesInArchive() function, required " + Attribute.Type.STRING +
                         " but found " + firstAttributeType.toString());
             }
+            if (attributeExpressionExecutors.length == 2) {
+                if (attributeExpressionExecutors[1] == null) {
+                    throw new SiddhiAppValidationException("Invalid input given to regex (second argument) " +
+                            "file:listFilesInArchive() function. Argument cannot be null");
+                }
+                Attribute.Type secondAttributeType = attributeExpressionExecutors[1].getReturnType();
+                if (!(secondAttributeType == Attribute.Type.STRING)) {
+                    throw new SiddhiAppValidationException("Invalid parameter type found for regex " +
+                            "(second argument) of file:listFilesInArchive() function, required " +
+                            Attribute.Type.STRING + " but found " + secondAttributeType.toString());
+                }
+            }
         } else {
-            throw new SiddhiAppValidationException("Invalid no of arguments passed to file:listFilesInZip() function, "
-                    + "required 1, but found " + attributeExpressionExecutors.length);
+            throw new SiddhiAppValidationException("Invalid no of arguments passed to file:listFilesInArchive() " +
+                    "function, required 1, but found " + attributeExpressionExecutors.length);
         }
         return null;
     }

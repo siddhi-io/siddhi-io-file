@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package io.siddhi.extension.io.file.stream.processor.function;
+package io.siddhi.extension.execution.file;
 
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -64,23 +64,21 @@ import java.util.regex.Pattern;
 @Extension(
         name = "searchAndList",
         namespace = "file",
-        description = "This function searches a given folder for files with a given regex expressions and returns " +
-                "file names matches with the regex.",
+        description = "Searches files in a given folder and lists.",
         parameters = {
                 @Parameter(
-                        name = "file.path",
-                        description = "The file path .",
+                        name = "uri",
+                        description = "Absolute file path of the directory.",
                         type = {DataType.STRING},
                         dynamic = true),
                 @Parameter(
-                        name = "regex.pattern",
-                        description = "The path of the set of elements that will be tokenized. " +
-                                "Give empty string to list all files",
+                        name = "regexp",
+                        description = "Pattern to be checked before listing the file name.",
                         type = {DataType.STRING},
                         dynamic = true),
                 @Parameter(
-                        name = "archive.recursively",
-                        description = "This parameter will allow recursive search for the sub folders.",
+                        name = "exclude.subdirectories",
+                        description = "This flag is used to exclude the files un subdirectories when listing.",
                         type = DataType.BOOL,
                         optional = true,
                         defaultValue = "false"
@@ -93,37 +91,25 @@ import java.util.regex.Pattern;
                         type = {DataType.STRING})},
         examples = {
                 @Example(
-                        syntax = "define stream ListFileStream (filePath string);\n\n" +
-                                "@info(name = 'query1')\n" +
-                                "from ListFileStream#file:search(filePath, '', 'true')\n" +
-                                "select fileName\n" +
-                                "insert into ResultStream;",
-                        description = "This query will searched for all the files recursively for a given path. " +
-                                "The file names will be returned to the 'RecordStream'."
+                        syntax = "ListFileStream#file:search(filePath)",
+                        description = "This will list all the files (also in sub-folders) in a given path."
                 ),
                 @Example(
-                        syntax = "define stream ListFileStream (filePath string);\n\n" +
-                                "@info(name = 'query1')\n" +
-                                "from ListFileStream#file:search(filePath, '.*test3.txt$', 'true')\n" +
-                                "select fileName\n" +
-                                "insert into ResultStream;",
-                        description = "This query will searched for all the files with a given regex file pattern " +
-                                "recursively for a given path. The file names will be returned to the 'RecordStream'."
+                        syntax = "ListFileStream#file:search(filePath, '.*test3.txt$')",
+                        description = "This will list all the files (also in sub-folders) which adheres to a given " +
+                                "regex file pattern in a given path."
                 ),
                 @Example(
-                        syntax = "define stream ListFileStream (filePath string);\n\n" +
-                                "@info(name = 'query1')\n" +
-                                "from ListFileStream#file:search(filePath, '.*test3.txt$', 'false')\n" +
-                                "select fileName\n" +
-                                "insert into ResultStream;",
-                        description = "This query will searched for all the files with a given regex file pattern " +
-                                "only in the given path. The file names will be returned to the 'RecordStream'."
+                        syntax = "ListFileStream#file:search(filePath, '.*test3.txt$', true)",
+                        description = "This will list all the files excluding the files in sub-folders which adheres " +
+                                "to a given regex file pattern in a given path."
                 )
         }
 )
 public class FileSearchExtension extends StreamProcessor<State> {
     private static final Logger log = Logger.getLogger(FileSearchExtension.class);
-
+    private Pattern pattern;
+    private boolean excludeSubdirectories;
     @Override
     protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
                            StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater,
@@ -132,8 +118,8 @@ public class FileSearchExtension extends StreamProcessor<State> {
             StreamEvent streamEvent = streamEventChunk.next();
             String sourceFileUri = (String) attributeExpressionExecutors[0].execute(streamEvent);
             String filePattern = (String) attributeExpressionExecutors[1].execute(streamEvent);
-            Pattern pattern = Pattern.compile(filePattern);
-            boolean recursiveSearch = (Boolean) attributeExpressionExecutors[2].execute(streamEvent);
+            pattern = Pattern.compile(filePattern);
+            excludeSubdirectories = (Boolean) attributeExpressionExecutors[2].execute(streamEvent);
             FileSystemOptions opts = new FileSystemOptions();
             FileSystemManager fsManager;
             try {
@@ -147,8 +133,8 @@ public class FileSearchExtension extends StreamProcessor<State> {
                                     getBaseName()).lookingAt() || pattern.toString().isEmpty())) {
                                 Object[] data = {getFilePath(child.getName())};
                                 sendEvents(streamEvent, data, streamEventChunk);
-                            } else if (child.getType() == FileType.FOLDER && recursiveSearch) {
-                                searchSubFolders(child, pattern, streamEvent, streamEventChunk);
+                            } else if (child.getType() == FileType.FOLDER) {
+                                searchSubFolders(child, streamEvent, streamEventChunk);
                             }
                         } catch (IOException e) {
                             throw new SiddhiAppRuntimeException("Unable to search a file with pattern" +
@@ -281,12 +267,11 @@ public class FileSearchExtension extends StreamProcessor<State> {
 
     /**
      * @param child            sub folder
-     * @param pattern          pattern of the file to be searched
      * @param streamEvent      the message context that is generated for processing the file
      * @param streamEventChunk OMFactory
      * @throws IOException
      */
-    private void searchSubFolders(FileObject child, Pattern pattern, StreamEvent streamEvent,
+    private void searchSubFolders(FileObject child, StreamEvent streamEvent,
                                   ComplexEventChunk<StreamEvent> streamEventChunk) {
         List<FileObject> fileList = new ArrayList<FileObject>();
         getAllFiles(child, fileList);
@@ -296,8 +281,8 @@ public class FileSearchExtension extends StreamProcessor<State> {
                         getBaseName().toLowerCase(Locale.ENGLISH)).lookingAt() || pattern.toString().isEmpty())) {
                     Object[] data = {getFilePath(file.getName())};
                     sendEvents(streamEvent, data, streamEventChunk);
-                } else if (file.getType() == FileType.FOLDER) {
-                    searchSubFolders(file, pattern, streamEvent, streamEventChunk);
+                } else if (file.getType() == FileType.FOLDER && !excludeSubdirectories) {
+                    searchSubFolders(file, streamEvent, streamEventChunk);
                 }
             }
         } catch (IOException e) {

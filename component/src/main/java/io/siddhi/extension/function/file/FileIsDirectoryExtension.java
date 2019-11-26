@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.siddhi.extension.io.file.function;
+package io.siddhi.extension.function.file;
 
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -29,63 +29,59 @@ import io.siddhi.core.executor.function.FunctionExecutor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.Attribute;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.FileSystemOptions;
-import org.apache.commons.vfs2.VFS;
 import org.apache.log4j.Logger;
 
-import static io.siddhi.query.api.definition.Attribute.Type.LONG;
+import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
 import static io.siddhi.query.api.definition.Attribute.Type.STRING;
 
 /**
  * This extension can be used to check the size of a given file.
  */
 @Extension(
-        name = "size",
+        name = "isDirectory",
         namespace = "file",
-        description = "This function checks for a given file's size",
+        description = "This function checks for a given file path points to a directory",
         parameters = {
                 @Parameter(
-                        name = "file.path",
-                        description = "The file path to be checked for a directory.",
+                        name = "uri",
+                        description = "The path to be checked for a directory.",
                         type = DataType.STRING
                 )
         },
         returnAttributes = {
                 @ReturnAttribute(
-                        description = "The size of the given file.",
-                        type = DataType.LONG
+                        description = "Value will be set to true if the directory exists in the given path. " +
+                                "False if otherwise.",
+                        type = DataType.BOOL
                 )
         },
         examples = {
                 @Example(
-                        syntax = "from FileSizeStream\n" +
-                                "select file:size('/User/wso2/source/test.txt') as fileSize\n" +
-                                "insert into  ResultStream;",
-                        description = "This query will be used to get the size of a file in a given path. The size " +
-                                "of the file will be returned as an long value to the stream named 'RecordStream'."
+                        syntax = "file:isDirectory(filePath) as isDirectory",
+                        description = "Checks whether the given path is a directory. Result will be returned as an " +
+                                "boolean."
                 )
         }
 )
-public class FileSizeExtension extends FunctionExecutor {
-    private static final Logger log = Logger.getLogger(FileSizeExtension.class);
-    private Attribute.Type returnType = LONG;
+public class FileIsDirectoryExtension extends FunctionExecutor {
+    private static final Logger log = Logger.getLogger(FileIsDirectoryExtension.class);
+    private Attribute.Type returnType = BOOL;
     @Override
     protected StateFactory init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
                                 SiddhiQueryContext siddhiQueryContext) {
         int executorsCount = attributeExpressionExecutors.length;
         if (attributeExpressionExecutors.length != 1) {
-            throw new SiddhiAppValidationException("Invalid no of arguments passed to file:size() function, "
+            throw new SiddhiAppValidationException("Invalid no of arguments passed to file:isDirectory() function, "
                     + "required 1, but found " + executorsCount);
         }
         ExpressionExecutor executor1 = attributeExpressionExecutors[0];
         if (executor1.getReturnType() != STRING) {
             throw new SiddhiAppValidationException("Invalid parameter type found for the filePath (first argument) of "
-                    + "file:size() function, required " + STRING.toString() + ", but found "
+                    + "file:isDirectory() function, required " + STRING.toString() + ", but found "
                     + executor1.getReturnType().toString());
         }
         return null;
@@ -98,15 +94,12 @@ public class FileSizeExtension extends FunctionExecutor {
 
     @Override
     protected Object execute(Object data, State state) {
-        String sourceFileUri = (String) data;
-        FileSystemOptions opts = new FileSystemOptions();
-        FileSystemManager fsManager;
+        String filePathUri = (String) data;
         try {
-            fsManager = VFS.getManager();
-            FileObject fileObj = fsManager.resolveFile(sourceFileUri, opts);
-            return fileObj.getContent().getSize();
+            return Utils.getFileObject(filePathUri).isFolder();
         } catch (FileSystemException e) {
-            throw new SiddhiAppRuntimeException("Exception occurred when getting the file size of " + sourceFileUri, e);
+            throw new SiddhiAppRuntimeException("Exception occurred when checking type of file in path: " +
+                    filePathUri, e);
         }
     }
 

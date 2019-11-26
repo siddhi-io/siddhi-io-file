@@ -49,9 +49,6 @@ public class Constants {
     /* configuration param values*/
     public static final String MOVE = "move";
     public static final String DELETE = "delete";
-    public static final String COPY = "copy";
-    public static final String EXISTS = "exists";
-    public static final String CREATE = "create";
     public static final String TEXT_FULL = "text.full";
     public static final String BINARY_FULL = "binary.full";
     public static final String REGEX = "regex";
@@ -101,6 +98,4 @@ public class Constants {
     public static final String LAST_MODIFIED_TIMESTAMP = "lastModifiedTimestamp";
 
     public static final String UTF_8 = "UTF-8";
-    public static final String LAST_MODIFIED_DATETIME_FORMAT = "MM/dd/yyyy HH:mm:ss";
-
 }

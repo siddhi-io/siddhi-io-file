@@ -15,11 +15,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.siddhi.extension.io.file.function;
+package io.siddhi.extension.function.file;
 
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
@@ -29,6 +30,7 @@ import io.siddhi.core.executor.function.FunctionExecutor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.Attribute;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.commons.vfs2.FileObject;
@@ -40,7 +42,7 @@ import org.apache.log4j.Logger;
 
 import java.text.SimpleDateFormat;
 
-import static io.siddhi.extension.io.file.util.Constants.LAST_MODIFIED_DATETIME_FORMAT;
+import static io.siddhi.extension.util.Constant.LAST_MODIFIED_DATETIME_FORMAT;
 import static io.siddhi.query.api.definition.Attribute.Type.STRING;
 
 /**
@@ -49,43 +51,45 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
 @Extension(
         name = "lastModifiedTime",
         namespace = "file",
-        description = "This function checks for the last modified time for a given file path",
+        description = "Checks for the last modified time for a given file path",
         parameters = {
                 @Parameter(
-                        name = "file.path",
-                        description = "The file path to be checked for te last modified time.",
+                        name = "uri",
+                        description = "File path to be checked for te last modified time.",
                         type = DataType.STRING
                 ),
                 @Parameter(
                         name = "datetime.format",
-                        description = "The file path to be checked for the last modified datetime.",
+                        description = "Format of the last modified datetime to be returned.",
                         type = DataType.STRING,
                         optional = true,
                         defaultValue = "MM/dd/yyyy HH:mm:ss"
                 )
         },
+        parameterOverloads = {
+                @ParameterOverload(
+                        parameterNames = {"uri"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "datetime.format"}
+                )
+        },
         returnAttributes = {
                 @ReturnAttribute(
-                        description = "The last modified date time of a file in the given format.",
+                        description = "Last modified date time of a file in the given format.",
                         type = DataType.STRING
                 )
         },
         examples = {
                 @Example(
-                        syntax = "from FileLastModifiedStream\n" +
-                                "select file:lastModifiedTime(filePath) as lastModifiedTime\n" +
-                                "insert into  ResultStream;",
-                        description = "This query checks last modified datetime of a file. " +
-                                "Result will be returned as an string in " + LAST_MODIFIED_DATETIME_FORMAT +
-                                " format to the stream named 'RecordStream'."
+                        syntax = "file:lastModifiedTime(filePath) as lastModifiedTime",
+                        description = "Last modified datetime of a file will be returned as an string in " +
+                                LAST_MODIFIED_DATETIME_FORMAT + "."
                 ),
                 @Example(
-                        syntax = "from FileLastModifiedStream\n" +
-                                "select file:lastModifiedTime(filePath, dd/MM/yyyy HH:mm:ss) as lastModifiedTime\n" +
-                                "insert into  ResultStream;",
-                        description = "This query checks last modified datetime of a file. " +
-                                "Result will be returned as an string in 'dd/MM/yyyy HH:mm:ss' format " +
-                                "to the stream named 'RecordStream'."
+                        syntax = "file:lastModifiedTime(filePath, dd/MM/yyyy HH:mm:ss) as lastModifiedTime",
+                        description = "Last modified datetime of a file will be returned as an string in " +
+                                "'dd/MM/yyyy HH:mm:ss' format."
                 )
         }
 )
@@ -147,11 +151,8 @@ public class FileLastModifiedTimeExtension extends FunctionExecutor {
     @Override
     protected Object execute(Object data, State state) {
         String sourceFileUri = (String) data;
-        FileSystemOptions opts = new FileSystemOptions();
-        FileSystemManager fsManager;
         try {
-            fsManager = VFS.getManager();
-            FileObject fileObj = fsManager.resolveFile(sourceFileUri, opts);
+            FileObject fileObj = Utils.getFileObject(sourceFileUri);
             SimpleDateFormat sdf;
             sdf = new SimpleDateFormat(LAST_MODIFIED_DATETIME_FORMAT);
             return sdf.format(fileObj.getContent().getLastModifiedTime());
