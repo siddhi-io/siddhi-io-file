@@ -175,8 +175,6 @@ public class FileCopyExtension extends StreamProcessor<State> {
                         }
                     }
                 }
-                Object[] data = {true};
-                sendEvents(streamEvent, data, streamEventChunk);
             } catch (FileSystemException e) {
                 throw new SiddhiAppRuntimeException("Exception occurred when getting the file type " +
                         uri, e);
@@ -285,10 +283,5 @@ public class FileCopyExtension extends StreamProcessor<State> {
             throw new SiddhiAppRuntimeException("Exception occurred when copying content in file: " +
                     sourceFileObject.getName().getPath(), e);
         }
-    }
-
-    private void sendEvents(StreamEvent streamEvent, Object[] data, ComplexEventChunk<StreamEvent> streamEventChunk) {
-        complexEventPopulater.populateComplexEvent(streamEvent, data);
-        nextProcessor.process(streamEventChunk);
     }
 }

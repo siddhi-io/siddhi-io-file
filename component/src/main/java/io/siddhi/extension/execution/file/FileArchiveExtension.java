@@ -183,7 +183,11 @@ public class FileArchiveExtension extends StreamProcessor<State> {
                 File sourceFile = new File(uri);
                 List<String> fileList = new ArrayList<>();
                 generateFileList(uri, sourceFile, fileList, excludeSubdirectories);
-                zip(uri, destinationDirUri, fileList);
+                try {
+                    zip(uri, destinationDirUri, fileList);
+                } catch (IOException e) {
+                    throw new SiddhiAppRuntimeException("IOException occurred when archiving  " + uri, e);
+                }
             } else {
                 try {
                     if (archiveType.compareToIgnoreCase(TAR_FILE_EXTENSION) == 0) {
@@ -196,9 +200,6 @@ public class FileArchiveExtension extends StreamProcessor<State> {
                     throw new SiddhiAppRuntimeException("Exception occurred when archiving " + uri, e);
                 }
             }
-            Object[] data = {true};
-            complexEventPopulater.populateComplexEvent(streamEvent, data);
-            nextProcessor.process(streamEventChunk);
         }
     }
 
@@ -299,7 +300,7 @@ public class FileArchiveExtension extends StreamProcessor<State> {
      *
      * @param zipFile output ZIP file location
      */
-    private void zip(String sourceFileUri, String zipFile, List<String> fileList) {
+    private void zip(String sourceFileUri, String zipFile, List<String> fileList) throws IOException {
         byte[] buffer = new byte[1024];
         FileInputStream in = null;
         String filePath = null;
@@ -319,7 +320,6 @@ public class FileArchiveExtension extends StreamProcessor<State> {
                 }
                 ZipEntry ze = new ZipEntry(file);
                 zos.putNextEntry(ze);
-                filePath = sourceFileUri + File.separator + file;
                 in = new FileInputStream(sourceFileUri + File.separator + file);
                 int len;
                 while ((len = in.read(buffer)) > 0) {
@@ -328,27 +328,15 @@ public class FileArchiveExtension extends StreamProcessor<State> {
                 in.close();
             }
             zos.closeEntry();
-            //remember close it
-            zos.close();
             if (log.isDebugEnabled()) {
                 log.debug("Output to Zip : " + zipFile + " is complete for folder/ file: " + sourceFileUri);
             }
-        } catch (IOException e) {
-            throw new SiddhiAppRuntimeException("IOException occurred when archiving  " + sourceFileUri, e);
-        } finally {
+        }  finally {
             if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    log.error("IO exception occurred when closing file input stream for file path: " + filePath);
-                }
+                in.close();
             }
             if (zos != null) {
-                try {
-                    zos.close();
-                } catch (IOException e) {
-                    log.error("IO exception occurred when closing file input stream for file path: " + filePath);
-                }
+                zos.close();
             }
         }
     }

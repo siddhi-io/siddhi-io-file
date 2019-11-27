@@ -121,8 +121,6 @@ public class FileCreateExtension extends StreamProcessor<State> {
             try {
                 vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, properties);
                 vfsClientConnectorCallback.waitTillDone(WAIT_TILL_DONE, fileSourcePath);
-                Object[] data = {true};
-                sendEvents(streamEvent, data, streamEventChunk);
             } catch (ClientConnectorException e) {
                 throw new SiddhiAppRuntimeException("Failure occurred in vfs-client while creating the file " +
                         fileSourcePath, e);
@@ -188,10 +186,5 @@ public class FileCreateExtension extends StreamProcessor<State> {
     @Override
     public void stop() {
 
-    }
-
-    private void sendEvents(StreamEvent streamEvent, Object[] data, ComplexEventChunk<StreamEvent> streamEventChunk) {
-        complexEventPopulater.populateComplexEvent(streamEvent, data);
-        nextProcessor.process(streamEventChunk);
     }
 }

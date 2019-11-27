@@ -171,8 +171,6 @@ public class FileMoveExtension extends StreamProcessor<State> {
                         }
                     }
                 }
-                Object[] data = {true};
-                sendEvents(streamEvent, data, streamEventChunk);
             } catch (FileSystemException e) {
                 throw new SiddhiAppRuntimeException("Exception occurred when getting the file type " +
                         uri, e);
@@ -278,10 +276,5 @@ public class FileMoveExtension extends StreamProcessor<State> {
             throw new SiddhiAppRuntimeException("Exception occurred when doing file operations when moving for file: " +
                     sourceFileObject.getName().getPath(), e);
         }
-    }
-
-    private void sendEvents(StreamEvent streamEvent, Object[] data, ComplexEventChunk<StreamEvent> streamEventChunk) {
-        complexEventPopulater.populateComplexEvent(streamEvent, data);
-        nextProcessor.process(streamEventChunk);
     }
 }

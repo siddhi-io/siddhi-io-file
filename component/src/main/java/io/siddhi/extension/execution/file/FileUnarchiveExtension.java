@@ -96,13 +96,6 @@ import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
                         parameterNames = {"uri", "destination.dir.uri", "exclude.root.folder"}
                 )
         },
-        returnAttributes = {
-                @ReturnAttribute(
-                        name = "isSuccess",
-                        description = "The success of the file decompress process.",
-                        type = DataType.BOOL
-                )
-        },
         examples = {
                 @Example(
                         syntax = "file:unarchive('/User/wso2/source/test.zip', '/User/wso2/destination')",
@@ -153,7 +146,7 @@ public class FileUnarchiveExtension extends StreamProcessor<State> {
                             filePathUri);
                 }
             }
-            FileInputStream fis;
+            FileInputStream fis = null;
             //buffer for read and write data to file
             byte[] buffer = new byte[BUFFER_SIZE];
             ZipInputStream zis = null;
@@ -184,10 +177,6 @@ public class FileUnarchiveExtension extends StreamProcessor<State> {
                     }
                     //close last ZipEntry
                     zis.closeEntry();
-                    zis.close();
-                    fis.close();
-                    Object[] data = {true};
-                    sendEvents(streamEvent, data, streamEventChunk);
                 } else if (sourceFileExtension.compareToIgnoreCase(Constant.TAR_FILE_EXTENSION) == 0) {
                     try (TarArchiveInputStream fin = new TarArchiveInputStream(new FileInputStream(filePathUri))) {
                         TarArchiveEntry entry;
@@ -212,12 +201,19 @@ public class FileUnarchiveExtension extends StreamProcessor<State> {
                     try {
                         zis.close();
                     } catch (IOException e) {
-                        log.error("IO exception occurred when closing file input stream for file path: " + filePath);
+                        log.error("IO exception occurred when closing zip input stream for file path: " + filePath);
                     }
                 }
                 if (fos != null) {
                     try {
                         fos.close();
+                    } catch (IOException e) {
+                        log.error("IO exception occurred when closing file output stream for file path: " + filePath);
+                    }
+                }
+                if (fis != null) {
+                    try {
+                        fis.close();
                     } catch (IOException e) {
                         log.error("IO exception occurred when closing file input stream for file path: " + filePath);
                     }
@@ -288,11 +284,6 @@ public class FileUnarchiveExtension extends StreamProcessor<State> {
     @Override
     public void stop() {
 
-    }
-
-    private void sendEvents(StreamEvent streamEvent, Object[] data, ComplexEventChunk<StreamEvent> streamEventChunk) {
-        complexEventPopulater.populateComplexEvent(streamEvent, data);
-        nextProcessor.process(streamEventChunk);
     }
 
     private void createParentDirectory(File file, String filePathUri) {

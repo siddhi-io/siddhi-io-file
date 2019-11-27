@@ -49,7 +49,6 @@ public class FileFunctionsTestCase {
     public void doBeforeMethod() {
         count.set(0);
         try {
-            //FileUtils.copyDirectory(sourceRoot, tempSource);
             FileUtils.deleteDirectory(destination);
             FileUtils.forceMkdir(destination);
         } catch (IOException e) {
@@ -372,6 +371,8 @@ public class FileFunctionsTestCase {
         Thread.sleep(100);
         siddhiAppRuntime.shutdown();
 
+        count.set(0);
+
         app = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream ListArchivedFileStream(sample string);\n" +
@@ -389,8 +390,9 @@ public class FileFunctionsTestCase {
             public void receive(Event[] events) {
                 EventPrinter.print(events);
                 int n = count.getAndIncrement();
+                log.error(n);
                 for (Event event : events) {
-                    if (n > 0 && n <= 3) {
+                    if (n >= 0 && n < 3) {
                         AssertJUnit.assertTrue(fileList.contains(event.getData(0)));
                     } else {
                         AssertJUnit.fail("More events received than expected.");
@@ -538,6 +540,7 @@ public class FileFunctionsTestCase {
         Thread.sleep(100);
         siddhiAppRuntime.shutdown();
 
+        count.set(0);
         app = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream ListArchivedFileStream(sample string);\n" +
@@ -556,7 +559,7 @@ public class FileFunctionsTestCase {
                 EventPrinter.print(events);
                 int n = count.getAndIncrement();
                 for (Event event : events) {
-                    if (n > 0 && n <= 3) {
+                    if (n >= 0 && n < 3) {
                         AssertJUnit.assertTrue(fileList.contains(event.getData(0)));
                     } else {
                         AssertJUnit.fail("More events received than expected.");
@@ -788,10 +791,10 @@ public class FileFunctionsTestCase {
     }
 
     @Test
-    public void fileMoveFunction() throws InterruptedException {
+    public void fileMoveFunction() throws InterruptedException, IOException {
+        FileUtils.copyDirectory(sourceRoot, tempSource);
         log.info("test Siddhi Io File Function for move()");
         AssertJUnit.assertFalse(isFileExist(sourceRoot + "/destination", false));
-        count.set(0);
         String app = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream MoveFileStream(sample string);\n" +
