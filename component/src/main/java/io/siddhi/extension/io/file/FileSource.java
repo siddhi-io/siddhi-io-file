@@ -232,7 +232,7 @@ import java.util.regex.PatternSyntaxException;
                                 "tailing='false'\n " +
                                 "dir.uri='file://abc/xyz',\n" +
                                 "action.after.process='delete',\n" +
-                                "@map(type='json')) \n" +
+                                "@map(type='json' @attributes(eof = 'trp:eof'))) \n" +
                                 "define stream FooStream (symbol string, price float, volume long); \n",
 
                         description = "" +
@@ -252,7 +252,7 @@ import java.util.regex.PatternSyntaxException;
                                 "mode='files.repo.line',\n" +
                                 "tailing='true',\n" +
                                 "dir.uri='file://abc/xyz',\n" +
-                                "@map(type='json')) \n" +
+                                "@map(type='json', @attributes(eof = 'trp:eof') )) \n" +
                                 "define stream FooStream (symbol string, price float, volume long);\n ",
 
                         description = "" +
