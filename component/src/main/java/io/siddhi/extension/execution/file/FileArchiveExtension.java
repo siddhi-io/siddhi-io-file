@@ -21,26 +21,17 @@ import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.ParameterOverload;
-import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
-import io.siddhi.core.event.ComplexEventChunk;
-import io.siddhi.core.event.stream.MetaStreamEvent;
-import io.siddhi.core.event.stream.StreamEvent;
-import io.siddhi.core.event.stream.StreamEventCloner;
-import io.siddhi.core.event.stream.holder.StreamEventClonerHolder;
-import io.siddhi.core.event.stream.populater.ComplexEventPopulater;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.executor.ConstantExpressionExecutor;
 import io.siddhi.core.executor.ExpressionExecutor;
 import io.siddhi.core.query.processor.ProcessingMode;
-import io.siddhi.core.query.processor.Processor;
-import io.siddhi.core.query.processor.stream.StreamProcessor;
+import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
-import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
-import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
@@ -59,8 +50,6 @@ import java.util.zip.ZipOutputStream;
 
 import static io.siddhi.extension.util.Constant.TAR_FILE_EXTENSION;
 import static io.siddhi.extension.util.Constant.ZIP_FILE_EXTENSION;
-import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
-import static io.siddhi.query.api.definition.Attribute.Type.STRING;
 
 /**
  * This extension can be used to archive files.
@@ -89,8 +78,8 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
                         defaultValue = "zip"
                 ),
                 @Parameter(
-                        name = "regexp",
-                        description = "pattern to be checked before zipping the file.\n" +
+                        name = "include.by.regexp",
+                        description = "Only the files matching the patterns will be archived.\n" +
                                 "Note: Add an empty string to match all files",
                         type = DataType.STRING,
                         optional = true,
@@ -113,18 +102,11 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
                         parameterNames = {"uri", "destination.dir.uri", "archive.type"}
                 ),
                 @ParameterOverload(
-                        parameterNames = {"uri", "destination.dir.uri", "archive.type", "regexp"}
+                        parameterNames = {"uri", "destination.dir.uri", "archive.type", "include.by.regexp"}
                 ),
                 @ParameterOverload(
-                        parameterNames = {"uri", "destination.dir.uri", "archive.type", "regexp",
+                        parameterNames = {"uri", "destination.dir.uri", "archive.type", "include.by.regexp",
                                 "exclude.subdirectories"}
-                )
-        },
-        returnAttributes = {
-                @ReturnAttribute(
-                        name = "isSuccess",
-                        description = "Status of the file archive operation (true if success)",
-                        type = DataType.BOOL
                 )
         },
         examples = {
@@ -154,135 +136,80 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
                 )
         }
 )
-public class FileArchiveExtension extends StreamProcessor<State> {
+public class FileArchiveExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileArchiveExtension.class);
-    private Pattern pattern;
+    private Pattern pattern = null;
+    private int inputExecutorLength;
 
     @Override
-    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-                           StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater,
-                           State state) {
-        while (streamEventChunk.hasNext()) {
-            StreamEvent streamEvent = streamEventChunk.next();
-            String uri = (String) attributeExpressionExecutors[0].execute(streamEvent);
-            String destinationDirUri = (String) attributeExpressionExecutors[1].execute(streamEvent);
-            boolean excludeSubdirectories = false;
-            String regex = "";
-            String archiveType = ZIP_FILE_EXTENSION;
-            if (attributeExpressionExecutors.length >= 3) {
-                archiveType = (String) attributeExpressionExecutors[2].execute(streamEvent);
-            }
-            if (attributeExpressionExecutors.length >= 4) {
-                regex = (String) attributeExpressionExecutors[3].execute(streamEvent);
-            }
-            if (attributeExpressionExecutors.length == 5) {
-                excludeSubdirectories = (Boolean) attributeExpressionExecutors[4].execute(streamEvent);
-            }
-            pattern = Pattern.compile(regex);
-            if (archiveType.compareToIgnoreCase(ZIP_FILE_EXTENSION) == 0) {
-                File sourceFile = new File(uri);
-                List<String> fileList = new ArrayList<>();
-                generateFileList(uri, sourceFile, fileList, excludeSubdirectories);
-                try {
-                    zip(uri, destinationDirUri, fileList);
-                } catch (IOException e) {
-                    throw new SiddhiAppRuntimeException("IOException occurred when archiving  " + uri, e);
-                }
-            } else {
-                try {
-                    if (archiveType.compareToIgnoreCase(TAR_FILE_EXTENSION) == 0) {
-                        addToTarArchiveCompression(
-                                getTarArchiveOutputStream(destinationDirUri), new File(uri), uri);
-                    } else {
-                        throw new SiddhiAppRuntimeException("Unsupported archive type: " + archiveType);
-                    }
-                } catch (IOException e) {
-                    throw new SiddhiAppRuntimeException("Exception occurred when archiving " + uri, e);
-                }
-            }
-        }
-    }
-
-    @Override
-    protected StateFactory<State> init(MetaStreamEvent metaStreamEvent, AbstractDefinition inputDefinition,
-                                       ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
-                                       StreamEventClonerHolder streamEventClonerHolder,
-                                       boolean outputExpectsExpiredEvents, boolean findToBeExecuted,
-                                       SiddhiQueryContext siddhiQueryContext) {
-        if (attributeExpressionExecutors.length > 1 && attributeExpressionExecutors.length < 6) {
-            if (attributeExpressionExecutors[0] == null) {
-                throw new SiddhiAppValidationException("Invalid input given to uri (first argument) " +
-                        "file:archive() function. Argument cannot be null");
-            }
-            Attribute.Type firstAttributeType = attributeExpressionExecutors[0].getReturnType();
-            if (!(firstAttributeType == Attribute.Type.STRING)) {
-                throw new SiddhiAppValidationException("Invalid parameter type found for uri " +
-                        "(first argument) of file:archive() function, required " + Attribute.Type.STRING +
-                        " but found " + firstAttributeType.toString());
-            }
-            if (attributeExpressionExecutors[1] == null) {
-                throw new SiddhiAppValidationException("Invalid input given to destination.dir.uri (first argument) " +
-                        "file:archive() function. Argument cannot be null");
-            }
-            Attribute.Type secondAttributeType = attributeExpressionExecutors[1].getReturnType();
-            if (!(secondAttributeType == Attribute.Type.STRING)) {
-                throw new SiddhiAppValidationException("Invalid parameter type found for destination.dir.uri " +
-                        "(second argument) of file:archive() function, required " + Attribute.Type.STRING +
-                        " but found " + firstAttributeType.toString());
-            }
-            if (attributeExpressionExecutors.length == 3) {
-                if (attributeExpressionExecutors[2] == null) {
-                    throw new SiddhiAppValidationException("Invalid input given to exclude.subdirectories " +
-                            "(forth argument) file:archive() function. Argument cannot be null");
-                }
-                Attribute.Type thirdAttributeType = attributeExpressionExecutors[2].getReturnType();
-                if (!(thirdAttributeType == STRING)) {
-                    throw new SiddhiAppValidationException("Invalid parameter type found for exclude.subdirectories " +
-                            "(forth argument) of file:archive() function, required " + Attribute.Type.STRING +
-                            " but found " + firstAttributeType.toString());
-                }
-            }
-            if (attributeExpressionExecutors.length == 4) {
-                if (attributeExpressionExecutors[3] == null) {
-                    throw new SiddhiAppValidationException("Invalid input given to exclude.subdirectories " +
-                            "(forth argument) file:archive() function. Argument cannot be null");
-                }
-                Attribute.Type thirdAttributeType = attributeExpressionExecutors[3].getReturnType();
-                if (!(thirdAttributeType == STRING)) {
-                    throw new SiddhiAppValidationException("Invalid parameter type found for exclude.subdirectories " +
-                            "(forth argument) of file:archive() function, required " + Attribute.Type.STRING +
-                            " but found " + firstAttributeType.toString());
-                }
-            }
-            if (attributeExpressionExecutors.length == 5) {
-                if (attributeExpressionExecutors[4] == null) {
-                    throw new SiddhiAppValidationException("Invalid input given to regex " +
-                            "(third argument) file:archive() function. Argument cannot be null");
-                }
-                Attribute.Type thirdAttributeType = attributeExpressionExecutors[4].getReturnType();
-                if (!(thirdAttributeType == BOOL)) {
-                    throw new SiddhiAppValidationException("Invalid parameter type found for regex " +
-                            "(third argument) of file:archive() function, required " + Attribute.Type.STRING +
-                            " but found " + firstAttributeType.toString());
-                }
-            }
-        } else {
-            throw new SiddhiAppValidationException("Invalid no of arguments passed to file:archive() function, "
-                    + "required 2 or 3, but found " + attributeExpressionExecutors.length);
+    protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
+                                ConfigReader configReader, boolean outputExpectsExpiredEvents,
+                                SiddhiQueryContext siddhiQueryContext) {
+        inputExecutorLength = attributeExpressionExecutors.length;
+        if (attributeExpressionExecutors.length >= 4 &&
+                attributeExpressionExecutors[3] instanceof ConstantExpressionExecutor) {
+            pattern = Pattern.compile(
+                    ((ConstantExpressionExecutor) attributeExpressionExecutors[3]).getValue().toString());
         }
         return null;
     }
 
     @Override
     public List<Attribute> getReturnAttributes() {
-        List<Attribute> attributes = new ArrayList<>();
-        attributes.add(new Attribute("isSuccess", BOOL));
-        return attributes;
+        return new ArrayList<>();
     }
 
     @Override
     public ProcessingMode getProcessingMode() {
         return ProcessingMode.BATCH;
+    }
+
+    @Override
+    protected Object[] process(Object[] data) {
+        String uri = (String) data[0];
+        String destinationDirUri = (String) data[1];
+        boolean excludeSubdirectories = false;
+        String regex = "";
+        String archiveType = ZIP_FILE_EXTENSION;
+        if (inputExecutorLength >= 3) {
+            archiveType = (String) data[2];
+        }
+        if (inputExecutorLength >= 4) {
+            regex = (String) data[3];
+        }
+        if (inputExecutorLength == 5) {
+            excludeSubdirectories = (Boolean) data[4];
+        }
+        if (pattern == null) {
+            pattern = Pattern.compile(regex);
+        }
+        if (archiveType.compareToIgnoreCase(ZIP_FILE_EXTENSION) == 0) {
+            File sourceFile = new File(uri);
+            List<String> fileList = new ArrayList<>();
+            generateFileList(uri, sourceFile, fileList, excludeSubdirectories);
+            try {
+                zip(uri, destinationDirUri, fileList);
+            } catch (IOException e) {
+                throw new SiddhiAppRuntimeException("IOException occurred when archiving  " + uri, e);
+            }
+        } else {
+            try {
+                if (archiveType.compareToIgnoreCase(TAR_FILE_EXTENSION) == 0) {
+                    addToTarArchiveCompression(
+                            getTarArchiveOutputStream(destinationDirUri), new File(uri), uri);
+                } else {
+                    throw new SiddhiAppRuntimeException("Unsupported archive type: " + archiveType);
+                }
+            } catch (IOException e) {
+                throw new SiddhiAppRuntimeException("Exception occurred when archiving " + uri, e);
+            }
+        }
+        return new Object[0];
+    }
+
+    @Override
+    protected Object[] process(Object data) {
+        return new Object[0];
     }
 
     @Override
@@ -303,13 +230,13 @@ public class FileArchiveExtension extends StreamProcessor<State> {
     private void zip(String sourceFileUri, String zipFile, List<String> fileList) throws IOException {
         byte[] buffer = new byte[1024];
         FileInputStream in = null;
-        String filePath = null;
         ZipOutputStream zos = null;
+        FileOutputStream fos = null;
         try {
             if (!zipFile.endsWith(TAR_FILE_EXTENSION)) {
                 zipFile = zipFile.concat("." + ZIP_FILE_EXTENSION);
             }
-            FileOutputStream fos = new FileOutputStream(zipFile);
+            fos = new FileOutputStream(zipFile);
             zos = new ZipOutputStream(fos);
             if (log.isDebugEnabled()) {
                 log.debug("Output to Zip : " + zipFile + " started for folder/ file: " + sourceFileUri);
@@ -331,12 +258,27 @@ public class FileArchiveExtension extends StreamProcessor<State> {
             if (log.isDebugEnabled()) {
                 log.debug("Output to Zip : " + zipFile + " is complete for folder/ file: " + sourceFileUri);
             }
-        }  finally {
+        } finally {
             if (in != null) {
-                in.close();
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    log.error("IO exception occurred when closing zip input stream for file path: " + sourceFileUri);
+                }
             }
             if (zos != null) {
-                zos.close();
+                try {
+                    zos.close();
+                } catch (IOException e) {
+                    log.error("IO exception occurred when closing zip output stream for file path: " + sourceFileUri);
+                }
+            }
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    log.error("IO exception occurred when closing file output stream for file path: " + sourceFileUri);
+                }
             }
         }
     }

@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.siddhi.extension.function.file;
+package io.siddhi.extension.execution.file;
 
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -31,59 +31,46 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.Attribute;
-import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.log4j.Logger;
 
 import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
-import static io.siddhi.query.api.definition.Attribute.Type.STRING;
 
 /**
- * This extension can be used to check the size of a given file.
+ * This extension can be used to check if there is a file in the given path.
  */
 @Extension(
-        name = "isDirectory",
+        name = "isFile",
         namespace = "file",
-        description = "This function checks for a given file path points to a directory",
+        description = "This function checks for a given file path points to a file",
         parameters = {
                 @Parameter(
-                        name = "uri",
-                        description = "The path to be checked for a directory.",
+                        name = "file.path",
+                        description = "The path to be checked for a file.",
                         type = DataType.STRING
                 )
         },
         returnAttributes = {
                 @ReturnAttribute(
-                        description = "Value will be set to true if the directory exists in the given path. " +
+                        description = "Value will be set to true if the file exists in the given path. " +
                                 "False if otherwise.",
                         type = DataType.BOOL
                 )
         },
         examples = {
                 @Example(
-                        syntax = "file:isDirectory(filePath) as isDirectory",
-                        description = "Checks whether the given path is a directory. Result will be returned as an " +
+                        syntax = "file:isFile(filePath) as isFile",
+                        description = "Checks whether the given path is a file. Result will be returned as an " +
                                 "boolean."
                 )
         }
 )
-public class FileIsDirectoryExtension extends FunctionExecutor {
-    private static final Logger log = Logger.getLogger(FileIsDirectoryExtension.class);
+public class FileIsFileExtension extends FunctionExecutor {
+    private static final Logger log = Logger.getLogger(FileIsFileExtension.class);
     private Attribute.Type returnType = BOOL;
     @Override
     protected StateFactory init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
                                 SiddhiQueryContext siddhiQueryContext) {
-        int executorsCount = attributeExpressionExecutors.length;
-        if (attributeExpressionExecutors.length != 1) {
-            throw new SiddhiAppValidationException("Invalid no of arguments passed to file:isDirectory() function, "
-                    + "required 1, but found " + executorsCount);
-        }
-        ExpressionExecutor executor1 = attributeExpressionExecutors[0];
-        if (executor1.getReturnType() != STRING) {
-            throw new SiddhiAppValidationException("Invalid parameter type found for the filePath (first argument) of "
-                    + "file:isDirectory() function, required " + STRING.toString() + ", but found "
-                    + executor1.getReturnType().toString());
-        }
         return null;
     }
 
@@ -96,7 +83,7 @@ public class FileIsDirectoryExtension extends FunctionExecutor {
     protected Object execute(Object data, State state) {
         String filePathUri = (String) data;
         try {
-            return Utils.getFileObject(filePathUri).isFolder();
+            return Utils.getFileObject(filePathUri).isFile();
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when checking type of file in path: " +
                     filePathUri, e);

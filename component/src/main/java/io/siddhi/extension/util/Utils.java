@@ -24,9 +24,16 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.VFS;
+import org.apache.commons.vfs2.provider.UriParser;
+import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
+import org.wso2.transport.file.connector.server.exception.FileServerConnectorException;
+import org.wso2.transport.file.connector.server.util.Constants;
+import org.wso2.transport.file.connector.server.util.FileTransportUtils;
 
-import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Util Class.
@@ -39,13 +46,25 @@ public class Utils {
      * @return FileObject retried by the given uri
      */
     public static FileObject getFileObject(String filePathUri) {
-        FileSystemOptions opts = new FileSystemOptions();
+        Map<String, String> sourceOptions = Utils.parseSchemeFileOptions(filePathUri, new Properties());
+        FileSystemOptions sourceFso;
         FileSystemManager fsManager;
         try {
             fsManager = VFS.getManager();
-            return fsManager.resolveFile(filePathUri, opts);
+            sourceFso = FileTransportUtils.attachFileSystemOptions(sourceOptions, fsManager);
+        } catch (FileServerConnectorException e) {
+            throw new SiddhiAppRuntimeException("Exception occurred when parsing scheme file options for path: " +
+                    sourceOptions, e);
         } catch (FileSystemException e) {
-            throw new SiddhiAppRuntimeException("Exception occurred when checking type of file in path: " +
+            throw new SiddhiAppRuntimeException("Exception occurred when getting VFS manager", e);
+        }
+        if (sourceOptions != null && "ftp".equals(sourceOptions.get("VFS_SCHEME"))) {
+            FtpFileSystemConfigBuilder.getInstance().setPassiveMode(sourceFso, true);
+        }
+        try {
+            return fsManager.resolveFile(filePathUri, sourceFso);
+        } catch (FileSystemException e) {
+            throw new SiddhiAppRuntimeException("Exception occurred when resolving path for: " +
                     filePathUri, e);
         }
     }
@@ -56,16 +75,45 @@ public class Utils {
      *
      * @param node file or directory
      */
-    public static void generateFileList(File node, List<String> fileList, boolean excludeSubdirectories) {
-        //add file only
-        if (node.isFile()) {
-            fileList.add(node.getAbsoluteFile().toString());
+    public static void generateFileList(FileObject node, List<FileObject> fileObjectList,
+                                        boolean excludeSubdirectories) {
+        try {
+            if (node.isFile()) {
+                fileObjectList.add(node);
+            }
+            if (node.isFolder() && !excludeSubdirectories) {
+                FileObject[] subNote = node.getChildren();
+                if (subNote != null) {
+                    for (FileObject file : subNote) {
+                        generateFileList(file, fileObjectList, false);
+                    }
+                }
+            }
+        } catch (FileSystemException e) {
+            throw new SiddhiAppRuntimeException("Exception occurred when checking file type for " +
+                    node.getName().getPath(), e);
         }
-        if (node.isDirectory() && !excludeSubdirectories) {
-            String[] subNote = node.list();
-            if (subNote != null) {
-                for (String filename : subNote) {
-                    generateFileList(new File(node, filename), fileList, false);
+    }
+
+    private static Map<String, String> parseSchemeFileOptions(String fileURI, Properties properties) {
+        String scheme = UriParser.extractScheme(fileURI);
+        if (scheme == null) {
+            return null;
+        } else {
+            HashMap<String, String> schemeFileOptions = new HashMap();
+            schemeFileOptions.put("VFS_SCHEME", scheme);
+            addOptions(scheme, schemeFileOptions, properties);
+            return schemeFileOptions;
+        }
+    }
+
+    private static void addOptions(String scheme, Map<String, String> schemeFileOptions, Properties properties) {
+        if (scheme.equals("sftp")) {
+            Constants.SftpFileOption[] sftpFileOptions = Constants.SftpFileOption.values();
+            for (Constants.SftpFileOption option : sftpFileOptions) {
+                String strValue = (String) properties.get("sftp" + option.toString());
+                if (strValue != null && !strValue.equals("")) {
+                    schemeFileOptions.put(option.toString(), strValue);
                 }
             }
         }

@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.siddhi.extension.function.file;
+package io.siddhi.extension.execution.file;
 
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -25,6 +25,7 @@ import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.executor.ConstantExpressionExecutor;
 import io.siddhi.core.executor.ExpressionExecutor;
 import io.siddhi.core.executor.function.FunctionExecutor;
 import io.siddhi.core.util.config.ConfigReader;
@@ -32,12 +33,8 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.Attribute;
-import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.FileSystemOptions;
-import org.apache.commons.vfs2.VFS;
 import org.apache.log4j.Logger;
 
 import java.text.SimpleDateFormat;
@@ -96,30 +93,19 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
 public class FileLastModifiedTimeExtension extends FunctionExecutor {
     private static final Logger log = Logger.getLogger(FileLastModifiedTimeExtension.class);
     private Attribute.Type returnType = STRING;
-
+    private SimpleDateFormat simpleDateFormat = null;
+    private int inputExecutorLength;
     @Override
     protected StateFactory init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
                                 SiddhiQueryContext siddhiQueryContext) {
-        int executorsCount = attributeExpressionExecutors.length;
-        if (executorsCount == 1 || executorsCount == 2) {
-            ExpressionExecutor executor1 = attributeExpressionExecutors[0];
-            if (executor1.getReturnType() != STRING) {
-                throw new SiddhiAppValidationException("Invalid parameter type found for the filePath " +
-                        "(first argument) of file:lastModifiedTime() function, required " + STRING.toString() +
-                        ", but found " + executor1.getReturnType().toString());
-
-            }
-            if (executorsCount == 2) {
-                ExpressionExecutor executor2 = attributeExpressionExecutors[1];
-                if (executor2.getReturnType() != STRING) {
-                    throw new SiddhiAppValidationException("Invalid parameter type found for the datetimeFormat " +
-                            "(second argument) of file:lastModifiedTime() function,required " + STRING.toString() +
-                            ", but found " + executor2.getReturnType().toString());
-                }
+        inputExecutorLength = attributeExpressionExecutors.length;
+        if (attributeExpressionExecutors.length >= 2) {
+            if (attributeExpressionExecutors[2] instanceof ConstantExpressionExecutor) {
+                simpleDateFormat = new SimpleDateFormat(((ConstantExpressionExecutor)
+                        attributeExpressionExecutors[1]).getValue().toString());
             }
         } else {
-            throw new SiddhiAppValidationException("Invalid no of arguments passed to file:lastModifiedTime() " +
-                    "function, required 2, but found " + executorsCount);
+            simpleDateFormat = new SimpleDateFormat(LAST_MODIFIED_DATETIME_FORMAT);
         }
         return null;
     }
@@ -127,24 +113,26 @@ public class FileLastModifiedTimeExtension extends FunctionExecutor {
     @Override
     protected Object execute(Object[] data, State state) {
         String sourceFileUri = (String) data[0];
-        String pattern = (String) data[1];
-        FileSystemOptions opts = new FileSystemOptions();
-        FileSystemManager fsManager;
-        try {
-            fsManager = VFS.getManager();
-            FileObject fileObj = fsManager.resolveFile(sourceFileUri, opts);
-            SimpleDateFormat sdf;
+        if (inputExecutorLength == 2 && simpleDateFormat == null) {
+            String pattern = (String) data[1];
             if (pattern != null && !pattern.isEmpty()) {
-                sdf = new SimpleDateFormat(pattern);
+                try {
+                    simpleDateFormat = new SimpleDateFormat(pattern);
+                } catch (IllegalArgumentException e) {
+                    throw new SiddhiAppRuntimeException("Illegal pattern: " + pattern +
+                            ", given to the datetime pattern ", e);
+                }
             } else {
-                sdf = new SimpleDateFormat(LAST_MODIFIED_DATETIME_FORMAT);
+                throw new SiddhiAppRuntimeException("Exception occurred when getting datetime pattern. " +
+                        "Pattern is either null or empty " + sourceFileUri);
             }
-            return sdf.format(fileObj.getContent().getLastModifiedTime());
+        }
+        try {
+            FileObject fileObj = Utils.getFileObject(sourceFileUri);
+            return simpleDateFormat.format(fileObj.getContent().getLastModifiedTime());
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when getting the last modified datetime of " +
                     sourceFileUri, e);
-        } catch (IllegalArgumentException e) {
-            throw new SiddhiAppRuntimeException("Illegal pattern: " + pattern + ", given to the datetime pattern ", e);
         }
     }
 

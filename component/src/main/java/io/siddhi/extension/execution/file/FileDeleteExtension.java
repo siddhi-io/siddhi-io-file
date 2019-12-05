@@ -20,42 +20,24 @@ package io.siddhi.extension.execution.file;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
-import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
-import io.siddhi.core.event.ComplexEventChunk;
-import io.siddhi.core.event.stream.MetaStreamEvent;
-import io.siddhi.core.event.stream.StreamEvent;
-import io.siddhi.core.event.stream.StreamEventCloner;
-import io.siddhi.core.event.stream.holder.StreamEventClonerHolder;
-import io.siddhi.core.event.stream.populater.ComplexEventPopulater;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.executor.ExpressionExecutor;
 import io.siddhi.core.query.processor.ProcessingMode;
-import io.siddhi.core.query.processor.Processor;
-import io.siddhi.core.query.processor.stream.StreamProcessor;
+import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
-import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
-import io.siddhi.extension.io.file.util.Constants;
-import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
+import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
-import io.siddhi.query.api.exception.SiddhiAppValidationException;
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.Selectors;
 import org.apache.log4j.Logger;
-import org.wso2.carbon.messaging.BinaryCarbonMessage;
-import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
-import org.wso2.transport.file.connector.sender.VFSClientConnector;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import static io.siddhi.extension.io.file.util.Constants.WAIT_TILL_DONE;
-import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
 
 /**
  * This extension can be used to delete a file or a folder.
@@ -71,13 +53,6 @@ import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
                         type = DataType.STRING
                 )
         },
-        returnAttributes = {
-                @ReturnAttribute(
-                        name = "isSuccess",
-                        description = "Success of the file deletion.",
-                        type = DataType.BOOL
-                )
-        },
         examples = {
                 @Example(
                         syntax = "from DeleteFileStream#file:delete('/User/wso2/source/test.txt')",
@@ -89,70 +64,41 @@ import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
                 )
         }
 )
-public class FileDeleteExtension extends StreamProcessor<State> {
+public class FileDeleteExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileDeleteExtension.class);
 
     @Override
-    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-                           StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater,
-                           State state) {
-        while (streamEventChunk.hasNext()) {
-            StreamEvent streamEvent = streamEventChunk.next();
-            String fileDeletePathUri = (String) attributeExpressionExecutors[0].execute(streamEvent);
-            VFSClientConnector vfsClientConnector = new VFSClientConnector();
-            VFSClientConnectorCallback vfsClientConnectorCallback = new VFSClientConnectorCallback();
-            BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
-                    fileDeletePathUri.getBytes(StandardCharsets.UTF_8)), true);
-            Map<String, String> properties = new HashMap<>();
-            properties.put(Constants.URI, fileDeletePathUri);
-            properties.put(Constants.ACTION, Constants.DELETE);
-            try {
-                vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, properties);
-                vfsClientConnectorCallback.waitTillDone(WAIT_TILL_DONE, fileDeletePathUri);
-            } catch (ClientConnectorException e) {
-                throw new SiddhiAppRuntimeException("Failure occurred in vfs-client while deleting the file " +
-                        fileDeletePathUri, e);
-            } catch (InterruptedException e) {
-                throw new SiddhiAppRuntimeException("Failed to get callback from vfs-client for file " +
-                        fileDeletePathUri, e);
-            }
-        }
-    }
-
-    @Override
-    protected StateFactory<State> init(MetaStreamEvent metaStreamEvent, AbstractDefinition inputDefinition,
-                                       ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
-                                       StreamEventClonerHolder streamEventClonerHolder,
-                                       boolean outputExpectsExpiredEvents, boolean findToBeExecuted,
-                                       SiddhiQueryContext siddhiQueryContext) {
-        if (attributeExpressionExecutors.length == 1) {
-            if (attributeExpressionExecutors[0] == null) {
-                throw new SiddhiAppValidationException("Invalid input given to uri (first argument) " +
-                        "file:delete() function. Argument cannot be null");
-            }
-            Attribute.Type firstAttributeType = attributeExpressionExecutors[0].getReturnType();
-            if (!(firstAttributeType == Attribute.Type.STRING)) {
-                throw new SiddhiAppValidationException("Invalid parameter type found for uri " +
-                        "(first argument) of file:delete() function, required " + Attribute.Type.STRING +
-                        " but found " + firstAttributeType.toString());
-            }
-        } else {
-            throw new SiddhiAppValidationException("Invalid no of arguments passed to file:copy() function, "
-                    + "required 1, but found " + attributeExpressionExecutors.length);
-        }
+    protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
+                                ConfigReader configReader, boolean outputExpectsExpiredEvents,
+                                SiddhiQueryContext siddhiQueryContext) {
         return null;
     }
 
     @Override
     public List<Attribute> getReturnAttributes() {
-        List<Attribute> attributes = new ArrayList<>();
-        attributes.add(new Attribute("isSuccess", BOOL));
-        return attributes;
+        return new ArrayList<>();
     }
 
     @Override
     public ProcessingMode getProcessingMode() {
         return ProcessingMode.BATCH;
+    }
+
+    @Override
+    protected Object[] process(Object[] data) {
+        return new Object[0];
+    }
+
+    @Override
+    protected Object[] process(Object data) {
+        String fileDeletePathUri = (String) data;
+        try {
+            FileObject rootFileObject = Utils.getFileObject(fileDeletePathUri);
+            rootFileObject.delete(Selectors.SELECT_ALL);
+        } catch (FileSystemException e) {
+            throw new SiddhiAppRuntimeException("Failure occurred when deleting the file " + fileDeletePathUri, e);
+        }
+        return new Object[0];
     }
 
     @Override

@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.siddhi.extension.function.file;
+package io.siddhi.extension.execution.file;
 
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
