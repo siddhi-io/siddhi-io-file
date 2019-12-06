@@ -122,6 +122,17 @@
                 <artifactId>commons-net</artifactId>
                 <version>${commons-net.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${org.apache.commons-compress.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.siddhi.extension.execution.list</groupId>
+                <artifactId>siddhi-execution-list</artifactId>
+                <version>${siddhi.execution.list}</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -129,11 +140,13 @@
         <siddhi.version>5.1.5</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
         <wso2.transport.file.version>6.0.60</wso2.transport.file.version>
+        <org.apache.commons-compress.version>1.14</org.apache.commons-compress.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>5.0.2</siddhi.map.json.version>
         <siddhi.map.xml.version>5.0.2</siddhi.map.xml.version>
         <siddhi.map.text.version>2.0.1</siddhi.map.text.version>
         <siddhi.map.csv.version>2.0.1</siddhi.map.csv.version>
+        <siddhi.execution.list>1.0.0</siddhi.execution.list>
         <jacoco.version>0.7.9</jacoco.version>
         <commons-net.version>3.6</commons-net.version>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>

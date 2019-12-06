@@ -85,6 +85,14 @@
             <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.siddhi.extension.execution.list</groupId>
+            <artifactId>siddhi-execution-list</artifactId>
+        </dependency>
     </dependencies>
     <profiles>
         <profile>

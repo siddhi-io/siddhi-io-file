@@ -44,6 +44,7 @@ public class Constants {
     public static final String TIMEOUT = "timeout";
     public static final String ADD_EVENT_SEPARATOR = "add.line.separator";
     public static final String FILE_READ_WAIT_TIMEOUT = "file.read.wait.timeout";
+    public static final int WAIT_TILL_DONE = 5000;
 
     /* configuration param values*/
     public static final String MOVE = "move";
@@ -55,6 +56,7 @@ public class Constants {
     public static final String TRUE = "true";
     public static final String FALSE = "false";
     public static final String NONE = "none";
+    public static final int BUFFER_SIZE = 4096;
 
     /*property keys*/
     public static final String ACTION = "action";
@@ -96,5 +98,4 @@ public class Constants {
     public static final String LAST_MODIFIED_TIMESTAMP = "lastModifiedTimestamp";
 
     public static final String UTF_8 = "UTF-8";
-
 }
