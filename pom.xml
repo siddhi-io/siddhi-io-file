@@ -125,7 +125,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
-                <version>1.14</version>
+                <version>${org.apache.commons-compress.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.siddhi.extension.execution.list</groupId>
@@ -140,6 +140,7 @@
         <siddhi.version>5.1.5</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
         <wso2.transport.file.version>6.0.60</wso2.transport.file.version>
+        <org.apache.commons-compress.version>1.14</org.apache.commons-compress.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>5.0.2</siddhi.map.json.version>
         <siddhi.map.xml.version>5.0.2</siddhi.map.xml.version>

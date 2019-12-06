@@ -35,6 +35,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import static io.siddhi.extension.util.Constant.FTP_SCHEME_FILE_OPTION;
+import static io.siddhi.extension.util.Constant.SFTP_SCHEME_FILE_OPTION;
+import static io.siddhi.extension.util.Constant.VFS_SCHEME_KEY;
+
 /**
  * Util Class.
  */
@@ -58,7 +62,7 @@ public class Utils {
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when getting VFS manager", e);
         }
-        if (sourceOptions != null && "ftp".equals(sourceOptions.get("VFS_SCHEME"))) {
+        if (sourceOptions != null && FTP_SCHEME_FILE_OPTION.equals(sourceOptions.get(VFS_SCHEME_KEY))) {
             FtpFileSystemConfigBuilder.getInstance().setPassiveMode(sourceFso, true);
         }
         try {
@@ -101,18 +105,18 @@ public class Utils {
             return null;
         } else {
             HashMap<String, String> schemeFileOptions = new HashMap();
-            schemeFileOptions.put("VFS_SCHEME", scheme);
+            schemeFileOptions.put(VFS_SCHEME_KEY, scheme);
             addOptions(scheme, schemeFileOptions, properties);
             return schemeFileOptions;
         }
     }
 
     private static void addOptions(String scheme, Map<String, String> schemeFileOptions, Properties properties) {
-        if (scheme.equals("sftp")) {
+        if (scheme.equals(SFTP_SCHEME_FILE_OPTION)) {
             Constants.SftpFileOption[] sftpFileOptions = Constants.SftpFileOption.values();
             for (Constants.SftpFileOption option : sftpFileOptions) {
-                String strValue = (String) properties.get("sftp" + option.toString());
-                if (strValue != null && !strValue.equals("")) {
+                String strValue = (String) properties.get(SFTP_SCHEME_FILE_OPTION + option.toString());
+                if (strValue != null && !strValue.isEmpty()) {
                     schemeFileOptions.put(option.toString(), strValue);
                 }
             }
