@@ -54,13 +54,15 @@ import java.util.regex.Pattern;
                 @Parameter(
                         name = "uri",
                         description = "Absolute file or directory path.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "destination.dir.uri",
                         description = "Absolute file path to the destination directory.\n" +
                                 "Note: Parent folder structure will be created if it does not exist.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "include.by.regexp",

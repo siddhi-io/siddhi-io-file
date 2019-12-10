@@ -53,7 +53,8 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
                 @Parameter(
                         name = "uri",
                         description = "Absolute path to the file or directory to be checked for the size.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 )
         },
         returnAttributes = {

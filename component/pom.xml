@@ -81,17 +81,18 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.siddhi.extension.execution.list</groupId>
             <artifactId>siddhi-execution-list</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <profiles>
@@ -146,16 +147,20 @@
                             org.wso2.transport.remotefilesystem.*,
                             org.wso2.carbon.messaging.*,
                             org.apache.commons.vfs2.*,
+                            org.apache.commons.compress.*,
                             org.wso2.transport.file.*,
                             org.apache.commons.net.*,
-                            org.quartz.*
+                            org.quartz.*,
+                            io.siddhi.extension.util.*
                         </Private-Package>
                         <Export-Package>
                             io.siddhi.extension.io.file.*,
+                            io.siddhi.extension.execution.file.*,
                             !org.wso2.carbon.connector.framework.*,
                             !org.wso2.transport.remotefilesystem.*,
                             !org.wso2.carbon.messaging.*,
                             !org.apache.commons.vfs2.*,
+                            !org.apache.commons.compress.*,
                             !org.wso2.transport.file.*,
                             !org.apache.commons.net.*,
                             !org.quartz.*

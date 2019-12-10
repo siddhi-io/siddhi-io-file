@@ -214,12 +214,12 @@ public class FileSearchExtension extends StreamFunctionProcessor {
             throw new SiddhiAppRuntimeException("Exception occurred when getting the searching files in path " +
                     sourceFileUri, e);
         }
-        return fileList.toArray();
+        return new Object[]{fileList};
     }
 
     @Override
     protected Object[] process(Object data) {
-        return new Object[0];
+        return process(new Object[]{data});
     }
 
     /**

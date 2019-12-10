@@ -49,12 +49,14 @@ import java.util.List;
                 @Parameter(
                         name = "uri",
                         description = "Absolute file path which needs to be created.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "is.directory",
                         description = "This flag is used when creating file path is a directory",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 )
         },
         examples = {

@@ -30,11 +30,14 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemException;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedInputStream;
@@ -63,12 +66,14 @@ import static io.siddhi.extension.util.Constant.ZIP_FILE_EXTENSION;
                 @Parameter(
                         name = "uri",
                         description = "Absolute path of the file or the directory",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "destination.dir.uri",
                         description = "Absolute directory path of the the archived file.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "archive.type",
@@ -168,6 +173,9 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
     protected Object[] process(Object[] data) {
         String uri = (String) data[0];
         String destinationDirUri = (String) data[1];
+        if (destinationDirUri.lastIndexOf(File.separator) != destinationDirUri.length() - 1) {
+            destinationDirUri = destinationDirUri + File.separator;
+        }
         boolean excludeSubdirectories = false;
         String regex = "";
         String archiveType = ZIP_FILE_EXTENSION;
@@ -183,12 +191,23 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
         if (pattern == null) {
             pattern = Pattern.compile(regex);
         }
+        FileObject destinationDirUriObject = Utils.getFileObject(destinationDirUri);
+        try {
+            if (!destinationDirUriObject.exists() || !destinationDirUriObject.isFolder()) {
+                destinationDirUriObject.createFolder();
+            }
+        } catch (FileSystemException e) {
+            throw new SiddhiAppRuntimeException(
+                    "Exception occurred when creating the subdirectories for the destination directory  " +
+                            destinationDirUriObject.getName().getPath(), e);
+        }
+        File sourceFile = new File(uri);
+        String archivingFile = destinationDirUri + sourceFile.getName();
         if (archiveType.compareToIgnoreCase(ZIP_FILE_EXTENSION) == 0) {
-            File sourceFile = new File(uri);
             List<String> fileList = new ArrayList<>();
             generateFileList(uri, sourceFile, fileList, excludeSubdirectories);
             try {
-                zip(uri, destinationDirUri, fileList);
+                zip(uri, archivingFile, fileList);
             } catch (IOException e) {
                 throw new SiddhiAppRuntimeException("IOException occurred when archiving  " + uri, e);
             }
@@ -196,7 +215,7 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
             try {
                 if (archiveType.compareToIgnoreCase(TAR_FILE_EXTENSION) == 0) {
                     addToTarArchiveCompression(
-                            getTarArchiveOutputStream(destinationDirUri), new File(uri), uri);
+                            getTarArchiveOutputStream(archivingFile), sourceFile, uri);
                 } else {
                     throw new SiddhiAppRuntimeException("Unsupported archive type: " + archiveType);
                 }
@@ -233,7 +252,7 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
         ZipOutputStream zos = null;
         FileOutputStream fos = null;
         try {
-            if (!zipFile.endsWith(TAR_FILE_EXTENSION)) {
+            if (!zipFile.endsWith(ZIP_FILE_EXTENSION)) {
                 zipFile = zipFile.concat("." + ZIP_FILE_EXTENSION);
             }
             fos = new FileOutputStream(zipFile);

@@ -131,7 +131,6 @@
                 <groupId>io.siddhi.extension.execution.list</groupId>
                 <artifactId>siddhi-execution-list</artifactId>
                 <version>${siddhi.execution.list}</version>
-                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -53,7 +53,8 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
                 @Parameter(
                         name = "uri",
                         description = "File path to be checked for te last modified time.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "datetime.format",

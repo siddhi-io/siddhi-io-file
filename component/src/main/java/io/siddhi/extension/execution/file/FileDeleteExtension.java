@@ -50,7 +50,8 @@ import java.util.List;
                 @Parameter(
                         name = "uri",
                         description = "Absolute path of the file or the directory to be deleted.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 )
         },
         examples = {

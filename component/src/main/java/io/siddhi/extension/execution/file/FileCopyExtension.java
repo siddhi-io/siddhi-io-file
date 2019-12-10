@@ -36,8 +36,6 @@ import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.Selectors;
 import org.apache.log4j.Logger;
 
@@ -57,13 +55,15 @@ import java.util.regex.Pattern;
                 @Parameter(
                         name = "uri",
                         description = "Absolute path of the File or the directory.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "destination.dir.uri",
                         description = "Absolute path of the destination directory.\n" +
                                 "Note: Parent folder structure will be created if it does not exist.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "include.by.regexp",
