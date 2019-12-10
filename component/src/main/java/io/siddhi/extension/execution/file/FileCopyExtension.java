@@ -122,6 +122,7 @@ import java.util.regex.Pattern;
         }
 )
 public class FileCopyExtension extends StreamFunctionProcessor {
+
     private static final Logger log = Logger.getLogger(FileCopyExtension.class);
     private Pattern pattern = null;
     private int inputExecutorLength;
