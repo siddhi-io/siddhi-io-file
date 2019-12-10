@@ -171,7 +171,6 @@ public class FileUnarchiveExtension extends StreamFunctionProcessor {
                     if (!fileName.isEmpty()) {
                         filePath = destinationDirUri + File.separator + fileName;
                         File newFile = new File(filePath);
-
                         if (log.isDebugEnabled()) {
                             log.debug("Decompressing: " + newFile.getAbsolutePath());
                         }
@@ -183,12 +182,10 @@ public class FileUnarchiveExtension extends StreamFunctionProcessor {
                         }
                         fos.close();
                     }
-                    //close this ZipEntry
+                    //Closes the current ZIP entry and positions the stream for reading the next entry
                     zis.closeEntry();
                     ze = zis.getNextEntry();
                 }
-                //close last ZipEntry
-                zis.closeEntry();
             } else if (sourceFileExtension.compareToIgnoreCase(Constant.TAR_FILE_EXTENSION) == 0) {
                 try (TarArchiveInputStream fin = new TarArchiveInputStream(new FileInputStream(filePathUri))) {
                     TarArchiveEntry entry;
