@@ -218,7 +218,7 @@ public class FileFunctionsTestCase {
         stockStream.send(new Object[]{"WSO2"});
         Thread.sleep(100);
         siddhiAppRuntime.shutdown();
-        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/archive/folder2/test3.txt", false));
+        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/archive/subFolder/test3.txt", false));
         AssertJUnit.assertFalse(isFileExist(sourceRoot + "/destination/archive/test.txt", false));
         AssertJUnit.assertTrue(isFileExist(sourceRoot + "/archive/test.txt", false));
     }
@@ -364,7 +364,7 @@ public class FileFunctionsTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "define stream ArchiveFileStream(sample string);\n" +
                 "from ArchiveFileStream#" +
-                "file:archive('" + sourceRoot + "/archive/', '" + destination + "/file', 'tar')\n" +
+                "file:archive('" + sourceRoot + "/archive/', '" + destination + "', 'tar')\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -394,7 +394,7 @@ public class FileFunctionsTestCase {
         app = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream ListArchivedFileStream(sample string);\n" +
-                "from ListArchivedFileStream#file:searchInArchive('" + destination + "/file.tar')\n" +
+                "from ListArchivedFileStream#file:searchInArchive('" + destination + "/archive.tar')\n" +
                 "select fileNameList \n" +
                 "insert into FileNameListStream;\n" + //;// +
                 "from FileNameListStream#list:tokenize(fileNameList)\n" +
@@ -404,7 +404,7 @@ public class FileFunctionsTestCase {
         InputHandler listArchivedFileStream = siddhiAppRuntime2.getInputHandler("ListArchivedFileStream");
         List<String> fileList = new ArrayList<>();
         fileList.add("test2.txt");
-        fileList.add("folder2/test3.txt");
+        fileList.add("subFolder/test3.txt");
         fileList.add("test.txt");
         siddhiAppRuntime2.addCallback("ResultStream", new StreamCallback() {
             @Override
@@ -438,7 +438,7 @@ public class FileFunctionsTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "define stream UnArchiveFileStream(sample string);\n" +
                 "from UnArchiveFileStream#" +
-                "file:unarchive('" + destination + "/file.tar', '" + unzipLocation.getAbsolutePath() + "')\n" +
+                "file:unarchive('" + destination + "/archive.tar', '" + unzipLocation.getAbsolutePath() + "')\n" +
                 "select *\n" +
                 "insert into ResultStream;";
 
@@ -469,7 +469,7 @@ public class FileFunctionsTestCase {
                 "define stream UnArchiveFileStream(sample string);\n" +
                 "from UnArchiveFileStream#" +
                 "file:unarchive" +
-                "('" + destination + "/file.tar', '" + unzipLocation.getAbsolutePath() + "', " + true + ")\n" +
+                "('" + destination + "/archive.tar', '" + unzipLocation.getAbsolutePath() + "', " + true + ")\n" +
                 "select *\n" +
                 "insert into ResultStream;";
 
@@ -493,8 +493,42 @@ public class FileFunctionsTestCase {
         unArchiveFileStream2.send(new Object[]{"WSO2"});
         Thread.sleep(100);
         siddhiAppRuntime4.shutdown();
-        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/decompressed/file/test.txt", false));
+        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/decompressed/archive/test.txt", false));
         AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/decompressed/test.txt", false));
+    }
+
+    @Test
+    public void fileArchiveTarFunction2() throws InterruptedException {
+        log.info("test Siddhi Io File Function for archiving, listing files in an archived file, " +
+                "unarchive and search files with or without regex");
+        String app = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream ArchiveFileStream(sample string);\n" +
+                "from ArchiveFileStream#" +
+                "file:archive('" + sourceRoot + "/archive/', '" + destination + "/', 'zip')\n" +
+                "select *\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime1 = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler archiveFileStream = siddhiAppRuntime1.getInputHandler("ArchiveFileStream");
+        siddhiAppRuntime1.addCallback("ResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.getAndIncrement();
+                for (Event event : events) {
+                    if (n == 0) {
+                        AssertJUnit.assertEquals("TarArchiveFileStream", event.getData(0));
+                    } else {
+                        AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime1.start();
+        archiveFileStream.send(new Object[]{"TarArchiveFileStream"});
+        Thread.sleep(100);
+        siddhiAppRuntime1.shutdown();
     }
 
     @Test
@@ -504,7 +538,7 @@ public class FileFunctionsTestCase {
         String app = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream ArchiveFileStream(sample string);\n" +
-                "from ArchiveFileStream#file:archive('" + sourceRoot + "/archive/', '" + destination + "/file')\n" +
+                "from ArchiveFileStream#file:archive('" + sourceRoot + "/archive/', '" + destination + "')\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -532,7 +566,7 @@ public class FileFunctionsTestCase {
         app = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream ListArchivedFileStream(sample string);\n" +
-                "from ListArchivedFileStream#file:searchInArchive('" + destination + "/file.zip')\n" +
+                "from ListArchivedFileStream#file:searchInArchive('" + destination + "/archive.zip')\n" +
                 "select sample, fileNameList " +
                 "insert into FileNameListStream;\n" +
                 "from FileNameListStream#list:tokenize(fileNameList)\n" +
@@ -542,7 +576,7 @@ public class FileFunctionsTestCase {
         InputHandler listArchivedFileStream = siddhiAppRuntime2.getInputHandler("ListArchivedFileStream");
         List<String> fileList = new ArrayList<>();
         fileList.add("test2.txt");
-        fileList.add("folder2/test3.txt");
+        fileList.add("subFolder/test3.txt");
         fileList.add("test.txt");
         siddhiAppRuntime2.addCallback("ResultStream", new StreamCallback() {
             @Override
@@ -573,7 +607,7 @@ public class FileFunctionsTestCase {
                 "define stream UnArchiveFileStream(sample string);\n" +
                 "from UnArchiveFileStream#" +
                 "file:unarchive" +
-                "('" + destination + "/file.zip', '" + unzipLocation.getAbsolutePath() + "', " + false + ")\n" +
+                "('" + destination + "/archive.zip', '" + unzipLocation.getAbsolutePath() + "', " + false + ")\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
@@ -602,7 +636,7 @@ public class FileFunctionsTestCase {
                 "define stream UnArchiveFileStream(sample string);\n" +
                 "from UnArchiveFileStream#" +
                 "file:unarchive" +
-                "('" + destination + "/file.zip', '" + unzipLocation.getAbsolutePath() + "', " + true + ")\n" +
+                "('" + destination + "/archive.zip', '" + unzipLocation.getAbsolutePath() + "', " + true + ")\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
@@ -625,7 +659,7 @@ public class FileFunctionsTestCase {
         stockStream.send(new Object[]{"WSO2"});
         Thread.sleep(100);
         siddhiAppRuntime.shutdown();
-        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/decompressed/file/test.txt", false));
+        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/decompressed/archive/test.txt", false));
         AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/decompressed/test.txt", false));
     }
 
@@ -702,9 +736,9 @@ public class FileFunctionsTestCase {
         stockStream.send(new Object[]{"WSO2"});
         Thread.sleep(100);
         siddhiAppRuntime.shutdown();
-        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/archive/folder2/test3.txt", false));
+        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/archive/subFolder/test3.txt", false));
         AssertJUnit.assertFalse(isFileExist(sourceRoot + "/destination/archive/test.txt", false));
-        AssertJUnit.assertFalse(isFileExist(tempSource + "/archive/folder2/test3.txt", false));
+        AssertJUnit.assertFalse(isFileExist(tempSource + "/archive/subFolder/test3.txt", false));
     }
 
 

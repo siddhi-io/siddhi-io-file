@@ -47,7 +47,8 @@ import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
                 @Parameter(
                         name = "uri",
                         description = "File path to check for existence.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 )
         },
         returnAttributes = {

@@ -47,7 +47,8 @@ import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
                 @Parameter(
                         name = "uri",
                         description = "The path to be checked for a directory.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 )
         },
         returnAttributes = {

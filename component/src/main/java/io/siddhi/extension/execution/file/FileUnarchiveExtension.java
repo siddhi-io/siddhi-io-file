@@ -37,6 +37,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -61,14 +62,16 @@ import static io.siddhi.extension.io.file.util.Constants.BUFFER_SIZE;
                 @Parameter(
                         name = "uri",
                         description = "Absolute path of the file to be decompressed in the format of zip or tar.",
-                        type = DataType.STRING
+                        type = DataType.STRING,
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "destination.dir.uri",
                         description = "Absolute path of the destination directory.\n" +
                                 "Note: If the folder structure does not exist, it will be created.",
-                        type = DataType.STRING
-                ), // TODO: 11/28/19 find and replace folder with dir / directory
+                        type = DataType.STRING,
+                        dynamic = true
+                ),
                 @Parameter(
                         name = "exclude.root.dir",
                         description = "This flag excludes parent folder when extracting the content.",
@@ -142,13 +145,15 @@ public class FileUnarchiveExtension extends StreamFunctionProcessor {
                     destinationDirUri.concat(File.separator +
                             fileName.substring(0, fileName.lastIndexOf(sourceFileExtension) - 1));
         }
-        File destinationDirFile = new File(destinationDirUri);
+        FileObject destinationDirFile = Utils.getFileObject(destinationDirUri);
         // create output directory if it doesn't exist
-        if (!destinationDirFile.exists()) {
-            if (!destinationDirFile.mkdirs()) {
-                throw new SiddhiAppRuntimeException("Directory cannot be created to unzip the file: " +
-                        filePathUri);
+        try {
+            if (!destinationDirFile.exists() || !destinationDirFile.isFolder()) {
+                destinationDirFile.createFolder();
             }
+        } catch (FileSystemException e) {
+            throw new SiddhiAppRuntimeException("Directory cannot be created to unzip the file: " +
+                    filePathUri);
         }
         FileInputStream fis = null;
         //buffer for read and write data to file
@@ -163,24 +168,24 @@ public class FileUnarchiveExtension extends StreamFunctionProcessor {
                 ZipEntry ze = zis.getNextEntry();
                 while (ze != null) {
                     String fileName = ze.getName();
-                    filePath = destinationDirUri + File.separator + fileName;
-                    File newFile = new File(filePath);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Decompressing: " + newFile.getAbsolutePath());
+                    if (!fileName.isEmpty()) {
+                        filePath = destinationDirUri + File.separator + fileName;
+                        File newFile = new File(filePath);
+                        if (log.isDebugEnabled()) {
+                            log.debug("Decompressing: " + newFile.getAbsolutePath());
+                        }
+                        createParentDirectory(newFile, filePathUri);
+                        fos = new FileOutputStream(newFile);
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            fos.write(buffer, 0, len);
+                        }
+                        fos.close();
                     }
-                    createParentDirectory(newFile, filePathUri);
-                    fos = new FileOutputStream(newFile);
-                    int len;
-                    while ((len = zis.read(buffer)) > 0) {
-                        fos.write(buffer, 0, len);
-                    }
-                    fos.close();
-                    //close this ZipEntry
+                    //Closes the current ZIP entry and positions the stream for reading the next entry
                     zis.closeEntry();
                     ze = zis.getNextEntry();
                 }
-                //close last ZipEntry
-                zis.closeEntry();
             } else if (sourceFileExtension.compareToIgnoreCase(Constant.TAR_FILE_EXTENSION) == 0) {
                 try (TarArchiveInputStream fin = new TarArchiveInputStream(new FileInputStream(filePathUri))) {
                     TarArchiveEntry entry;
@@ -188,7 +193,7 @@ public class FileUnarchiveExtension extends StreamFunctionProcessor {
                         if (entry.isDirectory()) {
                             continue;
                         }
-                        File curfile = new File(destinationDirFile, entry.getName());
+                        File curfile = new File(destinationDirFile.getName().getPath(), entry.getName());
                         createParentDirectory(curfile, filePathUri);
                         IOUtils.copy(fin, new FileOutputStream(curfile));
                     }
