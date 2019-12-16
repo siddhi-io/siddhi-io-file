@@ -282,8 +282,8 @@ import java.util.regex.PatternSyntaxException;
                                 "In this case, it's assumed that all the files contains valid json strings with " +
                                 "keys 'symbol' and 'price'.\n" +
                                 "Once a file is read, " +
-                                "its content will be converted to an event using siddhi-map-json with additional eof attribute " +
-                                "and then, that event will be received to the FooStream.\n" +
+                                "its content will be converted to an event using siddhi-map-json with additional eof " +
+                                "attribute and then, that event will be received to the FooStream.\n" +
                                 "Finally, after reading is finished, the file will be deleted.\n"
                 ),
         }
