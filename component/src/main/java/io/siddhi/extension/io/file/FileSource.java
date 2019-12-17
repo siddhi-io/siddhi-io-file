@@ -456,7 +456,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     public void disconnect() {
         try {
             fileSystemServerConnector = null;
-            if (isTailingEnabled) {
+            if (isTailingEnabled && fileSourceConfiguration.getFileServerConnector() != null) {
                 fileSourceConfiguration.getFileServerConnector().stop();
                 fileSourceConfiguration.setFileServerConnector(null);
             }
