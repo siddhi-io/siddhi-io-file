@@ -431,15 +431,12 @@ public class FileSourceTextFullModeTestCase {
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
-
         String query = "" +
                 "from FooStream " +
                 "select * " +
                 "insert into BarStream; ";
-
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
 
             @Override
@@ -457,16 +454,53 @@ public class FileSourceTextFullModeTestCase {
                 }
             }
         });
-
         siddhiAppRuntime.start();
-
         SiddhiTestHelper.waitForEvents(waitTime, 1, count, timeout);
-
         File file = new File(dirUri + "/text_full_single");
         AssertJUnit.assertEquals(0, file.list().length);
-
         //assert event count
         AssertJUnit.assertEquals("Number of events", 1, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIoFileTestForEOFAndFileNameForTextFull() throws InterruptedException {
+        log.info("test SiddhiIoFile [mode=line] Test for EOF and File Path");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='text.full'," +
+                "file.uri='file:/" + dirUri + "/text_full/google.json', " +
+                "action.after.process='delete', " +
+                "tailing='false', " +
+                "@map(type='json', enclosing.element=\"$.event\", " +
+                    "@attributes(symbol = \"symbol\", price = \"price\", volume = \"volume\", " +
+                        "eof = 'trp:eof', fp = 'trp:file.path')))\n" +
+                "define stream FooStream (symbol string, price float, volume long, eof String, fp String); " +
+                "define stream BarStream (symbol string, price float, volume long, eof String, fp String); ";
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.incrementAndGet();
+                for (Event event : events) {
+                    if (n == 1) {
+                        AssertJUnit.assertEquals("true", event.getData(3));
+                        AssertJUnit.assertTrue(((String) event.getData(4)).
+                                contains("test-classes/files/new/text_full/google.json"));
+                    } else {
+                        AssertJUnit.fail();
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        Thread.sleep(10000);
         siddhiAppRuntime.shutdown();
     }
 

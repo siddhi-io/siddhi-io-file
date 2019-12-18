@@ -70,6 +70,8 @@ public class FileProcessor implements CarbonMessageProcessor {
             if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
                     carbonCallback.done(carbonMessage);
+                    carbonMessage.setProperty
+                            (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
                     sourceEventListener.onEvent(new String(content, Constants.UTF_8),
                             getRequiredPropertyValues(carbonMessage));
                 }

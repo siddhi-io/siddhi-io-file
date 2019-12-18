@@ -1091,4 +1091,47 @@ public class FileSourceLineModeTestCase {
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         siddhiAppRuntime.start();
     }
+
+    @Test
+    public void siddhiIoFileTestForEOFAndFileName() throws InterruptedException {
+        log.info("test SiddhiIoFile [mode=line] Test for EOF and File Name");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='line'," +
+                "file.uri='file:/" + dirUri + "/line/json/logs.txt', " +
+                "action.after.process='delete', " +
+                "tailing='false', " +
+                "@map(type='json', enclosing.element=\"$.event\", " +
+                    "@attributes(symbol = \"symbol\", price = \"price\", volume = \"volume\", " +
+                        "eof = 'trp:eof', fp = 'trp:file.path')))\n" +
+                "define stream FooStream (symbol string, price float, volume long, eof String, fp String); " +
+                "define stream BarStream (symbol string, price float, volume long, eof String, fp String); ";
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.incrementAndGet();
+                for (Event event : events) {
+                    if (n < 5) {
+                        AssertJUnit.assertEquals("false", event.getData(3));
+                        AssertJUnit.assertTrue(((String) event.getData(4)).
+                                contains("test-classes/files/new/line/json/logs.txt"));
+                    } else if (n == 5) {
+                        AssertJUnit.assertEquals("true", event.getData(3));
+                    } else {
+                        AssertJUnit.fail();
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        Thread.sleep(10000);
+        siddhiAppRuntime.shutdown();
+    }
 }
