@@ -67,17 +67,16 @@ public class FileProcessor implements CarbonMessageProcessor {
         if (carbonMessage instanceof BinaryCarbonMessage) {
             byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
             String msg = new String(content, Constants.UTF_8);
-            String[] requiredPropertyValues = getRequiredPropertyValues(carbonMessage);
             if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
                     carbonCallback.done(carbonMessage);
                     sourceEventListener.onEvent(new String(content, Constants.UTF_8),
-                            requiredPropertyValues);
+                            getRequiredPropertyValues(carbonMessage));
                 }
             } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
                     carbonCallback.done(carbonMessage);
-                    sourceEventListener.onEvent(content, requiredPropertyValues);
+                    sourceEventListener.onEvent(content, getRequiredPropertyValues(carbonMessage));
                 }
             } else if (Constants.LINE.equalsIgnoreCase(mode)) {
                 if (!fileSourceConfiguration.isTailingEnabled()) {
@@ -87,7 +86,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                     while ((line = bufferedReader.readLine()) != null) {
                         if (line.length() > 0) {
                             readBytes = line.length();
-                            sourceEventListener.onEvent(line.trim(), requiredPropertyValues);
+                            sourceEventListener.onEvent(line.trim(), getRequiredPropertyValues(carbonMessage));
                         }
                     }
                     carbonCallback.done(carbonMessage);
@@ -96,7 +95,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                         readBytes = msg.getBytes(Constants.UTF_8).length;
                         fileSourceConfiguration.updateFilePointer(
                                 (Long) carbonMessage.getProperties().get(Constants.CURRENT_POSITION));
-                        sourceEventListener.onEvent(msg, requiredPropertyValues);
+                        sourceEventListener.onEvent(msg, getRequiredPropertyValues(carbonMessage));
                     }
                 }
             } else if (Constants.REGEX.equalsIgnoreCase(mode)) {
@@ -106,13 +105,18 @@ public class FileProcessor implements CarbonMessageProcessor {
                     char[] buf = new char[10];
                     InputStream is = new ByteArrayInputStream(content);
                     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, Constants.UTF_8));
-
-                    while (bufferedReader.read(buf) != -1) {
+                    int endOfStream = bufferedReader.read(buf); //number of characters read
+                    String event = null;
+                    String prevEvent = null;
+                    while (endOfStream != -1) {
                         lastMatchedIndex = 0;
                         sb.append(new String(buf));
                         Matcher matcher = pattern.matcher(sb.toString().trim());
+                        boolean matchFound = false;
                         while (matcher.find()) {
-                            String event = matcher.group(0);
+                            matchFound = true;
+                            prevEvent = event;
+                            event = matcher.group(0);
                             lastMatchedIndex = matcher.end();
                             if (fileSourceConfiguration.getEndRegex() == null) {
                                 try {
@@ -127,14 +131,40 @@ public class FileProcessor implements CarbonMessageProcessor {
                                 }
                                 remainedLength = sb.length() - event.length() - remainedLength - 1;
                             }
-                            sourceEventListener.onEvent(event, requiredPropertyValues);
+                            buf = new char[10]; // to clean existing content of buffer
+                            endOfStream = bufferedReader.read(buf);
+                        }
+                        if (matchFound && endOfStream == -1) {
+                            if (prevEvent != null) {
+                                carbonMessage.setProperty
+                                        (org.wso2.transport.file.connector.server.util.Constants.EOF, false);
+                                sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                            }
+                            carbonMessage.setProperty
+                                    (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
+                            sourceEventListener.onEvent(event, getRequiredPropertyValues(carbonMessage));
+                        } else if (matchFound) {
+                            if (prevEvent != null) {
+                                carbonMessage.setProperty
+                                        (org.wso2.transport.file.connector.server.util.Constants.EOF, false);
+                                sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                            }
+                            prevEvent = event;
+                        } else {
+                            buf = new char[10]; // to clean existing content of buffer
+                            endOfStream = bufferedReader.read(buf);
+                            if (endOfStream == -1) {
+                                if (prevEvent != null) {
+                                    carbonMessage.setProperty
+                                            (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
+                                    sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                                }
+                            }
                         }
                         String tmp;
                         tmp = sb.substring(lastMatchedIndex);
-
                         sb.setLength(0);
                         sb.append(tmp);
-                        buf = new char[10]; // to clean existing content of buffer
                     }
 
                     /*
@@ -146,8 +176,9 @@ public class FileProcessor implements CarbonMessageProcessor {
                         Pattern p = Pattern.compile(fileSourceConfiguration.getBeginRegex() + "((.|\n)*?)");
                         Matcher m = p.matcher(sb.toString());
                         while (m.find()) {
-                            String event = m.group(0);
-                            sourceEventListener.onEvent(sb.substring(sb.indexOf(event)), requiredPropertyValues);
+                            event = m.group(0);
+                            sourceEventListener.onEvent
+                                    (sb.substring(sb.indexOf(event)), getRequiredPropertyValues(carbonMessage));
                         }
                     }
                     if (carbonCallback != null) {
@@ -170,7 +201,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                             }
                             remainedLength = sb.length() - event.length() - remainedLength - 1;
                         }
-                        sourceEventListener.onEvent(event, requiredPropertyValues);
+                        sourceEventListener.onEvent(event, getRequiredPropertyValues(carbonMessage));
                         readBytes += content.length;
                     }
                     String tmp;

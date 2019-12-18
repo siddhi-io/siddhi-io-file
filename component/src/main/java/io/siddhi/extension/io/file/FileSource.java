@@ -265,7 +265,27 @@ import java.util.regex.PatternSyntaxException;
                                 "Once file content is completely read, " +
                                 "it will keep checking whether a new entry is added to the file or not.\n" +
                                 "If such entry is added, it will be immediately picked up and processed.\n"
-                )
+                ),
+                @Example(
+                        syntax = "" +
+                                "@source(type='file',\n" +
+                                "mode='text.full',\n" +
+                                "tailing='false'\n " +
+                                "dir.uri='file://abc/xyz',\n" +
+                                "action.after.process='delete',\n" +
+                                "@map(type='csv' @attributes(eof = 'trp:eof', fp = 'trp:file.path'))) \n" +
+                                "define stream FooStream (symbol string, price float, volume long); \n",
+
+                        description = "" +
+                                "Under above configuration, all the files in directory will be picked and read " +
+                                "one by one.\n" +
+                                "In this case, it's assumed that all the files contains valid json strings with " +
+                                "keys 'symbol' and 'price'.\n" +
+                                "Once a file is read, " +
+                                "its content will be converted to an event using siddhi-map-json with additional eof " +
+                                "attribute and then, that event will be received to the FooStream.\n" +
+                                "Finally, after reading is finished, the file will be deleted.\n"
+                ),
         }
 )
 public class FileSource extends Source<FileSource.FileSourceState> {
