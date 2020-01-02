@@ -1060,6 +1060,56 @@ public class FileSourceRegexModeTestCase {
     }
 
     @Test
+    public void siddhiIoFileTestForEOFAndFileNameForRegex() throws InterruptedException {
+        log.info("test SiddhiIoFile [mode = regex]  Test for EOF and File Path");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='regex'," +
+                "file.uri='file:/" + dirUri + "/regex/json/logs.txt', " +
+                "begin.regex='(\\{)', " +
+                "end.regex='(}})', " +
+                "tailing='false', " +
+                "action.after.process='delete', " +
+                "@map(type='json', enclosing.element=\"$.event\", " +
+                    "@attributes(symbol = \"symbol\", price = \"price\", volume = \"volume\", " +
+                        "eof = 'trp:eof', fp = 'trp:file.path')))\n" +
+                "define stream FooStream (symbol string, price float, volume long, eof String, fp String); " +
+                "define stream BarStream (symbol string, price float, volume long, eof String, fp String); ";
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.incrementAndGet();
+                for (Event event : events) {
+                    if (n < 5) {
+                        AssertJUnit.assertEquals("false", event.getData(3));
+                        AssertJUnit.assertTrue(((String) event.getData(4)).
+                                contains("test-classes/files/new/regex/json/logs.txt"));
+                    } else if (n == 5) {
+                        AssertJUnit.assertEquals("true", event.getData(3));
+                        AssertJUnit.assertTrue(((String) event.getData(4)).
+                                contains("test-classes/files/new/regex/json/logs.txt"));
+                    } else {
+                        AssertJUnit.fail();
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
+        //assert event count
+        AssertJUnit.assertEquals("Number of events", 5, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
     public void siddhiIoFileTest16() throws InterruptedException {
         log.info("test SiddhiIoFile [mode = regex] 16");
         String streams = "" +
