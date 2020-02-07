@@ -407,6 +407,7 @@ public class FileSourceLineModeTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
                 "dir.uri='file:/" + dirUri + "/line/json', " +
+                "action.after.process='delete'," +
                 "tailing='false', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -525,6 +526,7 @@ public class FileSourceLineModeTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
                 "dir.uri='file:/" + dirUri + "/line/invalid', " +
+                "action.after.process='delete'," +
                 "tailing='false', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +

@@ -138,6 +138,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
                             fileSourceConfiguration.getFileReadWaitTimeout());
                     properties.put(Constants.MODE, mode);
+                    properties.put(Constants.HEADER_PRESENT, fileSourceConfiguration.getHeaderPresent());
                     if (fileSourceConfiguration.isTailingEnabled()) {
                         fileSourceConfiguration.setTailedFileURI(fileURI);
                         if (fileSourceConfiguration.getTailedFileURIMap().contains(fileURI)) {
@@ -227,31 +228,32 @@ public class FileSystemListener implements RemoteFileSystemListener {
     private void reProcessFile(VFSClientConnector vfsClientConnector,
                                VFSClientConnectorCallback vfsClientConnectorCallback,
                                Map<String, String> properties, String fileUri) {
-        properties.put(Constants.URI, fileUri);
-        properties.put(Constants.ACK_TIME_OUT, "1000");
-        BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
-                fileUri.getBytes(StandardCharsets.UTF_8)), true);
-
         String actionAfterProcess = fileSourceConfiguration.getActionAfterProcess();
-        String moveAfterProcess = fileSourceConfiguration.getMoveAfterProcess();
-        try {
-            if (fileSourceConfiguration.getActionAfterProcess() != null) {
-                properties.put(Constants.URI, fileUri);
-                properties.put(Constants.ACTION, actionAfterProcess);
-                if (fileSourceConfiguration.getMoveAfterProcess() != null) {
-                    String destination = constructPath(moveAfterProcess, getFileName(fileUri, fileSourceConfiguration
-                            .getProtocolForMoveAfterProcess()));
-                    if (destination != null) {
-                        properties.put(Constants.DESTINATION, destination);
+        if (!actionAfterProcess.equalsIgnoreCase(Constants.KEEP)) {
+            properties.put(Constants.URI, fileUri);
+            properties.put(Constants.ACK_TIME_OUT, "1000");
+            BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
+                    fileUri.getBytes(StandardCharsets.UTF_8)), true);
+            String moveAfterProcess = fileSourceConfiguration.getMoveAfterProcess();
+            try {
+                if (fileSourceConfiguration.getActionAfterProcess() != null) {
+                    properties.put(Constants.URI, fileUri);
+                    properties.put(Constants.ACTION, actionAfterProcess);
+                    if (fileSourceConfiguration.getMoveAfterProcess() != null) {
+                        String destination = constructPath(moveAfterProcess, getFileName(fileUri,
+                                fileSourceConfiguration.getProtocolForMoveAfterProcess()));
+                        if (destination != null) {
+                            properties.put(Constants.DESTINATION, destination);
+                        }
                     }
+                    vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, properties);
+                    vfsClientConnectorCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileUri);
                 }
-                vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, properties);
-                vfsClientConnectorCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileUri);
+            } catch (ClientConnectorException e) {
+                log.error(String.format("Failure occurred in vfs-client while reading the file '%s'.", fileUri), e);
+            } catch (InterruptedException e) {
+                log.error(String.format("Failed to get callback from vfs-client  for file '%s'.", fileUri), e);
             }
-        } catch (ClientConnectorException e) {
-            log.error(String.format("Failure occurred in vfs-client while reading the file '%s'.", fileUri), e);
-        } catch (InterruptedException e) {
-            log.error(String.format("Failed to get callback from vfs-client  for file '%s'.", fileUri), e);
         }
     }
 
