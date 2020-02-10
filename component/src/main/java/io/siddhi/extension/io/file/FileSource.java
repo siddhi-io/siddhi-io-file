@@ -225,9 +225,9 @@ import java.util.regex.PatternSyntaxException;
                 ),
                 @Parameter(
                         name = "header.present",
-                        description = "This parameter used to specify a particular text file (eg: CSV) contains a header " +
-                                "or not. This can either have value true or false. If it's set to `true` then it " +
-                                "indicates a file contains header, and it will not process",
+                        description = "This parameter used to specify a particular text file (eg: CSV) contains a " +
+                                "header or not. This can either have value true or false. If it's set to `true` then " +
+                                "it indicates a file contains header, and it will not process",
                         optional = true, defaultValue = "false",
                         type = {DataType.BOOL}),
         },
