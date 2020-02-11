@@ -756,6 +756,7 @@ public class FileSourceRegexModeTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
                 "dir.uri='file:/" + dirUri + "/regex/xml', " +
+                "action.after.process='delete'," +
                 "begin.regex='(<events>)', " +
                 "end.regex='(</events>)', " +
                 "tailing='false', " +
@@ -887,6 +888,7 @@ public class FileSourceRegexModeTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
                 "dir.uri='file:/" + dirUri + "/regex/invalid', " +
+                "action.after.process='delete'," +
                 "begin.regex='(<events>)', " +
                 "end.regex='(</events>)', " +
                 "tailing='false', " +
@@ -945,6 +947,7 @@ public class FileSourceRegexModeTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
                 "dir.uri='file:/" + dirUri + "/regex/invalid', " +
+                "action.after.process='delete'," +
                 "begin.regex='(<events>)', " +
                 "tailing='false', " +
                 "@map(type='xml'))" +
@@ -1002,6 +1005,7 @@ public class FileSourceRegexModeTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
                 "dir.uri='file:/" + dirUri + "/regex/xml', " +
+                "action.after.process='delete'," +
                 "end.regex='(</events>)', " +
                 "tailing='false', " +
                 "@map(type='xml'))" +
@@ -1116,6 +1120,7 @@ public class FileSourceRegexModeTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='regex'," +
                 "dir.uri='file:/" + dirUri + "/regex/xml', " +
+                "action.after.process='delete'," +
                 "begin.regex='(<events>)', " +
                 "tailing='false', " +
                 "@map(type='xml'))" +
