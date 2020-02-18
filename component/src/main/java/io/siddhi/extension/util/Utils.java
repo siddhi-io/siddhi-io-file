@@ -30,6 +30,17 @@ import org.wso2.transport.file.connector.server.exception.FileServerConnectorExc
 import org.wso2.transport.file.connector.server.util.Constants;
 import org.wso2.transport.file.connector.server.util.FileTransportUtils;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,6 +131,44 @@ public class Utils {
                     schemeFileOptions.put(option.toString(), strValue);
                 }
             }
+        }
+    }
+
+    public static double getFileSize(String filePathUri) {
+        if (filePathUri.startsWith("file:")) {
+            filePathUri = filePathUri.replaceFirst("file:", "");
+        }
+        filePathUri = filePathUri.replace("%20", " ");
+        File file = new File(filePathUri);
+        return file.length();
+    }
+
+    public static String getFileName(String uri) {
+        String[] path = uri.split("/");
+        String fileName = path[path.length - 1];
+        return fileName.replace("%20", " ");
+    }
+
+    public static String getFilePath(String uri) {
+        return uri.replace("%20", " ");
+    }
+
+    public static long getLinesCount(String uri) throws IOException {
+        /*if (uri.startsWith("file:")) {
+            uri = uri.replaceFirst("file:", "");
+        }
+        uri = uri.replace("%20", " ");
+        return Files.lines(Paths.get(uri)).filter(line -> line.length() != 0).count();*/
+        if (uri.startsWith("file:")) {
+            uri = uri.replaceFirst("file:", "");
+        }
+        uri = uri.replace("%20", " ");
+        CharsetDecoder dec = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.IGNORE);
+        Path path = Paths.get(uri);
+        try (Reader r = Channels.newReader(FileChannel.open(path), dec, -1);
+            BufferedReader br = new BufferedReader(r)) {
+            return br.lines()
+                    .filter(line -> line.length() != 0).count();
         }
     }
 }

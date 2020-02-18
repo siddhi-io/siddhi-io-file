@@ -33,12 +33,15 @@ import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.file.util.Constants;
+import io.siddhi.extension.io.file.util.Metrics;
+import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.StreamDefinition;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -121,6 +124,7 @@ public class FileSink extends Sink {
     private Option uriOption;
     private SiddhiAppContext siddhiAppContext;
     private boolean addEventSeparator;
+    private String streamName;
 
 
     @Override
@@ -144,9 +148,11 @@ public class FileSink extends Sink {
         }
         String mapType = streamDefinition.getAnnotations().get(0).getAnnotations().get(0).getElements().get(0)
                 .getValue();
+        streamName = streamDefinition.getId();
         addEventSeparator = optionHolder.isOptionExists(Constants.ADD_EVENT_SEPARATOR) ?
                 Boolean.parseBoolean(optionHolder.validateAndGetStaticValue(Constants.ADD_EVENT_SEPARATOR)) :
                 !mapType.equalsIgnoreCase("csv");
+        Metrics.getStreamStatus().putIfAbsent(getID(), Metrics.StreamStatus.CONNECTING);
         return null;
     }
 
@@ -157,9 +163,12 @@ public class FileSink extends Sink {
 
     public void connect() throws ConnectionUnavailableException {
         vfsClientConnector = new VFSClientConnector();
+        Metrics.getStreamStatus().replace(getID(), Metrics.StreamStatus.PROCESSING);
+        Metrics.createServer();
     }
 
     public void disconnect() {
+        Metrics.stopServer();
     }
 
     public void destroy() {
@@ -169,10 +178,15 @@ public class FileSink extends Sink {
             throws ConnectionUnavailableException {
         byte[] byteArray = new byte[0];
         boolean canBeWritten = true;
+        String uri = uriOption.getValue(dynamicOptions);
+        String fileName = Utils.getFileName(uri);
+        String type = null;
         if (payload instanceof byte[]) {
             byteArray = (byte[]) payload;
+            type = "Byte";
         } else {
             try {
+                type = "Text";
                 StringBuilder sb = new StringBuilder();
                 sb.append(payload.toString());
                 if (this.addEventSeparator) {
@@ -182,20 +196,54 @@ public class FileSink extends Sink {
             } catch (UnsupportedEncodingException e) {
                 canBeWritten = false;
                 log.error("Received payload does not support UTF-8 encoding. Hence dropping the event." , e);
+                Metrics.getSinkDroppedEvents().labels(fileName).inc();
             }
         }
 
         if (canBeWritten) {
-            String uri = uriOption.getValue(dynamicOptions);
             BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(byteArray), true);
             properties.put(Constants.URI, uri);
             try {
-                vfsClientConnector.send(binaryCarbonMessage, null, properties);
+                boolean send = vfsClientConnector.send(binaryCarbonMessage, null, properties);
+                if (send) {
+                    String finalType = type;
+                    siddhiAppContext.getExecutorService().execute(() -> {
+                        Metrics.getTotalPublishedEvents().inc();
+                        double fileSize = Utils.getFileSize(uri) / 1024.0; //converts into KB
+                        Metrics.getSinkFiles().labels(siddhiAppContext.getName(), uri, fileName, finalType,
+                                streamName, "Sink").inc();
+                        Metrics.getSinkDroppedEvents().labels(siddhiAppContext.getName(), uri, fileName).inc(0);
+                        Metrics.getSinkFileSize().labels(siddhiAppContext.getName(), uri, fileName).set(fileSize);
+                        Metrics.getSinkStreamStatusMetrics().labels(siddhiAppContext.getName(), uri, fileName,
+                                streamName).set(Metrics.getStreamStatus().get(getID()).ordinal());
+                        boolean added = Metrics.getFilesURI().add(uri);
+                        if (added) {
+                            Metrics.getSinkFileCount().inc();
+                            try {
+                                long lineCount = Utils.getLinesCount(uri);
+                                Metrics.getSinkNoOfLines().labels(siddhiAppContext.getName(), uri, fileName).inc(lineCount);
+                                return;
+                            } catch (IOException e) {
+                                log.error("Error while getting line count in file: " + fileName + "of siddhi " +
+                                        "app: " + siddhiAppContext.getName(), e);
+                            }
+                        }
+                        Metrics.getSinkNoOfLines().labels(siddhiAppContext.getName(), uri, fileName).inc();
+                    });
+                }
             } catch (ClientConnectorException e) {
+                Metrics.getStreamStatus().replace(getID(), Metrics.StreamStatus.RETRY);
+                Metrics.getSinkDroppedEvents().labels(fileName).inc();
                 throw new ConnectionUnavailableException("Writing data into the file " + uri + " failed during the " +
                         "execution of '" + siddhiAppContext.getName() + "' SiddhiApp, due to " +
                         e.getMessage(), e);
             }
         }
     }
+
+    private String getID() {
+        return siddhiAppContext.getName() + "_" + streamName;
+    }
 }
+
+// TODO: 2/5/20 Check sink with connectionUnavailable
