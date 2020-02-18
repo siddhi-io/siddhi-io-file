@@ -94,6 +94,29 @@
             <artifactId>siddhi-execution-list</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient</artifactId>
+        </dependency>
+        <!-- Exposition HTTPServer-->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_httpserver</artifactId>
+        </dependency>
+
+        <!--&lt;!&ndash; Hotspot JVM metrics&ndash;&gt;
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_hotspot</artifactId>
+        </dependency>
+
+        &lt;!&ndash; Pushgateway exposition&ndash;&gt;
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_pushgateway</artifactId>
+        </dependency>-->
+
     </dependencies>
     <profiles>
         <profile>
@@ -151,7 +174,8 @@
                             org.wso2.transport.file.*,
                             org.apache.commons.net.*,
                             org.quartz.*,
-                            io.siddhi.extension.util.*
+                            io.siddhi.extension.util.*,
+                            io.prometheus.*
                         </Private-Package>
                         <Export-Package>
                             io.siddhi.extension.io.file.*,

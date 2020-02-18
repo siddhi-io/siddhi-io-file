@@ -132,6 +132,30 @@
                 <artifactId>siddhi-execution-list</artifactId>
                 <version>${siddhi.execution.list}</version>
             </dependency>
+
+            <dependency>
+                <groupId>io.prometheus</groupId>
+                <artifactId>simpleclient</artifactId>
+                <version>${prometheus.simpleclient.version}</version>
+            </dependency>
+            <!-- Hotspot JVM metrics-->
+            <dependency>
+                <groupId>io.prometheus</groupId>
+                <artifactId>simpleclient_hotspot</artifactId>
+                <version>${prometheus.simpleclient.version}</version>
+            </dependency>
+            <!-- Exposition HTTPServer-->
+            <dependency>
+                <groupId>io.prometheus</groupId>
+                <artifactId>simpleclient_httpserver</artifactId>
+                <version>${prometheus.simpleclient.version}</version>
+            </dependency>
+            <!-- Pushgateway exposition-->
+            <dependency>
+                <groupId>io.prometheus</groupId>
+                <artifactId>simpleclient_pushgateway</artifactId>
+                <version>${prometheus.simpleclient.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -151,6 +175,7 @@
         <commons-net.version>3.6</commons-net.version>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <prometheus.simpleclient.version>0.8.0</prometheus.simpleclient.version>
     </properties>
 
     <build>
