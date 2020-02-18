@@ -31,6 +31,7 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.extension.io.file.util.Metrics;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -228,6 +229,7 @@ public class FileMoveExtension extends StreamFunctionProcessor {
                 if (pattern.matcher(fileName).lookingAt()) {
                     sourceFileObject.moveTo(destinationFileObject);
                 }
+                Metrics.getTotalCopy().inc();
             }
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when doing file operations when moving for file: " +

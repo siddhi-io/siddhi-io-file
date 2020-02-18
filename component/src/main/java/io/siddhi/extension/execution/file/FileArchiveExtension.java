@@ -30,6 +30,7 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.extension.io.file.util.Metrics;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -208,6 +209,7 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
             generateFileList(uri, sourceFile, fileList, excludeSubdirectories);
             try {
                 zip(uri, destinationFile, fileList);
+                Metrics.getTotalNumberOfArchive().inc();
             } catch (IOException e) {
                 throw new SiddhiAppRuntimeException("IOException occurred when archiving  " + uri, e);
             }
@@ -216,6 +218,7 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
                 if (archiveType.compareToIgnoreCase(TAR_FILE_EXTENSION) == 0) {
                     addToTarArchiveCompression(
                             getTarArchiveOutputStream(destinationFile), sourceFile, uri);
+                    Metrics.getTotalNumberOfArchive().inc();
                 } else {
                     throw new SiddhiAppRuntimeException("Unsupported archive type: " + archiveType);
                 }
