@@ -23,7 +23,9 @@ import io.siddhi.extension.io.file.processors.FileProcessor;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
+import io.siddhi.extension.io.file.util.Metrics;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
+import io.siddhi.extension.util.Utils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
@@ -55,12 +57,14 @@ public class FileSystemListener implements RemoteFileSystemListener {
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private FileSourceServiceProvider fileSourceServiceProvider;
+    private String siddhiAppName;
 
     public FileSystemListener(SourceEventListener sourceEventListener,
-                              FileSourceConfiguration fileSourceConfiguration) {
+                              FileSourceConfiguration fileSourceConfiguration, String siddhiAppName) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSourceConfiguration;
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
+        this.siddhiAppName = siddhiAppName;
     }
 
     @Override
@@ -73,9 +77,13 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 String fileURI = a.toURI().toString();
                 VFSClientConnector vfsClientConnector;
                 FileProcessor fileProcessor;
+                fileSourceConfiguration.setCurrentlyReadingFileURI(fileURI);
+                Metrics.getStreamStatus().putIfAbsent(fileURI, Metrics.StreamStatus.PROCESSING);
+                Metrics.getSourceFiles().labels(siddhiAppName, Utils.getFilePath(fileURI),
+                        Utils.getFileName(fileURI), "Line", sourceEventListener.getStreamDefinition().getId(), "Source");
                 if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                     vfsClientConnector = new VFSClientConnector();
-                    fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                    fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, siddhiAppName);
                     vfsClientConnector.setMessageProcessor(fileProcessor);
                     Map<String, String> properties = new HashMap<>();
                     properties.put(Constants.URI, fileURI);
@@ -100,10 +108,11 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     } catch (ClientConnectorException e) {
                         log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
                         carbonCallback.done(carbonMessage);
+                        Metrics.getStreamStatus().replace(fileURI, Metrics.StreamStatus.ERROR);
                     }
                 } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                     vfsClientConnector = new VFSClientConnector();
-                    fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                    fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, siddhiAppName);
                     vfsClientConnector.setMessageProcessor(fileProcessor);
 
                     Map<String, String> properties = new HashMap<>();
@@ -129,6 +138,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                         reProcessFile(vfsClientConnector, carbonCallback, properties, fileURI);
                     } catch (ClientConnectorException e) {
                         log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
+                        Metrics.getStreamStatus().replace(fileURI, Metrics.StreamStatus.ERROR);
                     }
                 } else if (Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)) {
                     Map<String, String> properties = new HashMap<>();
@@ -146,7 +156,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             FileServerConnectorProvider fileServerConnectorProvider =
                                     fileSourceServiceProvider.getFileServerConnectorProvider();
                             fileProcessor = new FileProcessor(sourceEventListener,
-                                    fileSourceConfiguration);
+                                    fileSourceConfiguration, siddhiAppName);
                             final ServerConnector fileServerConnector = fileServerConnectorProvider
                                     .createConnector("file-server-connector", properties);
                             fileServerConnector.setMessageProcessor(fileProcessor);
@@ -164,7 +174,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     } else {
                         properties.put(Constants.URI, fileURI);
                         vfsClientConnector = new VFSClientConnector();
-                        fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                        fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, siddhiAppName);
                         vfsClientConnector.setMessageProcessor(fileProcessor);
                         VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                         BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
@@ -181,6 +191,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             reProcessFile(vfsClientConnector, carbonCallback, properties, fileURI);
                         } catch (ClientConnectorException e) {
                             log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
+                            Metrics.getStreamStatus().replace(fileURI, Metrics.StreamStatus.ERROR);
                         }
                     }
                 }
@@ -196,7 +207,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
     }
 
     @Override
-    public void done() {}
+    public void done() {
+    }
 
     static class FileServerExecutor implements Runnable {
         ServerConnector fileServerConnector = null;
@@ -220,6 +232,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 log.error(String.format("Failed to start the server for file '%s'. " +
                         "Hence starting to process next file.", fileURI));
                 carbonCallback.done(carbonMessage);
+                Metrics.getStreamStatus().replace(fileURI, Metrics.StreamStatus.ERROR);
             }
         }
     }
@@ -247,7 +260,14 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 }
                 vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, properties);
                 vfsClientConnectorCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileUri);
+                String streamName = sourceEventListener.getStreamDefinition().getId();
+                Metrics.getStreamStatus().replace(fileUri, Metrics.StreamStatus.COMPLETED);
+                Metrics.getSourceStreamStatusMetrics().labels(Utils.getFileName(fileUri), streamName).set(
+                        Metrics.getStreamStatus().get(fileUri).ordinal());
+                increaseMetricsAfterProcess(actionAfterProcess);
+//                Metrics.sourceFiles.remove(Utils.getFileName(fileUri), "Line", streamName, "Source");
             }
+
         } catch (ClientConnectorException e) {
             log.error(String.format("Failure occurred in vfs-client while reading the file '%s'.", fileUri), e);
         } catch (InterruptedException e) {
@@ -274,6 +294,14 @@ public class FileSystemListener implements RemoteFileSystemListener {
             }
         } else {
             return null;
+        }
+    }
+
+    private void increaseMetricsAfterProcess(String actionAfterProcess) {
+        if (actionAfterProcess.equals(Constants.DELETE)) {
+            Metrics.getTotalDeletion().inc();
+        } else if (actionAfterProcess.equals(Constants.MOVE)) {
+            Metrics.getTotalMove().inc();
         }
     }
 }

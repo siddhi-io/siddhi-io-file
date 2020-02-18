@@ -18,9 +18,13 @@
 
 package io.siddhi.extension.io.file.processors;
 
+import com.google.common.base.Stopwatch;
+import io.prometheus.client.Counter;
 import io.siddhi.core.stream.input.source.SourceEventListener;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
+import io.siddhi.extension.io.file.util.Metrics;
+import io.siddhi.extension.util.Utils;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
@@ -31,6 +35,7 @@ import org.wso2.carbon.messaging.TransportSender;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.regex.Matcher;
@@ -49,18 +54,52 @@ public class FileProcessor implements CarbonMessageProcessor {
     private int readBytes;
     private StringBuilder sb;
     private String[] requiredProperties;
+    private String fileName;
+    private Counter.Child eventCounter;
+    private Counter.Child readBytesMetrics;
+    private Stopwatch stopwatch;
+    private String streamName;
+    private String siddhiAppName;
 
-    public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
+    public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration,
+                         String siddhiAppName) {
         this.sourceEventListener = sourceEventListener;
+        this.streamName = sourceEventListener.getStreamDefinition().getId();
         this.fileSourceConfiguration = fileSourceConfiguration;
         this.requiredProperties = fileSourceConfiguration.getRequiredProperties();
         this.mode = fileSourceConfiguration.getMode();
+        this.siddhiAppName = siddhiAppName;
         if (Constants.REGEX.equalsIgnoreCase(mode) && fileSourceConfiguration.isTailingEnabled()) {
             sb = fileSourceConfiguration.getTailingRegexStringBuilder();
         } else {
             sb = new StringBuilder();
         }
         pattern = fileSourceConfiguration.getPattern();
+        String fileURI = fileSourceConfiguration.getCurrentlyReadingFileURI();
+        fileName = Utils.getFileName(fileURI);
+        fileSourceConfiguration.getExecutorService().execute(() -> {
+            stopwatch = Stopwatch.createStarted();
+            String filePath = Utils.getFilePath(fileURI);
+            double fileSize = Utils.getFileSize(fileURI) / 1024.0; //converts into KB
+            String streamName = sourceEventListener.getStreamDefinition().getId();
+            String mode = this.mode.substring(0, 1).toUpperCase() + this.mode.substring(1);
+            eventCounter = Metrics.getSourceFiles().labels(siddhiAppName, filePath,
+                    fileName, mode, streamName, "Source");
+            readBytesMetrics = Metrics.getReadByte().labels(siddhiAppName, filePath);
+            Metrics.getSourceFileSize().labels(fileName).set(fileSize);
+            Metrics.getSourceStreamStatusMetrics().labels(siddhiAppName, filePath, fileName, streamName).set(
+                    Metrics.getStreamStatus().get(fileURI).ordinal());
+            Metrics.getSourceDroppedEvents().labels(siddhiAppName, filePath, fileName);
+            boolean add = Metrics.getFilesURI().add(fileURI);
+            if (add) {
+                Metrics.getSourceFileCount().inc();
+                try {
+                    Metrics.getSourceNoOfLines().labels(siddhiAppName, filePath, fileName).inc(Utils.getLinesCount(fileURI));
+                } catch (IOException e) {
+                    log.error("Error occurred while getting the lines count in '" + fileURI + "'.", e);
+                }
+            }
+        });
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
@@ -216,8 +255,10 @@ public class FileProcessor implements CarbonMessageProcessor {
                     }
                 }
             }
+            increaseMetrics(content.length, stopwatch.elapsed().toMillis());
             return true;
         } else {
+            Metrics.getSourceDroppedEvents().labels(fileName).inc();
             return false;
         }
     }
@@ -247,4 +288,14 @@ public class FileProcessor implements CarbonMessageProcessor {
         }
         return values;
     }
+
+    private void increaseMetrics(int byteLength, long elapseTime) {
+        eventCounter.inc();
+        readBytesMetrics.inc(byteLength);
+        Metrics.getTotalReceivedEvents().inc();
+        Metrics.getSourceElapsedTime().labels(fileName).set(elapseTime);
+        Metrics.getSourceStreamStatusMetrics().labels(fileName, streamName).set(Metrics.getStreamStatus().get(
+                fileSourceConfiguration.getCurrentlyReadingFileURI()).ordinal());
+    }
+
 }

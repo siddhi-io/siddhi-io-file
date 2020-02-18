@@ -55,6 +55,8 @@ public class FileSourceConfiguration {
     private String moveAfterProcess = null;
     private String fileReadWaitTimeout;
 
+    private String currentlyReadingFileURI;
+
     public FileSourceConfiguration() {
         tailingRegexStringBuilder = new StringBuilder();
     }
@@ -244,5 +246,13 @@ public class FileSourceConfiguration {
     public void setActionAfterFailure(String actionAfterFailure) {
 
         this.actionAfterFailure = actionAfterFailure;
+    }
+
+    public String getCurrentlyReadingFileURI() {
+        return currentlyReadingFileURI;
+    }
+
+    public void setCurrentlyReadingFileURI(String currentlyReadingFileURI) {
+        this.currentlyReadingFileURI = currentlyReadingFileURI;
     }
 }

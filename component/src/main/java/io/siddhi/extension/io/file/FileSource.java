@@ -38,6 +38,7 @@ import io.siddhi.extension.io.file.processors.FileProcessor;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
+import io.siddhi.extension.io.file.util.Metrics;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
 import io.siddhi.query.api.annotation.Annotation;
 import io.siddhi.query.api.annotation.Element;
@@ -320,6 +321,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private boolean fileServerConnectorStarted = false;
     private ScheduledFuture scheduledFuture;
     private ConnectionCallback connectionCallback;
+    private String streamName;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -338,6 +340,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         this.fileSourceConfiguration = new FileSourceConfiguration();
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         this.fileSystemConnectorFactory = fileSourceServiceProvider.getFileSystemConnectorFactory();
+        this.streamName = sourceEventListener.getStreamDefinition().getId();
         if (optionHolder.isOptionExists(Constants.DIR_URI)) {
             dirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
             validateURL(dirUri, "dir.uri");
@@ -435,7 +438,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         createInitialSourceConf();
         updateSourceConf();
         getPattern();
-
         return () -> new FileSourceState();
     }
 
@@ -447,6 +449,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     @Override
     public void connect(ConnectionCallback connectionCallback, FileSourceState fileSourceState)
             throws ConnectionUnavailableException {
+        Metrics.createServer();
         this.connectionCallback = connectionCallback;
         updateSourceConf();
         deployServers();
@@ -464,6 +467,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             if (executorService != null && !executorService.isShutdown()) {
                 executorService.shutdown();
             }
+            Metrics.stopServer();
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Failed to stop the file server when shutting down the siddhi app '" +
                     siddhiAppContext.getName() + "' due to " + e.getMessage(), e);
@@ -593,9 +597,10 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setExecutorService(executorService);
 
         if (dirUri != null) {
+            Metrics.getStreamStatus().replace(dirUri, Metrics.StreamStatus.CONNECTING);
             Map<String, String> properties = getFileSystemServerProperties();
             FileSystemListener fileSystemListener = new FileSystemListener(sourceEventListener,
-                    fileSourceConfiguration);
+                    fileSourceConfiguration, siddhiAppContext.getName());
             try {
                 fileSystemServerConnector = fileSystemConnectorFactory.createServerConnector(
                         siddhiAppContext.getName(), properties, fileSystemListener);
@@ -615,6 +620,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 this.scheduledFuture = siddhiAppContext.getScheduledExecutorService().
                         scheduleAtFixedRate(fileSourcePoller, 0, 1, TimeUnit.SECONDS);
             } catch (RemoteFileSystemConnectorException e) {
+                Metrics.getStreamStatus().replace(dirUri, Metrics.StreamStatus.RETRY);
                 throw new ConnectionUnavailableException("Connection to the file directory is lost.", e);
             }
         } else if (fileUri != null && !fileServerConnectorStarted) {
@@ -628,6 +634,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             if (moveAfterFailure != null) {
                 properties.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
             }
+            fileSourceConfiguration.setCurrentlyReadingFileURI(fileUri);
+            Metrics.getStreamStatus().putIfAbsent(fileUri, Metrics.StreamStatus.CONNECTING);
             if (fileSourceConfiguration.isTailingEnabled()) {
                 if (fileSourceConfiguration.getTailedFileURIMap() == null) {
                     fileSourceConfiguration.setTailedFileURI(fileUri);
@@ -640,7 +648,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                     FileServerConnectorProvider fileServerConnectorProvider =
                             fileSourceServiceProvider.getFileServerConnectorProvider();
                     FileProcessor fileProcessor = new FileProcessor(sourceEventListener,
-                            fileSourceConfiguration);
+                            fileSourceConfiguration, siddhiAppContext.getName());
                     final ServerConnector fileServerConnector = fileServerConnectorProvider
                             .createConnector("file-server-connector", properties);
                     fileServerConnector.setMessageProcessor(fileProcessor);
@@ -663,7 +671,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 properties.put(Constants.ACK_TIME_OUT, "1000");
                 properties.put(Constants.MODE, mode);
                 VFSClientConnector vfsClientConnector = new VFSClientConnector();
-                FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration,
+                        siddhiAppContext.getName());
                 vfsClientConnector.setMessageProcessor(fileProcessor);
                 VFSClientConnectorCallback vfsClientConnectorCallback = new VFSClientConnectorCallback();
                 Runnable runnableClient = () -> {
@@ -689,6 +698,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 };
                 fileSourceConfiguration.getExecutorService().execute(runnableClient);
             }
+            Metrics.getStreamStatus().replace(fileUri, Metrics.StreamStatus.PROCESSING);
         }
     }
 
