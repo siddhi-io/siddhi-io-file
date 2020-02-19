@@ -80,7 +80,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 fileSourceConfiguration.setCurrentlyReadingFileURI(fileURI);
                 Metrics.getStreamStatus().putIfAbsent(fileURI, Metrics.StreamStatus.PROCESSING);
                 Metrics.getSourceFiles().labels(siddhiAppName, Utils.getFilePath(fileURI),
-                        Utils.getFileName(fileURI), "Line", sourceEventListener.getStreamDefinition().getId(), "Source");
+                        Utils.getFileName(fileURI), mode, sourceEventListener.getStreamDefinition().getId(), "Source");
                 if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                     vfsClientConnector = new VFSClientConnector();
                     fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, siddhiAppName);
@@ -207,8 +207,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
     }
 
     @Override
-    public void done() {
-    }
+    public void done() {}
 
     static class FileServerExecutor implements Runnable {
         ServerConnector fileServerConnector = null;
@@ -265,7 +264,6 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 Metrics.getSourceStreamStatusMetrics().labels(Utils.getFileName(fileUri), streamName).set(
                         Metrics.getStreamStatus().get(fileUri).ordinal());
                 increaseMetricsAfterProcess(actionAfterProcess);
-//                Metrics.sourceFiles.remove(Utils.getFileName(fileUri), "Line", streamName, "Source");
             }
 
         } catch (ClientConnectorException e) {

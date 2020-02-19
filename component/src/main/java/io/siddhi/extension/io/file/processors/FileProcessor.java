@@ -60,6 +60,7 @@ public class FileProcessor implements CarbonMessageProcessor {
     private Stopwatch stopwatch;
     private String streamName;
     private String siddhiAppName;
+    private String filePath;
 
     public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration,
                          String siddhiAppName) {
@@ -76,17 +77,16 @@ public class FileProcessor implements CarbonMessageProcessor {
         }
         pattern = fileSourceConfiguration.getPattern();
         String fileURI = fileSourceConfiguration.getCurrentlyReadingFileURI();
+        filePath = Utils.getFilePath(fileURI);
         fileName = Utils.getFileName(fileURI);
         fileSourceConfiguration.getExecutorService().execute(() -> {
             stopwatch = Stopwatch.createStarted();
-            String filePath = Utils.getFilePath(fileURI);
             double fileSize = Utils.getFileSize(fileURI) / 1024.0; //converts into KB
             String streamName = sourceEventListener.getStreamDefinition().getId();
-            String mode = this.mode.substring(0, 1).toUpperCase() + this.mode.substring(1);
             eventCounter = Metrics.getSourceFiles().labels(siddhiAppName, filePath,
                     fileName, mode, streamName, "Source");
-            readBytesMetrics = Metrics.getReadByte().labels(siddhiAppName, filePath);
-            Metrics.getSourceFileSize().labels(fileName).set(fileSize);
+            readBytesMetrics = Metrics.getReadByte().labels(siddhiAppName, filePath, fileName);
+            Metrics.getSourceFileSize().labels(siddhiAppName, filePath, fileName).set(fileSize);
             Metrics.getSourceStreamStatusMetrics().labels(siddhiAppName, filePath, fileName, streamName).set(
                     Metrics.getStreamStatus().get(fileURI).ordinal());
             Metrics.getSourceDroppedEvents().labels(siddhiAppName, filePath, fileName);
@@ -293,8 +293,8 @@ public class FileProcessor implements CarbonMessageProcessor {
         eventCounter.inc();
         readBytesMetrics.inc(byteLength);
         Metrics.getTotalReceivedEvents().inc();
-        Metrics.getSourceElapsedTime().labels(fileName).set(elapseTime);
-        Metrics.getSourceStreamStatusMetrics().labels(fileName, streamName).set(Metrics.getStreamStatus().get(
+        Metrics.getSourceElapsedTime().labels(siddhiAppName, filePath, fileName).set(elapseTime);
+        Metrics.getSourceStreamStatusMetrics().labels(siddhiAppName, filePath, fileName, streamName).set(Metrics.getStreamStatus().get(
                 fileSourceConfiguration.getCurrentlyReadingFileURI()).ordinal());
     }
 
