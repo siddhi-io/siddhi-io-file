@@ -41,6 +41,7 @@ public class FileSourceConfiguration {
     private String protocolForMoveAfterFailure = null;
     private String protocolForMoveAfterProcess = null;
     private long timeout = 5000;
+    private String headerPresent = "false";
 
     private FileServerConnector fileServerConnector;
     private RemoteFileSystemServerConnector fileSystemServerConnector;
@@ -229,23 +230,27 @@ public class FileSourceConfiguration {
     }
 
     public String getFileReadWaitTimeout() {
-
         return fileReadWaitTimeout;
     }
 
     public void setFileReadWaitTimeout(String fileReadWaitTimeout) {
-
         this.fileReadWaitTimeout = fileReadWaitTimeout;
     }
 
     public String getActionAfterFailure() {
-
         return actionAfterFailure;
     }
 
     public void setActionAfterFailure(String actionAfterFailure) {
-
         this.actionAfterFailure = actionAfterFailure;
+    }
+
+    public String getHeaderPresent() {
+        return headerPresent;
+    }
+
+    public void setHeaderPresent(String headerPresent) {
+        this.headerPresent = headerPresent;
     }
 
     public String getCurrentlyReadingFileURI() {

@@ -284,6 +284,7 @@ public class FileSourceBinaryModeTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='binary.full'," +
                 "dir.uri='file:/" + dirUri + "/binary', " +
+                "action.after.process='delete'," +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -421,6 +422,7 @@ public class FileSourceBinaryModeTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='binary.full', " +
                 "dir.uri='file:/" + dirUri + "/malformed_binary', " +
+                "action.after.process='delete'," +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -459,6 +461,7 @@ public class FileSourceBinaryModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='binary.full'," +
+                "action.after.process='delete'," +
                 "dir.uri='file:/" + dirUri + "/binary', " +
                 "@map(type='binary'))" +
                 "define stream FooStream (symbol double, price float, volume long); " +

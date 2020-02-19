@@ -223,7 +223,14 @@ import java.util.regex.PatternSyntaxException;
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "1000"
-                )
+                ),
+                @Parameter(
+                        name = "header.present",
+                        description = "This parameter used to specify a particular text file (eg: CSV) contains a " +
+                                "header line or not. This can either have value true or false. If it's set to " +
+                                "`true` then it indicates a file contains a header line, and it will not process",
+                        optional = true, defaultValue = "false",
+                        type = {DataType.BOOL}),
         },
         examples = {
                 @Example(
@@ -316,12 +323,11 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String dirPollingInterval;
     private String filePollingInterval;
     private String fileReadWaitTimeout;
-
+    String headerPresent;
     private long timeout = 5000;
     private boolean fileServerConnectorStarted = false;
     private ScheduledFuture scheduledFuture;
     private ConnectionCallback connectionCallback;
-    private String streamName;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -340,7 +346,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         this.fileSourceConfiguration = new FileSourceConfiguration();
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         this.fileSystemConnectorFactory = fileSourceServiceProvider.getFileSystemConnectorFactory();
-        this.streamName = sourceEventListener.getStreamDefinition().getId();
         if (optionHolder.isOptionExists(Constants.DIR_URI)) {
             dirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
             validateURL(dirUri, "dir.uri");
@@ -405,7 +410,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                     Constants.NONE);
         } else {
             actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS,
-                    Constants.DELETE);
+                    Constants.KEEP);
         }
         actionAfterFailure = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_FAILURE, Constants.DELETE);
         // TODO : When file.uri has been provided, the file uri should be provided for move.after.process parameter.
@@ -433,7 +438,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         beginRegex = optionHolder.validateAndGetStaticValue(Constants.BEGIN_REGEX, null);
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
         fileReadWaitTimeout = optionHolder.validateAndGetStaticValue(Constants.FILE_READ_WAIT_TIMEOUT, "1000");
-
+        headerPresent = optionHolder.validateAndGetStaticValue(Constants.HEADER_PRESENT, "false");
         validateParameters();
         createInitialSourceConf();
         updateSourceConf();
@@ -513,6 +518,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setMoveAfterProcess(moveAfterProcess);
         fileSourceConfiguration.setTimeout(timeout);
         fileSourceConfiguration.setFileReadWaitTimeout(fileReadWaitTimeout);
+        fileSourceConfiguration.setHeaderPresent(headerPresent);
     }
 
     private void updateSourceConf() {
@@ -595,7 +601,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         ExecutorService executorService = siddhiAppContext.getExecutorService();
         createInitialSourceConf();
         fileSourceConfiguration.setExecutorService(executorService);
-
         if (dirUri != null) {
             Metrics.getStreamStatus().replace(dirUri, Metrics.StreamStatus.CONNECTING);
             Map<String, String> properties = getFileSystemServerProperties();
@@ -628,6 +633,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             properties.put(Constants.ACTION, Constants.READ);
             properties.put(Constants.MAX_LINES_PER_POLL, "10");
             properties.put(Constants.POLLING_INTERVAL, filePollingInterval);
+            properties.put(Constants.HEADER_PRESENT, headerPresent);
             if (actionAfterFailure != null) {
                 properties.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
             }
@@ -640,11 +646,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 if (fileSourceConfiguration.getTailedFileURIMap() == null) {
                     fileSourceConfiguration.setTailedFileURI(fileUri);
                 }
-
                 if (fileSourceConfiguration.getTailedFileURIMap().get(0).toString().equalsIgnoreCase(fileUri)) {
                     properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
                     properties.put(Constants.PATH, fileUri);
-
                     FileServerConnectorProvider fileServerConnectorProvider =
                             fileSourceServiceProvider.getFileServerConnectorProvider();
                     FileProcessor fileProcessor = new FileProcessor(sourceEventListener,
@@ -653,7 +657,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                             .createConnector("file-server-connector", properties);
                     fileServerConnector.setMessageProcessor(fileProcessor);
                     fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
-
                     Runnable runnableServer = () -> {
                         try {
                             fileServerConnector.start();
@@ -670,6 +673,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 properties.put(Constants.URI, fileUri);
                 properties.put(Constants.ACK_TIME_OUT, "1000");
                 properties.put(Constants.MODE, mode);
+                properties.put(Constants.HEADER_PRESENT, headerPresent);
                 VFSClientConnector vfsClientConnector = new VFSClientConnector();
                 FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration,
                         siddhiAppContext.getName());

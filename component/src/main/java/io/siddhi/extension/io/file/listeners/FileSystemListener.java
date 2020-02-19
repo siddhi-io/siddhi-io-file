@@ -71,6 +71,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
     public boolean onMessage(RemoteFileSystemBaseMessage remoteFileSystemBaseEvent) {
         if (remoteFileSystemBaseEvent instanceof RemoteFileSystemEvent) {
             String mode = fileSourceConfiguration.getMode();
+            String actionAfterProcess = fileSourceConfiguration.getActionAfterProcess();
             RemoteFileSystemEvent remoteFileSystemEvent = (RemoteFileSystemEvent) remoteFileSystemBaseEvent;
             for (int i = 0; i < remoteFileSystemEvent.getAddedFiles().size(); i++) {
                 File a = new File(remoteFileSystemEvent.getAddedFiles().get(i).getPath());
@@ -104,7 +105,9 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             log.error(String.format("Failed to wait until file '%s' is processed.", fileURI), e);
                             return false;
                         }
-                        reProcessFile(vfsClientConnector, carbonCallback, properties, fileURI);
+                        if (!actionAfterProcess.equalsIgnoreCase(Constants.KEEP)) {
+                            reProcessFile(vfsClientConnector, carbonCallback, properties, fileURI);
+                        }
                     } catch (ClientConnectorException e) {
                         log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
                         carbonCallback.done(carbonMessage);
@@ -135,7 +138,9 @@ public class FileSystemListener implements RemoteFileSystemListener {
                                     e);
                             return false;
                         }
-                        reProcessFile(vfsClientConnector, carbonCallback, properties, fileURI);
+                        if (!actionAfterProcess.equalsIgnoreCase(Constants.KEEP)) {
+                            reProcessFile(vfsClientConnector, carbonCallback, properties, fileURI);
+                        }
                     } catch (ClientConnectorException e) {
                         log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
                         Metrics.getStreamStatus().replace(fileURI, Metrics.StreamStatus.ERROR);
@@ -148,6 +153,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
                             fileSourceConfiguration.getFileReadWaitTimeout());
                     properties.put(Constants.MODE, mode);
+                    properties.put(Constants.HEADER_PRESENT, fileSourceConfiguration.getHeaderPresent());
                     if (fileSourceConfiguration.isTailingEnabled()) {
                         fileSourceConfiguration.setTailedFileURI(fileURI);
                         if (fileSourceConfiguration.getTailedFileURIMap().contains(fileURI)) {
@@ -188,7 +194,9 @@ public class FileSystemListener implements RemoteFileSystemListener {
                                         fileURI), e);
                                 return false;
                             }
-                            reProcessFile(vfsClientConnector, carbonCallback, properties, fileURI);
+                            if (!actionAfterProcess.equalsIgnoreCase(Constants.KEEP)) {
+                                reProcessFile(vfsClientConnector, carbonCallback, properties, fileURI);
+                            }
                         } catch (ClientConnectorException e) {
                             log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
                             Metrics.getStreamStatus().replace(fileURI, Metrics.StreamStatus.ERROR);
@@ -239,31 +247,32 @@ public class FileSystemListener implements RemoteFileSystemListener {
     private void reProcessFile(VFSClientConnector vfsClientConnector,
                                VFSClientConnectorCallback vfsClientConnectorCallback,
                                Map<String, String> properties, String fileUri) {
+        String actionAfterProcess = fileSourceConfiguration.getActionAfterProcess();
         properties.put(Constants.URI, fileUri);
         properties.put(Constants.ACK_TIME_OUT, "1000");
         BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
                 fileUri.getBytes(StandardCharsets.UTF_8)), true);
-
-        String actionAfterProcess = fileSourceConfiguration.getActionAfterProcess();
         String moveAfterProcess = fileSourceConfiguration.getMoveAfterProcess();
         try {
             if (fileSourceConfiguration.getActionAfterProcess() != null) {
                 properties.put(Constants.URI, fileUri);
                 properties.put(Constants.ACTION, actionAfterProcess);
                 if (fileSourceConfiguration.getMoveAfterProcess() != null) {
-                    String destination = constructPath(moveAfterProcess, getFileName(fileUri, fileSourceConfiguration
-                            .getProtocolForMoveAfterProcess()));
+                    String destination = constructPath(moveAfterProcess, getFileName(fileUri,
+                            fileSourceConfiguration.getProtocolForMoveAfterProcess()));
                     if (destination != null) {
                         properties.put(Constants.DESTINATION, destination);
                     }
                 }
                 vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, properties);
                 vfsClientConnectorCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileUri);
-                String streamName = sourceEventListener.getStreamDefinition().getId();
-                Metrics.getStreamStatus().replace(fileUri, Metrics.StreamStatus.COMPLETED);
-                Metrics.getSourceStreamStatusMetrics().labels(Utils.getFileName(fileUri), streamName).set(
-                        Metrics.getStreamStatus().get(fileUri).ordinal());
-                increaseMetricsAfterProcess(actionAfterProcess);
+                fileSourceConfiguration.getExecutorService().execute(() -> {
+                    String streamName = sourceEventListener.getStreamDefinition().getId();
+                    Metrics.getStreamStatus().replace(fileUri, Metrics.StreamStatus.COMPLETED);
+                    Metrics.getSourceStreamStatusMetrics().labels(siddhiAppName, fileUri, Utils.getFileName(fileUri),
+                            streamName).set(Metrics.getStreamStatus().get(fileUri).ordinal());
+                    increaseMetricsAfterProcess(actionAfterProcess);
+                });
             }
 
         } catch (ClientConnectorException e) {

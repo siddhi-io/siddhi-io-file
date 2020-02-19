@@ -22,6 +22,7 @@ import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.exception.CannotRestoreSiddhiAppStateException;
 import io.siddhi.core.stream.input.InputHandler;
+import io.siddhi.extension.io.file.util.Metrics;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.testng.AssertJUnit;
@@ -93,10 +94,10 @@ public class FileSinkTestCase {
 
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='json'), append='false', " +
+                "define stream FooStream (symbol string, price float, volume long, test string); " +
+                "@sink(type='file', @map(type='json'), append='true', " +
                 "file.uri='" + sinkUri + "/{{symbol}}.json') " +
-                "define stream BarStream (symbol string, price float, volume long); ";
+                "define stream BarStream (symbol string, price float, volume long, test string); ";
 
         String query = "" +
                 "from FooStream " +
@@ -109,10 +110,10 @@ public class FileSinkTestCase {
 
         siddhiAppRuntime.start();
 
-        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
-        stockStream.send(new Object[]{"IBM", 57.678f, 100L});
-        stockStream.send(new Object[]{"GOOGLE", 50f, 100L});
-        stockStream.send(new Object[]{"REDHAT", 50f, 100L});
+        stockStream.send(new Object[]{"WSO2", 55.6f, 100L, "test"});
+        stockStream.send(new Object[]{"IBM", 57.678f, 100L, "test"});
+        stockStream.send(new Object[]{"GOOGLE", 50f, 100L, "test"});
+        stockStream.send(new Object[]{"REDHAT", 50f, 100L, "test"});
         Thread.sleep(100);
 
         ArrayList<String> symbolNames = new ArrayList<>();
@@ -132,9 +133,13 @@ public class FileSinkTestCase {
         } else {
             AssertJUnit.fail(sinkUri + " is not a directory.");
         }
-
-        Thread.sleep(1000);
-        siddhiAppRuntime.shutdown();
+        while (true) {
+            Thread.sleep(2000);
+            stockStream.send(new Object[]{"GOOGLE", 50f, 100L, "test"});
+            stockStream.send(new Object[]{"REDHAT", 50f, 100L, "// U+0800 - U+0FFF"});
+        }
+       /* Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();*/
     }
 
     @Test
