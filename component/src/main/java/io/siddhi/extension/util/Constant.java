@@ -30,4 +30,6 @@ public class Constant {
     public static final String SFTP_SCHEME_FILE_OPTION = "sftp";
     public static final String VFS_SCHEME_KEY = "VFS_SCHEME";
     public static final String FTP_SCHEME_FILE_OPTION = "ftp";
+    public static final String STATUS_DONE = "Completed";
+    public static final String STATUS_PROCESS = "Copying";
 }

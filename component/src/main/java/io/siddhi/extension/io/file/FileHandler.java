@@ -15,116 +15,125 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.file.util.Constants;
-import io.siddhi.extension.io.file.util.FileSourceConfiguration;
-import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
 import io.siddhi.extension.util.Utils;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.commons.io.monitor.FileAlterationListener;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
-import org.wso2.transport.remotefilesystem.RemoteFileSystemConnectorFactory;
-import org.wso2.transport.remotefilesystem.server.connector.contract.RemoteFileSystemServerConnector;
-
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+
+import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
+import static io.siddhi.extension.util.Constant.STATUS_DONE;
+import static io.siddhi.extension.util.Constant.STATUS_PROCESS;
+
 
 /**
  * Implementation of siddhi-io-file source.
  */
 @Extension(
-        name = "file_handler",
+        name = "fileeventlistener",
         namespace = "source",
         description = "" +
-                "File Source provides the functionality for user to feed data to siddhi from " +
-                "files. Both text and binary files are supported by file source.",
+                "Fileeventlistener provides the functionality for user to get the details of files " +
+                "which have been created or modified or deleted in the execution time" ,
+
         parameters = {
                 @Parameter(
-                        name = "dir.uri",
+                        name = "uri",
                         description =
-                                "Used to specify a directory to be processed. \n" +
-                                        "All the files inside this directory will be processed. \n" +
-                                        "Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
-                                        "This uri MUST have the respective protocol specified.",
-                        type = {DataType.STRING}
-                ),
-
-                @Parameter(
-                        name = "file.uri",
-                        description =
-                                "Used to specify a file to be processed. \n" +
-                                        " Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
+                                "Used to specify a file to be processed. \nThe 'uri'  should be provided.\n" +
                                         "This uri MUST have the respective protocol specified.\n",
                         type = {DataType.STRING}
                 ),
                 @Parameter(
-                        name = "timeout",
-                        description = "This parameter is used to specify the maximum time period (in milliseconds) " +
-                                " for waiting until a file is processed.\n",
+                        name = "monitoring.interval",
+                        description = "This parameter is used to specify the time interval (in milliseconds) " +
+                                " that the process monitor the changes for.\n",
                         type = {DataType.STRING},
                         optional = true,
-                        defaultValue = "5000"
-                )
-
-
+                        defaultValue = "500"
+                ),
         },
         examples = {
                 @Example(
                         syntax = "" +
-                                "@source(type='file',\n" +
-                                "mode='text.full',\n" +
-                                "tailing='false'\n " +
-                                "dir.uri='file://abc/xyz',\n" +
-                                "action.after.process='delete',\n" +
-                                "@map(type='json')) \n" +
-                                "define stream FooStream (symbol string, price float, volume long); \n",
+                                "@source(type='fileeventlistener', uri='file://abc/xyz.txt',@map(type='json')) \n" +
+                                "define stream CreateFileStream (filepath string, length long, " +
+                                "last_modified string, status string);" +
+                                "@sink(type='log')" +
+                                "define stream FooStream (filepath string, length int, " +
+                                "last_modified string, status string); \n",
 
                         description = "" +
-                                "Under above configuration, all the files in directory will be " +
-                                "picked and read one by one.\n" +
-                                "In this case, it's assumed that all the files contains json valid json" +
-                                " strings with keys 'symbol','price' and 'volume'.\n" +
-                                "Once a file is read, " +
-                                "its content will be converted to an event using siddhi-map-json " +
-                                "extension and then, that event will be received to the FooStream.\n" +
-                                "Finally, after reading is finished, the file will be deleted.\n"
+                                "Under above configuration, After monitoring has been started, If the specific " +
+                                "file given in the uri gets modified or deleted. an event is created" +
+                                " with the filepath, length, last modified date and status of the file. " +
+                                "Then that will be received by the FooStream..\n"
+                ),
+                @Example(
+                        syntax = "" +
+                                "@source(type='fileeventlistener',uri='file://abc/xyz',@map(type='json')) \n" +
+                                "define stream CreateFileStream (filepath string, length long, " +
+                                "last_modified string, status string);\n" +
+                                "@sink(type='log')" +
+                                "define stream FooStream (filepath string, length int, " +
+                                "last_modified string, status string); \n",
+
+                        description = "" +
+                                "Under above configuration, all the files in the specific uri " +
+                                "which has been  modified or created or deleted in the execution time " +
+                                "will be identified and displayed.\n After monitoring has been started, " +
+                                "If any files in the specific uri is newly created, modified or deleted.\n " +
+                                "an event is created with the filepath, length, last modified date " +
+                                "and status of the file. Then that will be received by the FooStream..\n"
+                ),
+                @Example(
+                        syntax = "" +
+                                "@source(type='fileeventlistener',uri='file://abc/xyz', monitoring.interval='200', " +
+                                "@map(type='json')) \n" +
+                                "define stream CreateFileStream (filepath string, length long, " +
+                                "last_modified string, status string);\n" +
+                                "@sink(type='log')" +
+                                "define stream FooStream (filepath string, length int, " +
+                                "last_modified string, status string); \n",
+
+                        description = "" +
+                                "Under above configuration, all the files in the specific uri \n" +
+                                "which has been  modified or created or deleted in the execution time " +
+                                "will be identified and displayed. \n After monitoring has been started," +
+                                " If any files in the specific uri is newly created, modified or deleted.\n " +
+                                "an event is created with the filepath, length, last modified date " +
+                                "and status of the file. Then that will be received by the FooStream. If there " +
+                                "are any changes a new event will be generated in every 200 milliseconds.\n"
                 ),
 
         }
 )
-public class FileHandler extends Source<FileHandler.FileSourceState> {
+
+public class FileHandler extends Source<FileHandler.FileHandlerState> {
     private static final Logger log = Logger.getLogger(FileHandler.class);
-
     private SourceEventListener sourceEventListener;
-    private FileSourceConfiguration fileSourceConfiguration;
-    private RemoteFileSystemConnectorFactory fileSystemConnectorFactory;
-    private FileSourceServiceProvider fileSourceServiceProvider;
-    private RemoteFileSystemServerConnector fileSystemServerConnector;
-    private String filePointer = "0";
-    private String[] requiredProperties;
-    private boolean isTailingEnabled = true;
-    private SiddhiAppContext siddhiAppContext;
-    private List<String> tailedFileURIMap;
-    private String dirUri;
-    private String fileUri;
+    private long monitoringInterval = 500;
     private String uri;
-    private String dirPollingInterval;
-    private String filePollingInterval;
-    private String fileReadWaitTimeout;
-
-    private long timeout = 5000;
-    private boolean fileServerConnectorStarted = false;
-    private ScheduledFuture scheduledFuture;
-    private ConnectionCallback connectionCallback;
+    private String listeningDirUri;
+    private String listeningFileUri;
     private FileAlterationMonitor monitor;
+    private Map<String, Long> initialMap = new ConcurrentHashMap<>();
+    private SiddhiAppContext siddhiAppContext;
+    private List<SubThread> threadList = new ArrayList<>();
+    private static final String CURRENT_MAP_KEY = "current.map.key";
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -132,62 +141,42 @@ public class FileHandler extends Source<FileHandler.FileSourceState> {
     }
 
     @Override
-    public StateFactory<FileSourceState> init(SourceEventListener sourceEventListener,
-                                              OptionHolder optionHolder,
-                                              String[] requiredProperties,
-                                              ConfigReader configReader,
-                                              SiddhiAppContext siddhiAppContext) {
-        this.sourceEventListener = sourceEventListener;
+    public StateFactory<FileHandlerState> init(SourceEventListener sourceEventListener,
+                                               OptionHolder optionHolder,
+                                               String[] requiredProperties,
+                                               ConfigReader configReader,
+                                               SiddhiAppContext siddhiAppContext) throws SiddhiAppValidationException {
         this.siddhiAppContext = siddhiAppContext;
-        this.requiredProperties = requiredProperties.clone();
-        this.fileSourceConfiguration = new FileSourceConfiguration();
-        this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
-        this.fileSystemConnectorFactory = fileSourceServiceProvider.getFileSystemConnectorFactory();
-        if (optionHolder.isOptionExists(Constants.DIR_URI)) {
-            dirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
-            FileObject directory = Utils.getFileObject(dirUri);
+        this.sourceEventListener = sourceEventListener;
+        if (optionHolder.isOptionExists(Constants.URI)) {
+            uri = optionHolder.validateAndGetStaticValue(Constants.URI);
+            FileObject file = Utils.getFileObject(uri);
             try {
-                validateUri(directory);
+                if (!file.exists()) {
+                    throw new SiddhiAppCreationException(" Directory/File " + file.getPublicURIString()
+                            + " is not found ");
+                }
+                if (file.isFile()) {
+                    listeningFileUri = file.getName().getPath();
+                    file = file.getParent();
+                }
+                listeningDirUri = file.getName().getPath();
             } catch (FileSystemException e) {
-                log.error("Directory is not found");
+                throw new SiddhiAppValidationException("Directory/File " + file.getPublicURIString()
+                        + " is not found.", e);
             }
         }
-        if (optionHolder.isOptionExists(Constants.FILE_URI)) {
-            fileUri = optionHolder.validateAndGetStaticValue(Constants.FILE_URI);
-            FileObject directory = Utils.getFileObject(fileUri);
-            try {
-                validateUri(directory);
-            } catch (FileSystemException e) {
-                log.error("File is not found");
-            }
+        if (uri == null) {
+            throw new SiddhiAppCreationException("uri is not found.");
         }
-        if (dirUri != null && fileUri != null) {
-            throw new SiddhiAppCreationException("Only one of directory uri or file uri" +
-                    " should be provided. But both have been provided.");
-        }
-        if (dirUri == null && fileUri == null) {
-            throw new SiddhiAppCreationException("Either directory uri or file uri must " +
-                    "be provided. But none of them found.");
-        }
-        if (dirUri != null) {
-            uri = dirUri;
-        } else {
-            uri = fileUri;
-        }
-
-        dirPollingInterval = optionHolder.validateAndGetStaticValue(Constants.DIRECTORY_POLLING_INTERVAL,
-                "1000");
-        filePollingInterval = optionHolder.validateAndGetStaticValue(Constants.FILE_POLLING_INTERVAL,
-                "1000");
-
-        String timeoutValue = optionHolder.validateAndGetStaticValue(Constants.TIMEOUT, "5000");
+        String monitoringValue = optionHolder.validateAndGetStaticValue(Constants.MONITORING_INTERVAL, "500");
         try {
-            timeout = Long.parseLong(timeoutValue);
+            monitoringInterval = Long.parseLong(monitoringValue);
         } catch (NumberFormatException e) {
-            throw new SiddhiAppRuntimeException("Value provided for timeout, " + timeoutValue + " is invalid.", e);
+            throw new SiddhiAppRuntimeException("Value provided for monitoring " + monitoringValue +
+                    " is invalid.", e);
         }
-
-        return () -> new FileSourceState();
+        return FileHandlerState::new;
     }
 
     @Override
@@ -197,27 +186,22 @@ public class FileHandler extends Source<FileHandler.FileSourceState> {
 
     @Override
     public void connect(ConnectionCallback connectionCallback,
-                        FileSourceState fileSourceState) {
-        try {
-            usingFileAlterationObserver(sourceEventListener);
-        } catch (IOException e) {
-            log.info(e.getMessage());
+                        FileHandler.FileHandlerState fileHandlerState) {
+        initiateFileAlterationObserver();
+        File[] listOfFiles = new File(listeningDirUri).listFiles();
+        if (listOfFiles != null) {
+            for (File listOfFile : listOfFiles) {
+                initialMap.put(listOfFile.getName(), listOfFile.length());
+                sourceEventListener.onEvent(getFileHandlerEvent(listOfFile, listeningFileUri,
+                        STATUS_DONE), null);
+            }
         }
     }
 
-
     /**
-     * Implementation of siddhi-io-file source.
+     * Implementation of  FileAlterationImpl
      */
-
-    public static class FileAlterationImpl implements FileAlterationListener {
-
-
-        private SourceEventListener sourceEventListener;
-
-        public FileAlterationImpl(SourceEventListener sourceEventListener) {
-            this.sourceEventListener = sourceEventListener;
-        }
+    public class FileAlterationImpl implements FileAlterationListener {
 
         @Override
         public void onStart(final FileAlterationObserver observer) {
@@ -225,116 +209,63 @@ public class FileHandler extends Source<FileHandler.FileSourceState> {
 
         @Override
         public void onDirectoryCreate(final File directory) {
-            log.info(directory.getAbsolutePath() + " was created.");
-            String status = "Done";
-            JSONObject obj = new JSONObject();
-            obj.put("filepath", directory.getAbsoluteFile());
-            obj.put("length", directory.length());
-            obj.put("last_modified", new Date(directory.lastModified()));
-            obj.put("status", status);
-            String properties = "filepath:" + directory.getAbsoluteFile() + " length:" + directory.length() +
-                    "last_modified" + new  Date(directory.lastModified()) + "status:" + status;
-            String[] propertiesArr = new String[]{properties};
-            sourceEventListener.onEvent (obj.toString(), propertiesArr);
+            log.debug(directory.getAbsolutePath() + " was created.");
+            sourceEventListener.onEvent
+                    (getFileHandlerEvent(directory, listeningFileUri, STATUS_DONE), null);
         }
 
         @Override
         public void onDirectoryChange(final File directory) {
-            String status = null;
-            log.info(directory.getAbsolutePath() + " was modified");
-            JSONObject obj = new JSONObject();
-            obj.put("filepath", directory.getAbsoluteFile());
-            obj.put("length", directory.length());
-            obj.put("last_modified", new Date(directory.lastModified()));
-            Long fileSizeBefore = directory.length();
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                log.error(e);
+            log.debug(directory.getAbsolutePath() + " was modified");
+            synchronized (this) {
+                if (!initialMap.containsKey(directory.getName())) {
+                    initialMap.put(directory.getAbsolutePath(), directory.length());
+                    sourceEventListener.onEvent
+                            (getFileHandlerEvent(directory, listeningFileUri, STATUS_PROCESS),
+                                    null);
+                    SubThread subThread = new SubThread(directory);
+                    siddhiAppContext.getScheduledExecutorService().schedule(subThread,
+                            monitoringInterval, TimeUnit.MILLISECONDS);
+                    threadList.add(subThread);
+                }
             }
-            Long fileSizeAfter = directory.length();
-            if (fileSizeBefore.equals(fileSizeAfter)) {
-                status = "Done";
-            } else {
-                status = "In Process";
-            }
-            obj.put("status", status);
-            String properties = "filepath:" + directory.getAbsoluteFile() + " length:" + directory.length() +
-                    "last_modified" + new  Date(directory.lastModified()) + "status:" + status;
-            String[] propertiesArr = new String[]{properties};
-            sourceEventListener.onEvent (obj.toString(), propertiesArr);
         }
 
         @Override
         public void onDirectoryDelete(final File directory) {
-            log.info(directory.getAbsolutePath() + " was deleted.");
-            String status = "Done";
-            JSONObject obj = new JSONObject();
-            obj.put("filepath", directory.getAbsoluteFile());
-            obj.put("length", directory.length());
-            obj.put("last_modified", new Date(directory.lastModified()));
-            obj.put("status", status);
-            String properties = "filepath:" + directory.getAbsoluteFile() + " length:" + directory.length() +
-                    "last_modified" + new  Date(directory.lastModified()) + "status:" + status;
-            String[] propertiesArr = new String[]{properties};
-            sourceEventListener.onEvent (obj.toString(), propertiesArr);
+            log.debug(directory.getAbsolutePath() + " was deleted.");
+            sourceEventListener.onEvent
+                    (getFileHandlerEvent(directory, listeningFileUri, STATUS_DONE), null);
         }
 
         @Override
         public void onFileCreate(final File file) {
-            log.info(file.getAbsoluteFile() + " was created.");
-            JSONObject obj = new JSONObject();
-            String status = "Done";
-            obj.put("filepath", file.getAbsoluteFile());
-            obj.put("length", file.length());
-            obj.put("last_modified", new Date(file.lastModified()));
-            obj.put("status", status);
-            String properties = "filepath:" + file.getAbsoluteFile() + " length:" + file.length() +
-                    "last_modified : " + new Date(file.lastModified()) + "status:" + status;
-            String[] propertiesArr = new String[]{properties};
-            sourceEventListener.onEvent (obj.toString(), propertiesArr);
+            log.debug(file.getAbsolutePath() + " was created.");
+            sourceEventListener.onEvent
+                    (getFileHandlerEvent(file, listeningFileUri, STATUS_DONE), null);
         }
 
         @Override
         public void onFileChange(final File file) {
-            String status = null;
-            log.info(file.getAbsoluteFile() + " was modified.");
-            JSONObject obj = new JSONObject();
-            obj.put("filepath", file.getAbsoluteFile());
-            obj.put("length", file.length());
-            Long fileSizeBefore = file.length();
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                log.error(e);
+            log.info(file.getAbsolutePath() + " was modified.");
+            synchronized (this) {
+                if (!initialMap.containsKey(file.getAbsolutePath())) {
+                    initialMap.put(file.getAbsolutePath(), file.length());
+                    sourceEventListener.onEvent
+                            (getFileHandlerEvent(file, listeningFileUri, STATUS_PROCESS), null);
+                    SubThread subThread = new SubThread(file);
+                    siddhiAppContext.getScheduledExecutorService().schedule(subThread,
+                            monitoringInterval, TimeUnit.MILLISECONDS);
+                    threadList.add(subThread);
+                }
             }
-            Long fileSizeAfter = file.length();
-            if (fileSizeBefore.equals(fileSizeAfter)) {
-                status = "Done";
-            } else {
-                status = "In process";
-            }
-            obj.put("status", status);
-            obj.put("last_modified", new Date(file.lastModified()));
-            String properties = "filepath:" + file.getAbsoluteFile() + " length:" + file.length() +
-                    "last_modified : " + new Date(file.lastModified()) + "status:" + status;
-            String[] propertiesArr = new String[]{properties};
-            sourceEventListener.onEvent (obj.toString(), propertiesArr);
         }
 
         @Override
         public void onFileDelete(final File file) {
-            log.info(file.getAbsoluteFile() + " was deleted.");
-            String status = "Done";
-            JSONObject obj = new JSONObject();
-            obj.put("filepath", file.getAbsoluteFile());
-            obj.put("length", file.length());
-            obj.put("last_modified", new Date(file.lastModified()));
-            obj.put("status", status);
-            String properties = "filepath:" + file.getAbsoluteFile() + " length:" + file.length() +
-                    "last_modified : " + new Date(file.lastModified()) + "status:" + status;
-            String[] propertiesArr = new String[]{properties};
-            sourceEventListener.onEvent (obj.toString(), propertiesArr);
+            log.debug(file.getAbsolutePath() + " was deleted.");
+            sourceEventListener.onEvent
+                    (getFileHandlerEvent(file, listeningFileUri, STATUS_DONE), null);
         }
 
         @Override
@@ -342,105 +273,137 @@ public class FileHandler extends Source<FileHandler.FileSourceState> {
         }
     }
 
-    public void usingFileAlterationObserver(SourceEventListener sourceEventListener) throws IOException {
-
-        String folder = uri;
-        String pattern = "file:/.*";
-
-        FileObject directory = Utils.getFileObject(folder);
-        if (validateUri(directory)) {
-            if (directory.isFile()) {
-                directory = directory.getParent();
-            }
-            folder = directory.getPublicURIString();
-            if (folder.matches(pattern)) {
-                folder = folder.substring(7);
-            }
-
-
-            FileAlterationObserver observer = new FileAlterationObserver(folder);
-
-            observer.addListener(new FileAlterationImpl(sourceEventListener));
-
-
-            //create a monitor to check changes after every 500 ms
-            monitor = new FileAlterationMonitor(50);
-            monitor.addObserver(observer);
-
-            try {
-                monitor.start();
-                log.info("Starting monitor (" + folder + "). ");
-            } catch (Exception e) {
-                log.info(e.getMessage());
-            }
+    public void initiateFileAlterationObserver() {
+        FileAlterationObserver observer = new FileAlterationObserver(listeningDirUri);
+        observer.addListener(new FileAlterationImpl());
+        monitor = new FileAlterationMonitor(monitoringInterval);
+        monitor.addObserver(observer);
+        try {
+            monitor.start();
+            log.info("Directory monitoring has been started for folder : " + uri + " .");
+        } catch (Exception e) {
+            throw new SiddhiAppRuntimeException("Exception occurred when starting server to monitor " + uri + ".", e);
         }
     }
 
     @Override
     public void disconnect() {
-        try {
-            monitor.stop(10000);
-        } catch (Exception e) {
-            log.error("Unable to stop");
+
+        if (monitor != null) {
+            try {
+                monitor.stop();
+                initialMap.clear();
+                log.info("Directory monitoring has been stopped for folder : " + uri + " .");
+            } catch (Exception e) {
+                log.error("Exception occurred when stopping server  while monitoring " + uri + " .", e);
+            }
         }
-        log.info("Monitoring stopped");
     }
 
+    @Override
     public void destroy() {
     }
 
+    @Override
     public void pause() {
-
+        if (monitor != null) {
+            threadList.forEach(SubThread::pause);
+            log.info("Directory monitoring has been paused for folder : " + uri + " .");
+        }
     }
 
+    @Override
     public void resume() {
-
-    }
-
-    private  boolean validateUri(FileObject directory) throws FileSystemException {
-        boolean value = directory.exists();
-        if (!value) {
-            log.error(" Directory is not found ");
-            throw new SiddhiAppCreationException(" Directory/File " + directory.getPublicURIString()
-                    + " is not found ");
-
+        if (monitor != null) {
+            threadList.forEach(SubThread::resume);
+            log.info("Directory monitoring has been resumed for folder : " + uri + " .");
         }
-        return value;
     }
+
     /**
-     * FileSourceState
+     * Implementation of SubThread
      */
-    public class FileSourceState extends State {
+    public class SubThread implements Runnable {
+        String status;
+        private final File file;
+        private volatile boolean paused;
+        private ReentrantLock lock;
+        private Condition condition;
+        private volatile boolean inactive;
 
-        private final Map<String, Object> state;
-
-        public FileSourceState() {
-            state = new HashMap<>();
+        SubThread(File file) {
+            this.file = file;
+            inactive = false;
+            lock = new ReentrantLock();
+            condition = lock.newCondition();
         }
 
         @Override
-        public boolean canDestroy() {
-            return false;
+        public void run() {
+            while (!inactive) {
+                if (paused) {
+                    lock.lock();
+                    try {
+                        condition.await();
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+                long val = initialMap.get(file.getAbsolutePath());
+                if (val < file.length()) {
+                    status = STATUS_PROCESS;
+                    initialMap.put(file.getAbsolutePath(), file.length());
+                    SubThread subThread = new SubThread(file);
+                    siddhiAppContext.getScheduledExecutorService().schedule(subThread,
+                            monitoringInterval, TimeUnit.MILLISECONDS);
+                    threadList.add(subThread);
+                } else {
+                    status = STATUS_DONE;
+                    initialMap.remove(file.getAbsolutePath());
+                }
+                sourceEventListener.onEvent
+                        (getFileHandlerEvent(file, listeningFileUri, status), null);
+            }
         }
 
-        @Override
-        public Map<String, Object> snapshot() {
-            filePointer = FileHandler.this.fileSourceConfiguration.getFilePointer();
-            state.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
-            state.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURIMap());
-            state.put(Constants.TAILING_REGEX_STRING_BUILDER,
-                    fileSourceConfiguration.getTailingRegexStringBuilder());
-            return state;
+        public void pause() {
+            paused = true;
         }
 
-        @Override
-        public void restore(Map<String, Object> map) {
-            filePointer = map.get(Constants.FILE_POINTER).toString();
-            tailedFileURIMap = (List<String>) map.get(Constants.TAILED_FILE);
-            fileSourceConfiguration.setFilePointer(filePointer);
-            fileSourceConfiguration.setTailedFileURIMap(tailedFileURIMap);
-            fileSourceConfiguration.updateTailingRegexStringBuilder(
-                    (StringBuilder) map.get(Constants.TAILING_REGEX_STRING_BUILDER));
+        public void resume() {
+            paused = false;
+            try {
+                lock.lock();
+                condition.signalAll();
+            } finally {
+                lock.unlock();
+            }
         }
     }
-}
+        /**
+         * State class for  FileHandler
+         */
+        public static class FileHandlerState extends State {
+
+            private  Map<String, Long> stateMap = new HashMap<>();
+
+            @Override
+            public boolean canDestroy() {
+                return false;
+            }
+
+            @Override
+            public Map<String, Object> snapshot() {
+                Map<String, Object> currentState = new HashMap<>();
+                currentState.put(CURRENT_MAP_KEY, stateMap);
+                return currentState;
+            }
+
+            @Override
+            public void restore(Map<String, Object> state) {
+                stateMap = (Map<String, Long>) state.get(CURRENT_MAP_KEY);
+            }
+        }
+    }
