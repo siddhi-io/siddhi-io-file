@@ -41,6 +41,7 @@ public class Constants {
     public static final String FILE_URI = "file.uri";
     public static final String DIRECTORY_POLLING_INTERVAL = "dir.polling.interval";
     public static final String FILE_POLLING_INTERVAL = "file.polling.interval";
+    public static final String MONITORING_INTERVAL = "monitoring.interval";
     public static final String TIMEOUT = "timeout";
     public static final String ADD_EVENT_SEPARATOR = "add.line.separator";
     public static final String FILE_READ_WAIT_TIMEOUT = "file.read.wait.timeout";
