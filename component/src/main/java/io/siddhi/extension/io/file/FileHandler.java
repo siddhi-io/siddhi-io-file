@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.siddhi.extension.io.file;
 
 import io.siddhi.annotation.Example;
@@ -36,6 +54,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
 import static io.siddhi.extension.util.Constant.STATUS_DONE;
+import static io.siddhi.extension.util.Constant.STATUS_NEW;
 import static io.siddhi.extension.util.Constant.STATUS_PROCESS;
 
 
@@ -63,7 +82,7 @@ import static io.siddhi.extension.util.Constant.STATUS_PROCESS;
                                 " that the process monitor the changes for.\n",
                         type = {DataType.STRING},
                         optional = true,
-                        defaultValue = "500"
+                        defaultValue = "1000"
                 ),
         },
         examples = {
@@ -125,15 +144,17 @@ import static io.siddhi.extension.util.Constant.STATUS_PROCESS;
 public class FileHandler extends Source<FileHandler.FileHandlerState> {
     private static final Logger log = Logger.getLogger(FileHandler.class);
     private SourceEventListener sourceEventListener;
-    private long monitoringInterval = 500;
-    private String uri;
+    private long monitoringInterval = 1000;
+    private String listeningUri;
     private String listeningDirUri;
     private String listeningFileUri;
     private FileAlterationMonitor monitor;
     private Map<String, Long> initialMap = new ConcurrentHashMap<>();
+    private Map<String, Long> onChangeMap = new ConcurrentHashMap<>();
     private SiddhiAppContext siddhiAppContext;
-    private List<SubThread> threadList = new ArrayList<>();
+    private List<ThreadOnContinuousChange> threadList = new ArrayList<>();
     private static final String CURRENT_MAP_KEY = "current.map.key";
+    private  Map<String, Long> stateMap = new HashMap<>();
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -149,27 +170,28 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
         if (optionHolder.isOptionExists(Constants.URI)) {
-            uri = optionHolder.validateAndGetStaticValue(Constants.URI);
-            FileObject file = Utils.getFileObject(uri);
-            try {
-                if (!file.exists()) {
-                    throw new SiddhiAppCreationException(" Directory/File " + file.getPublicURIString()
-                            + " is not found ");
-                }
-                if (file.isFile()) {
-                    listeningFileUri = file.getName().getPath();
-                    file = file.getParent();
-                }
-                listeningDirUri = file.getName().getPath();
-            } catch (FileSystemException e) {
-                throw new SiddhiAppValidationException("Directory/File " + file.getPublicURIString()
-                        + " is not found.", e);
+            listeningUri = optionHolder.validateAndGetStaticValue(Constants.URI);
+        }
+        if (listeningUri == null) {
+            throw new SiddhiAppCreationException(" uri must be provided.");
+        }
+        FileObject listeningFileObject = Utils.getFileObject(listeningUri);
+        try {
+            if (!listeningFileObject.exists()) {
+                throw new SiddhiAppCreationException(" Directory/File " + listeningFileObject.getPublicURIString()
+                        + " is not found ");
             }
+            if (listeningFileObject.isFile()) {
+                listeningFileUri = listeningFileObject.getName().getPath();
+                listeningFileObject = listeningFileObject.getParent();
+            }
+            listeningDirUri = listeningFileObject.getName().getPath();
+        } catch (FileSystemException e) {
+            throw new SiddhiAppValidationException("Directory/File " + listeningFileObject.getPublicURIString()
+                    + " is not found.", e);
         }
-        if (uri == null) {
-            throw new SiddhiAppCreationException("uri is not found.");
-        }
-        String monitoringValue = optionHolder.validateAndGetStaticValue(Constants.MONITORING_INTERVAL, "500");
+
+        String monitoringValue = optionHolder.validateAndGetStaticValue(Constants.MONITORING_INTERVAL, "1000");
         try {
             monitoringInterval = Long.parseLong(monitoringValue);
         } catch (NumberFormatException e) {
@@ -185,15 +207,16 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
     }
 
     @Override
-    public void connect(ConnectionCallback connectionCallback,
-                        FileHandler.FileHandlerState fileHandlerState) {
+    public void connect(ConnectionCallback connectionCallback, FileHandler.FileHandlerState fileHandlerState) {
         initiateFileAlterationObserver();
         File[] listOfFiles = new File(listeningDirUri).listFiles();
         if (listOfFiles != null) {
             for (File listOfFile : listOfFiles) {
                 initialMap.put(listOfFile.getName(), listOfFile.length());
-                sourceEventListener.onEvent(getFileHandlerEvent(listOfFile, listeningFileUri,
-                        STATUS_DONE), null);
+                if (!stateMap.containsKey(listOfFile.getName())) {
+                    sourceEventListener.onEvent(getFileHandlerEvent(listOfFile, listeningFileUri,
+                            STATUS_NEW), null);
+                }
             }
         }
     }
@@ -210,6 +233,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         @Override
         public void onDirectoryCreate(final File directory) {
             log.debug(directory.getAbsolutePath() + " was created.");
+            initialMap.put(directory.getName(), directory.length());
             sourceEventListener.onEvent
                     (getFileHandlerEvent(directory, listeningFileUri, STATUS_DONE), null);
         }
@@ -218,15 +242,15 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         public void onDirectoryChange(final File directory) {
             log.debug(directory.getAbsolutePath() + " was modified");
             synchronized (this) {
-                if (!initialMap.containsKey(directory.getName())) {
-                    initialMap.put(directory.getAbsolutePath(), directory.length());
+                if (!onChangeMap.containsKey(directory.getName())) {
+                    initialMap.put(directory.getName(), directory.length());
                     sourceEventListener.onEvent
                             (getFileHandlerEvent(directory, listeningFileUri, STATUS_PROCESS),
                                     null);
-                    SubThread subThread = new SubThread(directory);
-                    siddhiAppContext.getScheduledExecutorService().schedule(subThread,
+                    ThreadOnContinuousChange threadOnContinuousChange = new ThreadOnContinuousChange(directory);
+                    siddhiAppContext.getScheduledExecutorService().schedule(threadOnContinuousChange,
                             monitoringInterval, TimeUnit.MILLISECONDS);
-                    threadList.add(subThread);
+                    threadList.add(threadOnContinuousChange);
                 }
             }
         }
@@ -234,6 +258,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         @Override
         public void onDirectoryDelete(final File directory) {
             log.debug(directory.getAbsolutePath() + " was deleted.");
+            initialMap.remove(directory.getName(), directory.length());
             sourceEventListener.onEvent
                     (getFileHandlerEvent(directory, listeningFileUri, STATUS_DONE), null);
         }
@@ -241,22 +266,23 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         @Override
         public void onFileCreate(final File file) {
             log.debug(file.getAbsolutePath() + " was created.");
+            initialMap.put(file.getName(), file.length());
             sourceEventListener.onEvent
                     (getFileHandlerEvent(file, listeningFileUri, STATUS_DONE), null);
         }
 
         @Override
         public void onFileChange(final File file) {
-            log.info(file.getAbsolutePath() + " was modified.");
+            log.debug(file.getAbsolutePath() + " was modified.");
             synchronized (this) {
-                if (!initialMap.containsKey(file.getAbsolutePath())) {
-                    initialMap.put(file.getAbsolutePath(), file.length());
+                if (!onChangeMap.containsKey(file.getName())) {
+                    onChangeMap.put(file.getName(), file.length());
                     sourceEventListener.onEvent
                             (getFileHandlerEvent(file, listeningFileUri, STATUS_PROCESS), null);
-                    SubThread subThread = new SubThread(file);
-                    siddhiAppContext.getScheduledExecutorService().schedule(subThread,
+                    ThreadOnContinuousChange threadOnContinuousChange = new ThreadOnContinuousChange(file);
+                    siddhiAppContext.getScheduledExecutorService().schedule(threadOnContinuousChange,
                             monitoringInterval, TimeUnit.MILLISECONDS);
-                    threadList.add(subThread);
+                    threadList.add(threadOnContinuousChange);
                 }
             }
         }
@@ -264,12 +290,14 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         @Override
         public void onFileDelete(final File file) {
             log.debug(file.getAbsolutePath() + " was deleted.");
+            initialMap.remove(file.getName());
             sourceEventListener.onEvent
                     (getFileHandlerEvent(file, listeningFileUri, STATUS_DONE), null);
         }
 
         @Override
         public void onStop(final FileAlterationObserver observer) {
+
         }
     }
 
@@ -280,22 +308,22 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         monitor.addObserver(observer);
         try {
             monitor.start();
-            log.info("Directory monitoring has been started for folder : " + uri + " .");
+            log.debug("Directory monitoring has been started for folder : " + listeningUri + " .");
         } catch (Exception e) {
-            throw new SiddhiAppRuntimeException("Exception occurred when starting server to monitor " + uri + ".", e);
+            throw new SiddhiAppRuntimeException("Exception occurred when starting server to monitor "
+                    + listeningUri + ".", e);
         }
     }
 
     @Override
     public void disconnect() {
-
         if (monitor != null) {
             try {
                 monitor.stop();
                 initialMap.clear();
-                log.info("Directory monitoring has been stopped for folder : " + uri + " .");
+                log.debug("Directory monitoring has been stopped for folder : " + listeningUri + " .");
             } catch (Exception e) {
-                log.error("Exception occurred when stopping server  while monitoring " + uri + " .", e);
+                log.error("Exception occurred when stopping server  while monitoring " + listeningUri + " .", e);
             }
         }
     }
@@ -307,23 +335,23 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
     @Override
     public void pause() {
         if (monitor != null) {
-            threadList.forEach(SubThread::pause);
-            log.info("Directory monitoring has been paused for folder : " + uri + " .");
+            threadList.forEach(ThreadOnContinuousChange::pause);
+            log.debug("Directory monitoring has been paused for folder : " + listeningUri + " .");
         }
     }
 
     @Override
     public void resume() {
         if (monitor != null) {
-            threadList.forEach(SubThread::resume);
-            log.info("Directory monitoring has been resumed for folder : " + uri + " .");
+            threadList.forEach(ThreadOnContinuousChange::resume);
+            log.debug("Directory monitoring has been resumed for folder : " + listeningUri + " .");
         }
     }
 
     /**
      * Implementation of SubThread
      */
-    public class SubThread implements Runnable {
+    public class ThreadOnContinuousChange implements Runnable {
         String status;
         private final File file;
         private volatile boolean paused;
@@ -331,7 +359,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         private Condition condition;
         private volatile boolean inactive;
 
-        SubThread(File file) {
+        ThreadOnContinuousChange(File file) {
             this.file = file;
             inactive = false;
             lock = new ReentrantLock();
@@ -351,20 +379,19 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
                         lock.unlock();
                     }
                 }
-                long val = initialMap.get(file.getAbsolutePath());
+                long val = onChangeMap.get(file.getName());
                 if (val < file.length()) {
                     status = STATUS_PROCESS;
-                    initialMap.put(file.getAbsolutePath(), file.length());
-                    SubThread subThread = new SubThread(file);
-                    siddhiAppContext.getScheduledExecutorService().schedule(subThread,
+                    onChangeMap.put(file.getName(), file.length());
+                    ThreadOnContinuousChange threadOnContinuousChange = new ThreadOnContinuousChange(file);
+                    siddhiAppContext.getScheduledExecutorService().schedule(threadOnContinuousChange,
                             monitoringInterval, TimeUnit.MILLISECONDS);
-                    threadList.add(subThread);
+                    threadList.add(threadOnContinuousChange);
                 } else {
                     status = STATUS_DONE;
-                    initialMap.remove(file.getAbsolutePath());
+                    onChangeMap.remove(file.getName());
                 }
-                sourceEventListener.onEvent
-                        (getFileHandlerEvent(file, listeningFileUri, status), null);
+                sourceEventListener.onEvent(getFileHandlerEvent(file, listeningFileUri, status), null);
             }
         }
 
@@ -382,28 +409,26 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
             }
         }
     }
-        /**
-         * State class for  FileHandler
-         */
-        public static class FileHandlerState extends State {
+    /**
+     * State class for  FileHandler
+     */
+    public  class FileHandlerState extends State {
 
-            private  Map<String, Long> stateMap = new HashMap<>();
+        @Override
+        public boolean canDestroy() {
+            return false;
+        }
 
-            @Override
-            public boolean canDestroy() {
-                return false;
-            }
+        @Override
+        public Map<String, Object> snapshot() {
+            Map<String, Object> currentState = new HashMap<>();
+            currentState.put(CURRENT_MAP_KEY, initialMap);
+            return currentState;
+        }
 
-            @Override
-            public Map<String, Object> snapshot() {
-                Map<String, Object> currentState = new HashMap<>();
-                currentState.put(CURRENT_MAP_KEY, stateMap);
-                return currentState;
-            }
-
-            @Override
-            public void restore(Map<String, Object> state) {
-                stateMap = (Map<String, Long>) state.get(CURRENT_MAP_KEY);
-            }
+        @Override
+        public void restore(Map<String, Object> state) {
+            stateMap = (Map<String, Long>) state.get(CURRENT_MAP_KEY);
         }
     }
+}
