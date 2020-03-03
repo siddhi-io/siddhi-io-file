@@ -11,16 +11,17 @@ import java.util.Date;
  */
 public class Util {
     public static String getFileHandlerEvent(final File file, String listeningFileUri, String status) {
-        boolean fileUrlValidated = false;
-
+        boolean listenerEventsURLValidated = false;
+        //If the listeningUri is a fileUri
         if (listeningFileUri != null) {
             if (file.getAbsolutePath().equals(listeningFileUri)) {
-                fileUrlValidated = true;
+                listenerEventsURLValidated = true;
             }
         } else {
-            fileUrlValidated = true;
+            // If the listeningUri is a directoryUri
+            listenerEventsURLValidated = true;
         }
-        if (fileUrlValidated) {
+        if (listenerEventsURLValidated) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("filepath", file.getAbsolutePath());
             jsonObject.put("length", file.length());
