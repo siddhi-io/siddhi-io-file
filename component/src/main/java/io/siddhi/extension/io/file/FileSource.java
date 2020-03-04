@@ -301,7 +301,6 @@ import java.util.regex.PatternSyntaxException;
 )
 public class FileSource extends Source<FileSource.FileSourceState> {
     private static final Logger log = Logger.getLogger(FileSource.class);
-    String headerPresent;
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private RemoteFileSystemConnectorFactory fileSystemConnectorFactory;
