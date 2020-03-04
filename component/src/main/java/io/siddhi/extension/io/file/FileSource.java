@@ -328,6 +328,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private boolean fileServerConnectorStarted = false;
     private ScheduledFuture scheduledFuture;
     private ConnectionCallback connectionCallback;
+    private String headerPresent;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
