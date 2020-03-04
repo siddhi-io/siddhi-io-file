@@ -82,7 +82,9 @@ import java.util.regex.PatternSyntaxException;
                                         "All the files inside this directory will be processed. \n" +
                                         "Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
                                         "This uri MUST have the respective protocol specified.",
-                        type = {DataType.STRING}
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "file:/var/tmp"
                 ),
 
                 @Parameter(
@@ -91,7 +93,9 @@ import java.util.regex.PatternSyntaxException;
                                 "Used to specify a file to be processed. \n" +
                                         " Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
                                         "This uri MUST have the respective protocol specified.\n",
-                        type = {DataType.STRING}
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "file:/var/temp/tmp.text"
                 ),
 
                 @Parameter(
@@ -297,7 +301,6 @@ import java.util.regex.PatternSyntaxException;
 )
 public class FileSource extends Source<FileSource.FileSourceState> {
     private static final Logger log = Logger.getLogger(FileSource.class);
-
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private RemoteFileSystemConnectorFactory fileSystemConnectorFactory;
@@ -307,7 +310,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String[] requiredProperties;
     private boolean isTailingEnabled = true;
     private SiddhiAppContext siddhiAppContext;
-
     private String mode;
     private String actionAfterProcess;
     private String actionAfterFailure = null;
@@ -322,11 +324,11 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String dirPollingInterval;
     private String filePollingInterval;
     private String fileReadWaitTimeout;
-    String headerPresent;
     private long timeout = 5000;
     private boolean fileServerConnectorStarted = false;
     private ScheduledFuture scheduledFuture;
     private ConnectionCallback connectionCallback;
+    private String headerPresent;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
