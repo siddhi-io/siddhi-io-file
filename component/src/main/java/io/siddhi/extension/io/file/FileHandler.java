@@ -44,6 +44,7 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,7 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
 import static io.siddhi.extension.util.Constant.STATUS_DONE;
 import static io.siddhi.extension.util.Constant.STATUS_NEW;
 import static io.siddhi.extension.util.Constant.STATUS_PROCESS;
+import static io.siddhi.extension.util.Constant.STATUS_REMOVE;
 
 
 /**
@@ -154,7 +156,8 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
     private SiddhiAppContext siddhiAppContext;
     private List<ThreadOnContinuousChange> threadList = new ArrayList<>();
     private static final String CURRENT_MAP_KEY = "current.map.key";
-    private  Map<String, Long> stateMap = new HashMap<>();
+    private static final String RECENT_FILE_SIZE_MAP_KEY = "recent.file.size.map.key";
+
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -212,10 +215,22 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         File[] listOfFiles = new File(listeningDirUri).listFiles();
         if (listOfFiles != null) {
             for (File listOfFile : listOfFiles) {
-                initialMap.put(listOfFile.getName(), listOfFile.length());
-                if (!stateMap.containsKey(listOfFile.getName())) {
+                // if the file is in list of files and not in initial map add it to the map
+                if (!initialMap.containsKey(listOfFile.getAbsolutePath())) {
+                    initialMap.put(listOfFile.getAbsolutePath(), listOfFile.length());
                     sourceEventListener.onEvent(getFileHandlerEvent(listOfFile, listeningFileUri,
                             STATUS_NEW), null);
+                }
+            }
+            for (Map.Entry<String, Long> entry : initialMap.entrySet()) {
+                // if the file is not in the list OF files and it is in the state map it has to be remove it from the
+                // map
+                List<File> fileList = Arrays.asList(listOfFiles);
+                File initialMapEntry = new File(entry.getKey());
+                if (!fileList.contains(initialMapEntry)) {
+                    initialMap.remove(initialMapEntry.getAbsolutePath());
+                    sourceEventListener.onEvent(getFileHandlerEvent(initialMapEntry, listeningFileUri,
+                            STATUS_REMOVE), null);
                 }
             }
         }
@@ -233,7 +248,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         @Override
         public void onDirectoryCreate(final File directory) {
             log.debug(directory.getAbsolutePath() + " was created.");
-            initialMap.put(directory.getName(), directory.length());
+            initialMap.put(directory.getAbsolutePath(), directory.length());
             sourceEventListener.onEvent
                     (getFileHandlerEvent(directory, listeningFileUri, STATUS_DONE), null);
         }
@@ -242,8 +257,8 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         public void onDirectoryChange(final File directory) {
             log.debug(directory.getAbsolutePath() + " was modified");
             synchronized (this) {
-                if (!recentFileSizeMap.containsKey(directory.getName())) {
-                    recentFileSizeMap.put(directory.getName(), directory.length());
+                if (!recentFileSizeMap.containsKey(directory.getAbsolutePath())) {
+                    recentFileSizeMap.put(directory.getAbsolutePath(), directory.length());
                     sourceEventListener.onEvent
                             (getFileHandlerEvent(directory, listeningFileUri, STATUS_PROCESS),
                                     null);
@@ -258,7 +273,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         @Override
         public void onDirectoryDelete(final File directory) {
             log.debug(directory.getAbsolutePath() + " was deleted.");
-            initialMap.remove(directory.getName(), directory.length());
+            initialMap.remove(directory.getAbsolutePath(), directory.length());
             sourceEventListener.onEvent
                     (getFileHandlerEvent(directory, listeningFileUri, STATUS_DONE), null);
         }
@@ -266,7 +281,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         @Override
         public void onFileCreate(final File file) {
             log.debug(file.getAbsolutePath() + " was created.");
-            initialMap.put(file.getName(), file.length());
+            initialMap.put(file.getAbsolutePath(), file.length());
             sourceEventListener.onEvent
                     (getFileHandlerEvent(file, listeningFileUri, STATUS_DONE), null);
         }
@@ -275,8 +290,8 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         public void onFileChange(final File file) {
             log.debug(file.getAbsolutePath() + " was modified.");
             synchronized (this) {
-                if (!recentFileSizeMap.containsKey(file.getName())) {
-                    recentFileSizeMap.put(file.getName(), file.length());
+                if (!recentFileSizeMap.containsKey(file.getAbsolutePath())) {
+                    recentFileSizeMap.put(file.getAbsolutePath(), file.length());
                     sourceEventListener.onEvent
                             (getFileHandlerEvent(file, listeningFileUri, STATUS_PROCESS), null);
                     ThreadOnContinuousChange threadOnContinuousChange = new ThreadOnContinuousChange(file);
@@ -290,7 +305,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         @Override
         public void onFileDelete(final File file) {
             log.debug(file.getAbsolutePath() + " was deleted.");
-            initialMap.remove(file.getName());
+            initialMap.remove(file.getAbsolutePath());
             sourceEventListener.onEvent
                     (getFileHandlerEvent(file, listeningFileUri, STATUS_DONE), null);
         }
@@ -336,7 +351,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
     public void pause() {
         if (monitor != null) {
             threadList.forEach(ThreadOnContinuousChange::pause);
-            log.debug("Directory monitoring has been paused for folder : " + listeningUri + " .");
+            log.info("Directory monitoring has been paused for folder : " + listeningUri + " .");
         }
     }
 
@@ -344,7 +359,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
     public void resume() {
         if (monitor != null) {
             threadList.forEach(ThreadOnContinuousChange::resume);
-            log.debug("Directory monitoring has been resumed for folder : " + listeningUri + " .");
+            log.info("Directory monitoring has been resumed for folder : " + listeningUri + " .");
         }
     }
 
@@ -379,17 +394,17 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
                         lock.unlock();
                     }
                 }
-                long recentFileSize = recentFileSizeMap.get(file.getName());
+                long recentFileSize = recentFileSizeMap.get(file.getAbsolutePath());
                 if (recentFileSize < file.length()) {
                     status = STATUS_PROCESS;
-                    recentFileSizeMap.put(file.getName(), file.length());
+                    recentFileSizeMap.put(file.getAbsolutePath(), file.length());
                     ThreadOnContinuousChange threadOnContinuousChange = new ThreadOnContinuousChange(file);
                     siddhiAppContext.getScheduledExecutorService().schedule(threadOnContinuousChange,
                             monitoringInterval, TimeUnit.MILLISECONDS);
                     threadList.add(threadOnContinuousChange);
                 } else {
                     status = STATUS_DONE;
-                    recentFileSizeMap.remove(file.getName());
+                    recentFileSizeMap.remove(file.getAbsolutePath());
                 }
                 sourceEventListener.onEvent(getFileHandlerEvent(file, listeningFileUri, status), null);
             }
@@ -423,12 +438,20 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         public Map<String, Object> snapshot() {
             Map<String, Object> currentState = new HashMap<>();
             currentState.put(CURRENT_MAP_KEY, initialMap);
+            currentState.put(RECENT_FILE_SIZE_MAP_KEY, recentFileSizeMap);
+            log.info("Initial Map in snapshot() : " + initialMap);
             return currentState;
         }
 
         @Override
         public void restore(Map<String, Object> state) {
-            stateMap = (Map<String, Long>) state.get(CURRENT_MAP_KEY);
+            initialMap = (Map<String, Long>) state.get(CURRENT_MAP_KEY);
+            recentFileSizeMap = (Map<String, Long>) state.get(RECENT_FILE_SIZE_MAP_KEY);
+            for (Map.Entry<String, Long> entry : recentFileSizeMap.entrySet()) {
+                ThreadOnContinuousChange threadOnRecentFileSize =
+                        new ThreadOnContinuousChange(new File(entry.getKey()));
+                threadOnRecentFileSize.run();
+            }
         }
     }
 }

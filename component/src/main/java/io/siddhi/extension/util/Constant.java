@@ -32,4 +32,6 @@ public class Constant {
     public static final String FTP_SCHEME_FILE_OPTION = "ftp";
     public static final String STATUS_DONE = "Completed";
     public static final String STATUS_PROCESS = "Copying";
+    public static final String STATUS_NEW = "Newly Added";
+    public static final String STATUS_REMOVE = "Removed";
 }
