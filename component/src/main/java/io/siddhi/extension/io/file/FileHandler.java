@@ -223,7 +223,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
                 }
             }
             for (Map.Entry<String, Long> entry : initialMap.entrySet()) {
-                // if the file is not in the list OF files and it is in the state map it has to be remove it from the
+                // if the file is not in the list of files and it is in the state map it has to be remove it from the
                 // map
                 List<File> fileList = Arrays.asList(listOfFiles);
                 File initialMapEntry = new File(entry.getKey());
@@ -351,7 +351,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
     public void pause() {
         if (monitor != null) {
             threadList.forEach(ThreadOnContinuousChange::pause);
-            log.info("Directory monitoring has been paused for folder : " + listeningUri + " .");
+            log.debug("Directory monitoring has been paused for folder : " + listeningUri + " .");
         }
     }
 
@@ -359,7 +359,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
     public void resume() {
         if (monitor != null) {
             threadList.forEach(ThreadOnContinuousChange::resume);
-            log.info("Directory monitoring has been resumed for folder : " + listeningUri + " .");
+            log.debug("Directory monitoring has been resumed for folder : " + listeningUri + " .");
         }
     }
 
@@ -439,7 +439,6 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
             Map<String, Object> currentState = new HashMap<>();
             currentState.put(CURRENT_MAP_KEY, initialMap);
             currentState.put(RECENT_FILE_SIZE_MAP_KEY, recentFileSizeMap);
-            log.info("Initial Map in snapshot() : " + initialMap);
             return currentState;
         }
 
