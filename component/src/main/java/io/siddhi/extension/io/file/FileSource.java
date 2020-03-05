@@ -158,7 +158,9 @@ import java.util.regex.PatternSyntaxException;
                                 "This should be the absolute path of the file that going to be created after moving " +
                                 "is done.\n" +
                                 "This uri MUST have the respective protocol specified.\n",
-                        type = {DataType.STRING}
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "file:/var/tmp"
                 ),
 
                 @Parameter(
@@ -169,7 +171,9 @@ import java.util.regex.PatternSyntaxException;
                                 "This should be the absolute path of the file that going to be created after moving " +
                                 "is done.\n" +
                                 "This uri MUST have the respective protocol specified.\n",
-                        type = {DataType.STRING}
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "file:/var/tmp"
                 ),
 
                 @Parameter(
