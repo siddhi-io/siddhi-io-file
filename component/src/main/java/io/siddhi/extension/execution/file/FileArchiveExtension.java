@@ -209,7 +209,7 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
             generateFileList(uri, sourceFile, fileList, excludeSubdirectories);
             try {
                 zip(uri, destinationFile, fileList);
-                Metrics.getTotalNumberOfArchive().inc();
+                Metrics.getNumberOfArchives().inc();
             } catch (IOException e) {
                 throw new SiddhiAppRuntimeException("IOException occurred when archiving  " + uri, e);
             }
@@ -218,7 +218,7 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
                 if (archiveType.compareToIgnoreCase(TAR_FILE_EXTENSION) == 0) {
                     addToTarArchiveCompression(
                             getTarArchiveOutputStream(destinationFile), sourceFile, uri);
-                    Metrics.getTotalNumberOfArchive().inc();
+                    Metrics.getNumberOfArchives().inc();
                 } else {
                     throw new SiddhiAppRuntimeException("Unsupported archive type: " + archiveType);
                 }

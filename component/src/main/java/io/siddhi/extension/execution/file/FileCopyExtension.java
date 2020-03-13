@@ -240,7 +240,7 @@ public class FileCopyExtension extends StreamFunctionProcessor {
                 destinationFileObject.copyFrom(sourceFileObject, Selectors.SELECT_ALL);
                 destinationFileObject.close();
             }
-            Metrics.getTotalCopy().inc();
+            Metrics.getNumberOfCopy().inc();
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when doing file operations when copying for " +
                     "file: " + sourceFileObject.getName().getPath(), e);

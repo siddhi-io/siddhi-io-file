@@ -97,7 +97,7 @@ public class FileDeleteExtension extends StreamFunctionProcessor {
         try {
             FileObject rootFileObject = Utils.getFileObject(fileDeletePathUri);
             rootFileObject.delete(Selectors.SELECT_ALL);
-            Metrics.getTotalDeletion().inc();
+            Metrics.getNumberOfDeletion().inc();
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Failure occurred when deleting the file " + fileDeletePathUri, e);
         }

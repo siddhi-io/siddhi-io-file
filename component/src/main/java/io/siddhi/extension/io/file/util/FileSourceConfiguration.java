@@ -57,6 +57,7 @@ public class FileSourceConfiguration {
     private String fileReadWaitTimeout;
 
     private String currentlyReadingFileURI;
+    // once app is disconnected
 
     public FileSourceConfiguration() {
         tailingRegexStringBuilder = new StringBuilder();

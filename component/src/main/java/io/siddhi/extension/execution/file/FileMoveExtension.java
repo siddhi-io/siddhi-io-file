@@ -229,7 +229,7 @@ public class FileMoveExtension extends StreamFunctionProcessor {
                 if (pattern.matcher(fileName).lookingAt()) {
                     sourceFileObject.moveTo(destinationFileObject);
                 }
-                Metrics.getTotalCopy().inc();
+                Metrics.getNumberOfCopy().inc();
             }
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when doing file operations when moving for file: " +

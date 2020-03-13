@@ -79,9 +79,12 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 VFSClientConnector vfsClientConnector;
                 FileProcessor fileProcessor;
                 fileSourceConfiguration.setCurrentlyReadingFileURI(fileURI);
-                Metrics.getStreamStatus().putIfAbsent(fileURI, Metrics.StreamStatus.PROCESSING);
-                Metrics.getSourceFiles().labels(siddhiAppName, Utils.getFilePath(fileURI),
-                        Utils.getFileName(fileURI), mode, sourceEventListener.getStreamDefinition().getId(), "Source");
+                Metrics.SourceDetails sourceDetails = new Metrics.SourceDetails(siddhiAppName, Utils.getShortFilePath(
+                        fileURI));
+                Metrics.getSourceFileStatus().putIfAbsent(sourceDetails, Metrics.StreamStatus.PROCESSING);
+                Metrics.getSourceFilesEventCount().labels(siddhiAppName, Utils.getShortFilePath(fileURI),
+                        Utils.getFileName(fileURI), Utils.capitalizeFirstLetter(mode),
+                        sourceEventListener.getStreamDefinition().getId());
                 if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                     vfsClientConnector = new VFSClientConnector();
                     fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, siddhiAppName);
@@ -111,7 +114,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     } catch (ClientConnectorException e) {
                         log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
                         carbonCallback.done(carbonMessage);
-                        Metrics.getStreamStatus().replace(fileURI, Metrics.StreamStatus.ERROR);
+                        Metrics.getSourceFileStatus().replace(sourceDetails, Metrics.StreamStatus.ERROR);
                     }
                 } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                     vfsClientConnector = new VFSClientConnector();
@@ -143,7 +146,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                         }
                     } catch (ClientConnectorException e) {
                         log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
-                        Metrics.getStreamStatus().replace(fileURI, Metrics.StreamStatus.ERROR);
+                        Metrics.getSourceFileStatus().replace(sourceDetails, Metrics.StreamStatus.ERROR);
                     }
                 } else if (Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)) {
                     Map<String, String> properties = new HashMap<>();
@@ -156,6 +159,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.HEADER_PRESENT, fileSourceConfiguration.getHeaderPresent());
                     if (fileSourceConfiguration.isTailingEnabled()) {
                         fileSourceConfiguration.setTailedFileURI(fileURI);
+                        Metrics.getTailEnabledFiles().putIfAbsent(sourceDetails, System.currentTimeMillis());
                         if (fileSourceConfiguration.getTailedFileURIMap().contains(fileURI)) {
                             properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
                             properties.put(Constants.PATH, fileURI);
@@ -199,7 +203,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             }
                         } catch (ClientConnectorException e) {
                             log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
-                            Metrics.getStreamStatus().replace(fileURI, Metrics.StreamStatus.ERROR);
+                            Metrics.getSourceFileStatus().replace(sourceDetails, Metrics.StreamStatus.ERROR);
                         }
                     }
                 }
@@ -239,7 +243,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 log.error(String.format("Failed to start the server for file '%s'. " +
                         "Hence starting to process next file.", fileURI));
                 carbonCallback.done(carbonMessage);
-                Metrics.getStreamStatus().replace(fileURI, Metrics.StreamStatus.ERROR);
+                Metrics.getSourceFileStatus().replace(new Metrics.SourceDetails(null,
+                                Utils.getShortFilePath(fileURI)), Metrics.StreamStatus.ERROR);
             }
         }
     }
@@ -267,10 +272,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, properties);
                 vfsClientConnectorCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileUri);
                 fileSourceConfiguration.getExecutorService().execute(() -> {
-                    String streamName = sourceEventListener.getStreamDefinition().getId();
-                    Metrics.getStreamStatus().replace(fileUri, Metrics.StreamStatus.COMPLETED);
-                    Metrics.getSourceStreamStatusMetrics().labels(siddhiAppName, fileUri, Utils.getFileName(fileUri),
-                            streamName).set(Metrics.getStreamStatus().get(fileUri).ordinal());
+                    Metrics.getSourceFileStatus().replace(new Metrics.SourceDetails(siddhiAppName,
+                                    Utils.getShortFilePath(fileUri)), Metrics.StreamStatus.COMPLETED);
                     increaseMetricsAfterProcess(actionAfterProcess);
                 });
             }
@@ -279,6 +282,9 @@ public class FileSystemListener implements RemoteFileSystemListener {
             log.error(String.format("Failure occurred in vfs-client while reading the file '%s'.", fileUri), e);
         } catch (InterruptedException e) {
             log.error(String.format("Failed to get callback from vfs-client  for file '%s'.", fileUri), e);
+        } finally {
+            Metrics.getSourceCompletedTime().labels(siddhiAppName, Utils.getShortFilePath(
+                    fileSourceConfiguration.getCurrentlyReadingFileURI())).set(System.currentTimeMillis());
         }
     }
 
@@ -306,9 +312,11 @@ public class FileSystemListener implements RemoteFileSystemListener {
 
     private void increaseMetricsAfterProcess(String actionAfterProcess) {
         if (actionAfterProcess.equals(Constants.DELETE)) {
-            Metrics.getTotalDeletion().inc();
+            Metrics.getNumberOfDeletion().inc();
         } else if (actionAfterProcess.equals(Constants.MOVE)) {
-            Metrics.getTotalMove().inc();
+            Metrics.getNumberOfMoves().inc();
         }
+        Metrics.getSourceReadPercentage().labels(siddhiAppName, Utils.getShortFilePath(fileSourceConfiguration
+                .getCurrentlyReadingFileURI())).set(100);
     }
 }
