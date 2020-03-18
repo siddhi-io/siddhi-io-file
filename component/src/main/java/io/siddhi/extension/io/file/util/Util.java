@@ -1,33 +1,58 @@
+/*
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.siddhi.extension.io.file.util;
 
-import org.json.JSONObject;
+import io.siddhi.core.event.Event;
 
 import java.io.File;
-import java.util.Date;
-
+import java.util.List;
 
 /**
- * Class for providing server connectors.
+ * Util Class.
  */
 public class Util {
-    public static String getFileHandlerEvent(final File file, String listeningFileUri, String status) {
+    public static Event getFileHandlerEvent(final File file, List<String> fileObjectList, Status enumStatus) {
         boolean listenerEventsURLValidated = false;
-        //If the listeningUri is a fileUri
-        if (listeningFileUri != null) {
-            if (file.getAbsolutePath().equals(listeningFileUri)) {
-                listenerEventsURLValidated = true;
-            }
-        } else {
-            // If the listeningUri is a directoryUri
+        String status;
+        switch (enumStatus) {
+            case STATUS_NEW: status = "created"; break;
+            case STATUS_PROCESS: status = "modifying"; break;
+            case STATUS_DONE: status = "modifyingCompleted"; break;
+            case STATUS_REMOVE: status = "removed"; break;
+            default: throw new IllegalStateException("Unexpected value: " + enumStatus);
+        }
+        if (fileObjectList.contains(file.getAbsolutePath())) {
             listenerEventsURLValidated = true;
         }
+        //If the fileObjectList contains this file
+        for (String fileObjectPath : fileObjectList) {
+            File fileObject = new File(fileObjectPath);
+            if (fileObject.isDirectory()) {
+                //If a fileObject is a folder then the events for the files in the folder should thrown.
+                if (file.getAbsolutePath().startsWith(fileObjectPath)) {
+                    listenerEventsURLValidated = true;
+                }
+            }
+        }
         if (listenerEventsURLValidated) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("filepath", file.getAbsolutePath());
-            jsonObject.put("length", file.length());
-            jsonObject.put("last_modified", new Date(file.lastModified()));
-            jsonObject.put("status", status);
-            return jsonObject.toString();
+            Object[] obj = {file.getAbsolutePath(), file.getName(), status};
+            return new Event(System.currentTimeMillis(), obj);
         } else {
             return null;
         }
