@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -32,7 +32,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
 
 /**
- * Implementation of  FileAlterationImpl
+ * Implementation of  FileAlterationImpl  implements FileAlterationListener
+ *  This class throw events if any file or Directory gets created, modified or deleted.
  */
 public class FileAlterationImpl implements FileAlterationListener {
     private static final Logger log = Logger.getLogger(FileHandler.class);
@@ -64,7 +65,7 @@ public class FileAlterationImpl implements FileAlterationListener {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            log.error("Error occurred in Thread.sleep() " + e);
+            log.error("Error occurred in Thread.sleep() " , e);
         }
         long recentModifiedTimestamp = fileObjectMap.get(directory.getAbsolutePath());
         if (recentModifiedTimestamp < directory.lastModified()) {
@@ -97,7 +98,7 @@ public class FileAlterationImpl implements FileAlterationListener {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            log.error("Error occurred in Thread.sleep() " + e);
+            log.error("Error occurred in Thread.sleep() " , e);
         }
         long recentModifiedTimestamp = fileObjectMap.get(file.getAbsolutePath());
         if (recentModifiedTimestamp < file.lastModified()) {

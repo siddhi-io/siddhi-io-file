@@ -1,5 +1,5 @@
 /*
- * Copyright (c)  2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c)  2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -128,7 +128,7 @@ public class FileHandlingTestCase {
 
     @Test
     public void siddhiIOFileTest2() throws InterruptedException {
-        log.info("Siddhi IO File Testcase 1 - Directory without file:/");
+        log.info("Siddhi IO File Testcase 1");
         String app = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener', " +
                 "uri='" + newRoot + "')\n" +

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -53,6 +53,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
 /**
  * Implementation of siddhi-io-file Event Listener.
+ * FileEventListener  provides the functionality for user to get the details of files which have been created,
+ * modified or deleted in the execution time.
  */
 @Extension(
         name = "fileeventlistener" ,
@@ -96,7 +98,10 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                                 "define stream FileListenerStream (filepath string, filename string, " +
                                 "status string);\n" +
                                 "@sink(type='log')\n" +
-                                "define stream FooStream (filepath string, filename string, status string); \n",
+                                "define stream FooStream (filepath string, filename string, status string); \n" +
+                                "from FileListenerStream\n" +
+                                "select *\n" +
+                                "insert into FooStream;",
 
                         description = "" +
                                 "Under above configuration, An event is triggered if the files in the file.name.list " +
@@ -110,7 +115,10 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                                 "define stream FileListenerStream (filepath string, filename string, " +
                                 "status string);\n" +
                                 "@sink(type='log')\n" +
-                                "define stream FooStream (filepath string, filename string, status string); \n",
+                                "define stream FooStream (filepath string, filename string, status string); \n" +
+                                "from FileListenerStream\n" +
+                                "select *\n" +
+                                "insert into FooStream;",
 
                         description = "" +
                                 "Under above configuration,  An event is triggered if any file under the given" +
@@ -124,7 +132,10 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                                 "define stream FileListenerStream (filepath string, filename string, " +
                                 "status string);\n" +
                                 "@sink(type='log')\n" +
-                                "define stream FooStream (filepath string, filename string, status string);\n",
+                                "define stream FooStream (filepath string, filename string, status string);\n" +
+                                "from FileListenerStream\n" +
+                                "select *\n" +
+                                "insert into FooStream;",
 
                         description = "" +
                                 "Under above configuration, An event is triggered if any file under the given URI " +
@@ -194,7 +205,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
                             listeningFileObject.getPublicURIString() + " is not found.");
                 }
             } catch (FileSystemException e) {
-                log.error("File/Folder " + listeningFileObject.getPublicURIString() + " is not found");
+                log.error("File/Folder " + listeningFileObject.getPublicURIString() + " is not found.", e);
             }
             fileObjectList.set(i, fileObjectPath);
         }
@@ -241,6 +252,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         }
     }
 
+    //
     public void initiateFileAlterationObserver() {
         FileAlterationObserver observer = new FileAlterationObserver(listeningDirUri);
         observer.addListener(new FileAlterationImpl(sourceEventListener, fileObjectList));
