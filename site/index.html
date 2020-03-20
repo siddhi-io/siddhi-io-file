@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Siddhi IO File Extension">
+        <meta name="author" content="WSO2">
+        <link rel="canonical" href="https://siddhi-io.github.io/siddhi-io-file/">
+        <link rel="shortcut icon" href="./img/favicon.ico">
+        <title>Siddhi IO File</title>
+        <link href="./css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="./css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="./css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="./css/highlight.css">
+        <link href="./stylesheets/extra.css" rel="stylesheet">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="./js/jquery-1.10.2.min.js"></script>
+        <script src="./js/bootstrap-3.0.3.min.js"></script>
+        <script src="./js/highlight.pack.js"></script>
+        <script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+            ga('create', 'UA-103065-28', 'auto');
+            ga('send', 'pageview');
+        </script> 
+    </head>
+
+    <body class="homepage">
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href=".">Siddhi IO File</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li class="active">
+                        <a href=".">Welcome</a>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">API Docs <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="api/latest/">latest</a>
+</li>
+                            
+<li >
+    <a href="api/2.0.6-SNAPSHOT/">2.0.6-SNAPSHOT</a>
+</li>
+                            
+<li >
+    <a href="api/2.0.5/">2.0.5</a>
+</li>
+                            
+<li >
+    <a href="api/2.0.4/">2.0.4</a>
+</li>
+                            
+<li >
+    <a href="api/2.0.3/">2.0.3</a>
+</li>
+                            
+<li >
+    <a href="api/2.0.2/">2.0.2</a>
+</li>
+                            
+<li >
+    <a href="api/2.0.1/">2.0.1</a>
+</li>
+                            
+<li >
+    <a href="api/2.0.0/">2.0.0</a>
+</li>
+                            
+<li >
+    <a href="api/1.1.1/">1.1.1</a>
+</li>
+                            
+<li >
+    <a href="api/1.1.0/">1.1.0</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.14/">1.0.14</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.13/">1.0.13</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.12/">1.0.12</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.11/">1.0.11</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.10/">1.0.10</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.9/">1.0.9</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.8/">1.0.8</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.7/">1.0.7</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.6/">1.0.6</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.5/">1.0.5</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.4/">1.0.4</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.3/">1.0.3</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.2/">1.0.2</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.1/">1.0.1</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.0-M12/">1.0.0-M12</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.0-M11/">1.0.0-M11</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.0-M10/">1.0.0-M10</a>
+</li>
+                            
+<li >
+    <a href="api/1.0.0/">1.0.0</a>
+</li>
+                        </ul>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li class="disabled">
+                        <a rel="next" >
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="api/latest/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/siddhi-io/siddhi-io-file/edit/master/docs/index.md">Edit on Siddhi-IO-file</a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#siddhi-io-file">Siddhi IO File</a></li>
+            <li><a href="#download">Download</a></li>
+            <li><a href="#latest-api-docs">Latest API Docs</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#dependencies">Dependencies</a></li>
+            <li><a href="#installation">Installation</a></li>
+            <li><a href="#support-and-contribution">Support and Contribution</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="siddhi-io-file">Siddhi IO File<a class="headerlink" href="#siddhi-io-file" title="Permanent link">&para;</a></h1>
+<p><a href="https://wso2.org/jenkins/job/siddhi/job/siddhi-io-file/"><img alt="Jenkins Build Status" src="https://wso2.org/jenkins/job/siddhi/job/siddhi-io-file/badge/icon" /></a>
+  <a href="https://github.com/siddhi-io/siddhi-io-file/releases"><img alt="GitHub Release" src="https://img.shields.io/github/release/siddhi-io/siddhi-io-file.svg" /></a>
+  <a href="https://github.com/siddhi-io/siddhi-io-file/releases"><img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/siddhi-io/siddhi-io-file.svg" /></a>
+  <a href="https://github.com/siddhi-io/siddhi-io-file/issues"><img alt="GitHub Open Issues" src="https://img.shields.io/github/issues-raw/siddhi-io/siddhi-io-file.svg" /></a>
+  <a href="https://github.com/siddhi-io/siddhi-io-file/commits/master"><img alt="GitHub Last Commit" src="https://img.shields.io/github/last-commit/siddhi-io/siddhi-io-file.svg" /></a>
+  <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" /></a></p>
+<p>The <strong>siddhi-io-file extension</strong> is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> which used to receive/publish event data from/to file. It supports both binary and text formats.</p>
+<p>For information on <a target="_blank" href="https://siddhi.io/">Siddhi</a> and it's features refer <a target="_blank" href="https://siddhi.io/redirect/docs.html">Siddhi Documentation</a>. </p>
+<h2 id="download">Download<a class="headerlink" href="#download" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Versions 5.x and above with group id <code>io.siddhi.extension.*</code> from <a target="_blank" href="https://mvnrepository.com/artifact/io.siddhi.extension.io.file/siddhi-io-file/">here</a>.</li>
+<li>Versions 4.x and lower with group id <code>org.wso2.extension.siddhi.*</code> from <a target="_blank" href="https://mvnrepository.com/artifact/org.wso2.extension.siddhi.io.file/siddhi-io-file">here</a>.</li>
+</ul>
+<h2 id="latest-api-docs">Latest API Docs<a class="headerlink" href="#latest-api-docs" title="Permanent link">&para;</a></h2>
+<p>Latest API Docs is <a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5">2.0.5</a>.</p>
+<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#isdirectory-function">isDirectory</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#function">Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">This function checks for a given file path points to a directory</p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#isexist-function">isExist</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#function">Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">This function checks whether a file or a folder exists in a given path</p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#isfile-function">isFile</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#function">Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">This function checks for a given file path points to a file</p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#lastmodifiedtime-function">lastModifiedTime</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#function">Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">Checks for the last modified time for a given file path</p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#size-function">size</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#function">Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">This function checks for a given file's size</p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#archive-stream-function">archive</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#stream-function">Stream Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">Archives files and folders as a zip or in tar format that are available in the given file uri.<br></p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#copy-stream-function">copy</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#stream-function">Stream Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">This function performs copying file from one directory to another.<br></p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#create-stream-function">create</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#stream-function">Stream Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">Create a file or a folder in the given location</p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#delete-stream-function">delete</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#stream-function">Stream Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">Deletes file/files in a particular path</p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#move-stream-function">move</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#stream-function">Stream Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">This function performs copying file from one directory to another.<br></p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#search-stream-function">search</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#stream-function">Stream Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">Searches files in a given folder and lists.</p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#searchinarchive-stream-function">searchInArchive</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#stream-function">Stream Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">This.</p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#unarchive-stream-function">unarchive</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#stream-function">Stream Function</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">This function decompresses a given file</p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#file-sink">file</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#sink">Sink</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p></p></div></li>
+<li><a target="_blank" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.5/#file-source">file</a> <em>(<a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#source">Source</a>)</em><br> <div style="padding-left: 1em;"><p><p style="word-wrap: break-word;margin: 0;">File Source provides the functionality for user to feed data to siddhi from files. Both text and binary files are supported by file source.</p></p></div></li>
+</ul>
+<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
+<p>There are no other dependencies needed for this extension.</p>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<p>For installing this extension and to add the dependent jars on various siddhi execution environments refer Siddhi documentation section on <a target="_blank" href="https://siddhi.io/redirect/add-extensions.html">adding extensions and jars</a>.</p>
+<h2 id="support-and-contribution">Support and Contribution<a class="headerlink" href="#support-and-contribution" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>We encourage users to ask questions and get support via <a target="_blank" href="https://stackoverflow.com/questions/tagged/siddhi">StackOverflow</a>, make sure to add the <code>siddhi</code> tag to the issue for better response.</p>
+</li>
+<li>
+<p>If you find any issues related to the extension please report them on <a target="_blank" href="https://github.com/siddhi-io/siddhi-execution-string/issues">the issue tracker</a>.</p>
+</li>
+<li>
+<p>For production support and other contribution related information refer <a target="_blank" href="https://siddhi.io/community/">Siddhi Community</a> documentation.</p>
+</li>
+</ul></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>Copyright &copy; 2011 - 2018 WSO2</p>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '.';</script>
+        <script src="./js/base.js"></script>
+        <script src="./javascripts/extra.js"></script>
+        <script src="./search/require.js"></script>
+        <script src="./search/search.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>&larr;</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>&rarr;</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    </body>
+</html>
+
+<!--
+MkDocs version : 0.17.2
+Build Date UTC : 2020-03-20 05:18:17
+-->

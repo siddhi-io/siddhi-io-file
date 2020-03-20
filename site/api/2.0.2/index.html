@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <meta name="author" content="WSO2">
+        <link rel="canonical" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.2/">
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>2.0.2 - Siddhi IO File</title>
+        <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/highlight.css">
+        <link href="../../stylesheets/extra.css" rel="stylesheet">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="../../js/jquery-1.10.2.min.js"></script>
+        <script src="../../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../../js/highlight.pack.js"></script>
+        <script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+            ga('create', 'UA-103065-28', 'auto');
+            ga('send', 'pageview');
+        </script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="../..">Siddhi IO File</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li >
+                        <a href="../..">Welcome</a>
+                    </li>
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">API Docs <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../latest/">latest</a>
+</li>
+                            
+<li >
+    <a href="../2.0.6-SNAPSHOT/">2.0.6-SNAPSHOT</a>
+</li>
+                            
+<li >
+    <a href="../2.0.5/">2.0.5</a>
+</li>
+                            
+<li >
+    <a href="../2.0.4/">2.0.4</a>
+</li>
+                            
+<li >
+    <a href="../2.0.3/">2.0.3</a>
+</li>
+                            
+<li class="active">
+    <a href="./">2.0.2</a>
+</li>
+                            
+<li >
+    <a href="../2.0.1/">2.0.1</a>
+</li>
+                            
+<li >
+    <a href="../2.0.0/">2.0.0</a>
+</li>
+                            
+<li >
+    <a href="../1.1.1/">1.1.1</a>
+</li>
+                            
+<li >
+    <a href="../1.1.0/">1.1.0</a>
+</li>
+                            
+<li >
+    <a href="../1.0.14/">1.0.14</a>
+</li>
+                            
+<li >
+    <a href="../1.0.13/">1.0.13</a>
+</li>
+                            
+<li >
+    <a href="../1.0.12/">1.0.12</a>
+</li>
+                            
+<li >
+    <a href="../1.0.11/">1.0.11</a>
+</li>
+                            
+<li >
+    <a href="../1.0.10/">1.0.10</a>
+</li>
+                            
+<li >
+    <a href="../1.0.9/">1.0.9</a>
+</li>
+                            
+<li >
+    <a href="../1.0.8/">1.0.8</a>
+</li>
+                            
+<li >
+    <a href="../1.0.7/">1.0.7</a>
+</li>
+                            
+<li >
+    <a href="../1.0.6/">1.0.6</a>
+</li>
+                            
+<li >
+    <a href="../1.0.5/">1.0.5</a>
+</li>
+                            
+<li >
+    <a href="../1.0.4/">1.0.4</a>
+</li>
+                            
+<li >
+    <a href="../1.0.3/">1.0.3</a>
+</li>
+                            
+<li >
+    <a href="../1.0.2/">1.0.2</a>
+</li>
+                            
+<li >
+    <a href="../1.0.1/">1.0.1</a>
+</li>
+                            
+<li >
+    <a href="../1.0.0-M12/">1.0.0-M12</a>
+</li>
+                            
+<li >
+    <a href="../1.0.0-M11/">1.0.0-M11</a>
+</li>
+                            
+<li >
+    <a href="../1.0.0-M10/">1.0.0-M10</a>
+</li>
+                            
+<li >
+    <a href="../1.0.0/">1.0.0</a>
+</li>
+                        </ul>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="../2.0.3/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../2.0.1/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/siddhi-io/siddhi-io-file/edit/master/docs/api/2.0.2.md">Edit on Siddhi-IO-file</a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#api-docs-v202">API Docs - v2.0.2</a></li>
+            <li><a href="#sink">Sink</a></li>
+            <li><a href="#source">Source</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="api-docs-v202">API Docs - v2.0.2<a class="headerlink" href="#api-docs-v202" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Tested Siddhi Core version: <em><a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/">5.1.5</a></em></p>
+<p>It could also support other Siddhi Core minor versions.</p>
+</div>
+<h2 id="sink">Sink<a class="headerlink" href="#sink" title="Permanent link">&para;</a></h2>
+<h3 id="file-sink">file <em><a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#sink">(Sink)</a></em><a class="headerlink" href="#file-sink" title="Permanent link">&para;</a></h3>
+<p><p></p>
+<p style="word-wrap: break-word;margin: 0;">File Sink can be used to publish (write) event data which is processed within siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p>
+<p></p>
+<span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
+<div class="codehilite"><pre><span></span>@sink(type=&quot;file&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, append=&quot;&lt;BOOL&gt;&quot;, add.line.separator=&quot;&lt;BOOL&gt;&quot;, @map(...)))
+</pre></div>
+
+
+<p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
+<table>
+    <tr>
+        <th>Name</th>
+        <th style="min-width: 20em">Description</th>
+        <th>Default Value</th>
+        <th>Possible Data Types</th>
+        <th>Optional</th>
+        <th>Dynamic</th>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.uri</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">Used to specify the file for data to be written. </p></td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">Yes</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">append</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter is used to specify whether the data should be append to the file or not.<br>If append = 'true', data will be write at the end of the file without changing the existing content.<br>If file does not exist, a new fill will be crated and then data will be written.<br>If append append = 'false', <br>If given file exists, existing content will be deleted and then data will be written back to the file.<br>If given file does not exist, a new file will be created and then data will be written on it.<br></p></td>
+        <td style="vertical-align: top">true</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">add.line.separator</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter is used to specify whether events added to the file should be separated by a newline.<br>If add.event.separator= 'true',then a newline will be added after data is added to the file.</p></td>
+        <td style="vertical-align: top">true. (However, if csv mapper is used, it is false)</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+</table></p>
+<p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
+<span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
+<div class="codehilite"><pre><span></span>@sink(type=&#39;file&#39;, @map(type=&#39;json&#39;), append=&#39;false&#39;, file.uri=&#39;/abc/{{symbol}}.txt&#39;) define stream BarStream (symbol string, price float, volume long); 
+</pre></div>
+
+
+<p></p>
+
+<p style="word-wrap: break-word;margin: 0;">Under above configuration, for each event, a file will be generated if there's no such a file,and then data will be written to that file as json messagesoutput will looks like below.<br>{<br>&nbsp;&nbsp;&nbsp;&nbsp;"event":{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"symbol":"WSO2",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"price":55.6,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"volume":100<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></p>
+
+<p></p>
+
+<h2 id="source">Source<a class="headerlink" href="#source" title="Permanent link">&para;</a></h2>
+<h3 id="file-source">file <em><a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#source">(Source)</a></em><a class="headerlink" href="#file-source" title="Permanent link">&para;</a></h3>
+<p><p></p>
+<p style="word-wrap: break-word;margin: 0;">File Source provides the functionality for user to feed data to siddhi from files. Both text and binary files are supported by file source.</p>
+<p></p>
+<span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
+<div class="codehilite"><pre><span></span>@source(type=&quot;file&quot;, dir.uri=&quot;&lt;STRING&gt;&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, mode=&quot;&lt;STRING&gt;&quot;, tailing=&quot;&lt;BOOL&gt;&quot;, action.after.process=&quot;&lt;STRING&gt;&quot;, action.after.failure=&quot;&lt;STRING&gt;&quot;, move.after.process=&quot;&lt;STRING&gt;&quot;, move.after.failure=&quot;&lt;STRING&gt;&quot;, begin.regex=&quot;&lt;STRING&gt;&quot;, end.regex=&quot;&lt;STRING&gt;&quot;, file.polling.interval=&quot;&lt;STRING&gt;&quot;, dir.polling.interval=&quot;&lt;STRING&gt;&quot;, timeout=&quot;&lt;STRING&gt;&quot;, file.read.wait.timeout=&quot;&lt;STRING&gt;&quot;, @map(...)))
+</pre></div>
+
+
+<p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
+<table>
+    <tr>
+        <th>Name</th>
+        <th style="min-width: 20em">Description</th>
+        <th>Default Value</th>
+        <th>Possible Data Types</th>
+        <th>Optional</th>
+        <th>Dynamic</th>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">dir.uri</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">Used to specify a directory to be processed. <br>All the files inside this directory will be processed. <br>Only one of 'dir.uri' and 'file.uri' should be provided.<br>This uri MUST have the respective protocol specified.</p></td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.uri</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">Used to specify a file to be processed. <br>&nbsp;Only one of 'dir.uri' and 'file.uri' should be provided.<br>This uri MUST have the respective protocol specified.<br></p></td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">mode</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter is used to specify how files in given directory should.Possible values for this parameter are,<br>1. TEXT.FULL : to read a text file completely at once.<br>2. BINARY.FULL : to read a binary file completely at once.<br>3. LINE : to read a text file line by line.<br>4. REGEX : to read a text file and extract data using a regex.<br></p></td>
+        <td style="vertical-align: top">line</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">tailing</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This can either have value true or false. By default it will be true. <br>This attribute allows user to specify whether the file should be tailed or not. <br>If tailing is enabled, the first file of the directory will be tailed.<br>Also tailing should not be enabled in 'binary.full' or 'text.full' modes.<br></p></td>
+        <td style="vertical-align: top">true</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">action.after.process</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter is used to specify the action which should be carried out <br>after processing a file in the given directory. <br>It can be either DELETE or MOVE and default value will be 'DELETE'.<br>If the action.after.process is MOVE, user must specify the location to move consumed files using 'move.after.process' parameter.<br></p></td>
+        <td style="vertical-align: top">delete</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">action.after.failure</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter is used to specify the action which should be carried out if a failure occurred during the process. <br>It can be either DELETE or MOVE and default value will be 'DELETE'.<br>If the action.after.failure is MOVE, user must specify the location to move consumed files using 'move.after.failure' parameter.<br></p></td>
+        <td style="vertical-align: top">delete</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">move.after.process</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">If action.after.process is MOVE, user must specify the location to move consumed files using 'move.after.process' parameter.<br>This should be the absolute path of the file that going to be created after moving is done.<br>This uri MUST have the respective protocol specified.<br></p></td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">move.after.failure</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">If action.after.failure is MOVE, user must specify the location to move consumed files using 'move.after.failure' parameter.<br>This should be the absolute path of the file that going to be created after moving is done.<br>This uri MUST have the respective protocol specified.<br></p></td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">begin.regex</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This will define the regex to be matched at the beginning of the retrieved content.<br></p></td>
+        <td style="vertical-align: top">None</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">end.regex</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This will define the regex to be matched at the end of the retrieved content.<br></p></td>
+        <td style="vertical-align: top">None</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.polling.interval</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter is used to specify the time period (in milliseconds) of a polling cycle for a file.<br></p></td>
+        <td style="vertical-align: top">1000</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">dir.polling.interval</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter is used to specify the time period (in milliseconds) of a polling cycle for a directory.<br></p></td>
+        <td style="vertical-align: top">1000</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">timeout</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter is used to specify the maximum time period (in milliseconds)  for waiting until a file is processed.<br></p></td>
+        <td style="vertical-align: top">5000</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.read.wait.timeout</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter is used to specify the maximum time period (in milliseconds)  till it waits before retrying to read the full file content.</p></td>
+        <td style="vertical-align: top">1000</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+</table></p>
+<p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
+<span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
+<div class="codehilite"><pre><span></span>@source(type=&#39;file&#39;,
+mode=&#39;text.full&#39;,
+tailing=&#39;false&#39;
+ dir.uri=&#39;file://abc/xyz&#39;,
+action.after.process=&#39;delete&#39;,
+@map(type=&#39;json&#39;)) 
+define stream FooStream (symbol string, price float, volume long); 
+</pre></div>
+
+
+<p></p>
+
+<p style="word-wrap: break-word;margin: 0;">Under above configuration, all the files in directory will be picked and read one by one.<br>In this case, it's assumed that all the files contains json valid json strings with keys 'symbol','price' and 'volume'.<br>Once a file is read, its content will be converted to an event using siddhi-map-json extension and then, that event will be received to the FooStream.<br>Finally, after reading is finished, the file will be deleted.<br></p>
+
+<p></p>
+
+<p><span id="example-2" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 2</span></p>
+<div class="codehilite"><pre><span></span>@source(type=&#39;file&#39;,
+mode=&#39;files.repo.line&#39;,
+tailing=&#39;true&#39;,
+dir.uri=&#39;file://abc/xyz&#39;,
+@map(type=&#39;json&#39;)) 
+define stream FooStream (symbol string, price float, volume long);
+</pre></div>
+
+
+<p></p>
+
+<p style="word-wrap: break-word;margin: 0;">Under above configuration, the first file in directory '/abc/xyz'  will be picked and read line by line.<br>In this case, it is assumed that the file contains lines json strings.<br>For each line, line content will be converted to an event using siddhi-map-json extension and then, that event will be received to the FooStream.<br>Once file content is completely read, it will keep checking whether a new entry is added to the file or not.<br>If such entry is added, it will be immediately picked up and processed.<br></p>
+
+<p></p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>Copyright &copy; 2011 - 2018 WSO2</p>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '../..';</script>
+        <script src="../../js/base.js"></script>
+        <script src="../../javascripts/extra.js"></script>
+        <script src="../../search/require.js"></script>
+        <script src="../../search/search.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>&larr;</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>&rarr;</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    </body>
+</html>
