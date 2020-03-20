@@ -10,7 +10,7 @@ repo_name: Siddhi-IO-file
 repo_url: https://github.com/siddhi-io/siddhi-io-file
 copyright: Copyright &copy; 2011 - 2018 WSO2
 theme:
-  name: material
+  name: mkdocs
   logo: images/siddhi-logo-w.svg
   favicon: images/favicon.ico
   palette:
@@ -31,13 +31,14 @@ markdown_extensions:
     permalink: true
 - codehilite:
     guess_lang: false
-- pymdownx.tasklist:
-    custom_checkbox: true
+#- pymdownx.tasklist:
+#    custom_checkbox: true
 - markdown.extensions.attr_list: null
 pages:
 - Welcome: index.md
 - API Docs:
   - latest: api/latest.md
+  - 2.0.6-SNAPSHOT : api/2.0.6-SNAPSHOT.md
   - 2.0.5: api/2.0.5.md
   - 2.0.4: api/2.0.4.md
   - 2.0.3: api/2.0.3.md
@@ -64,4 +65,4 @@ pages:
   - 1.0.0-M11: api/1.0.0-M11.md
   - 1.0.0-M10: api/1.0.0-M10.md
   - 1.0.0: api/1.0.0.md
-- License: about/license.md
+#- License: about/license.md
