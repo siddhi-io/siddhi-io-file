@@ -68,11 +68,14 @@ import java.util.List;
 )
 public class FileDeleteExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileDeleteExtension.class);
+    private String sidhhiAppName;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
                                 ConfigReader configReader, boolean outputExpectsExpiredEvents,
                                 SiddhiQueryContext siddhiQueryContext) {
+        this.sidhhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
+        Utils.addSiddhiApp(sidhhiAppName);
         return null;
     }
 
@@ -96,9 +99,12 @@ public class FileDeleteExtension extends StreamFunctionProcessor {
         String fileDeletePathUri = (String) data;
         try {
             FileObject rootFileObject = Utils.getFileObject(fileDeletePathUri);
-            rootFileObject.delete(Selectors.SELECT_ALL);
-            Metrics.getNumberOfDeletion().inc();
+            rootFileObject.findFiles(Selectors.SELECT_ALL);
+            Metrics.getInstance().getNumberOfDeletion().labels(sidhhiAppName, Utils.getShortFilePath(fileDeletePathUri),
+                    String.valueOf(System.currentTimeMillis())).set(1);
         } catch (FileSystemException e) {
+            Metrics.getInstance().getNumberOfDeletion().labels(sidhhiAppName, Utils.getShortFilePath(fileDeletePathUri),
+                    String.valueOf(System.currentTimeMillis())).set(0);
             throw new SiddhiAppRuntimeException("Failure occurred when deleting the file " + fileDeletePathUri, e);
         }
         return new Object[0];

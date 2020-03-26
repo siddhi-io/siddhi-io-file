@@ -127,6 +127,7 @@ public class FileCopyExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileCopyExtension.class);
     private Pattern pattern = null;
     private int inputExecutorLength;
+    private String siddhiAppName;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
@@ -138,6 +139,8 @@ public class FileCopyExtension extends StreamFunctionProcessor {
             pattern = Pattern.compile(((ConstantExpressionExecutor)
                     attributeExpressionExecutors[2]).getValue().toString());
         }
+        siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
+        Utils.addSiddhiApp(siddhiAppName);
         return null;
     }
 
@@ -240,8 +243,13 @@ public class FileCopyExtension extends StreamFunctionProcessor {
                 destinationFileObject.copyFrom(sourceFileObject, Selectors.SELECT_ALL);
                 destinationFileObject.close();
             }
-            Metrics.getNumberOfCopy().inc();
+            Metrics.getInstance().getNumberOfCopy().labels(siddhiAppName, Utils.getShortFilePath(sourceFileObject
+                            .getName().getPath()), Utils.getShortFilePath(destinationDirUri), String.valueOf(
+                                    System.currentTimeMillis())).set(1);
         } catch (FileSystemException e) {
+            Metrics.getInstance().getNumberOfCopy().labels(siddhiAppName, Utils.getShortFilePath(sourceFileObject
+                    .getName().getPath()), Utils.getShortFilePath(destinationDirUri), String.valueOf(
+                    System.currentTimeMillis())).set(0);
             throw new SiddhiAppRuntimeException("Exception occurred when doing file operations when copying for " +
                     "file: " + sourceFileObject.getName().getPath(), e);
         } finally {

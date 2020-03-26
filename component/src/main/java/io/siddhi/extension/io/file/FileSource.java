@@ -39,6 +39,7 @@ import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
 import io.siddhi.extension.io.file.util.Metrics;
+import io.siddhi.extension.io.file.util.SourceMetrics;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.annotation.Annotation;
@@ -329,6 +330,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private boolean fileServerConnectorStarted = false;
     private ScheduledFuture scheduledFuture;
     private ConnectionCallback connectionCallback;
+    private SourceMetrics metrics;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -444,6 +446,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         createInitialSourceConf();
         updateSourceConf();
         getPattern();
+        metrics = SourceMetrics.getInstance();
         return () -> new FileSourceState();
     }
 
@@ -455,7 +458,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     @Override
     public void connect(ConnectionCallback connectionCallback, FileSourceState fileSourceState)
             throws ConnectionUnavailableException {
-        Metrics.createServer(siddhiAppContext.getExecutorService());
+        metrics.createServer();
+        metrics.updateMetrics(siddhiAppContext.getExecutorService());
         Utils.addSiddhiApp(siddhiAppContext.getName());
         this.connectionCallback = connectionCallback;
         updateSourceConf();
@@ -475,7 +479,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 executorService.shutdown();
             }
             String siddhiAppName = siddhiAppContext.getName();
-            Metrics.getSiddhiApps().remove(siddhiAppName);
+            metrics.getSiddhiApps().remove(siddhiAppName);
             /*for (String filePath:fileSourceConfiguration.getFilePath()) {
                 filePath = Utils.getShortFilePath(filePath);
                 String fileName =  Utils.getFileName(filePath);
@@ -494,7 +498,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 Metrics.getFilesURI().remove(filePath);
                 Metrics.getSourceStreamStatusMetrics().remove(siddhiAppName, filePath);
             }*/
-            Metrics.stopServer();
+//            metrics.stopServer();
 
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Failed to stop the file server when shutting down the siddhi app '" +
@@ -662,15 +666,15 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 properties.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
             }
             fileSourceConfiguration.setCurrentlyReadingFileURI(fileUri);
-            Metrics.getSourceFileStatus().putIfAbsent(new Metrics.SourceDetails(siddhiAppContext.getName(),
+            metrics.getSourceFileStatusMap().putIfAbsent(new SourceMetrics.SourceDetails(siddhiAppContext.getName(),
                             Utils.getShortFilePath(fileUri)), Metrics.StreamStatus.CONNECTING);
             if (fileSourceConfiguration.isTailingEnabled()) {
                 if (fileSourceConfiguration.getTailedFileURIMap() == null) {
                     fileSourceConfiguration.setTailedFileURI(fileUri);
                 }
                 if (fileSourceConfiguration.getTailedFileURIMap().get(0).toString().equalsIgnoreCase(fileUri)) {
-                    Metrics.getTailEnabledFiles().putIfAbsent(new Metrics.SourceDetails(siddhiAppContext.getName(),
-                            Utils.getShortFilePath(fileUri)), System.currentTimeMillis());
+                    metrics.getTailEnabledFilesMap().putIfAbsent(new SourceMetrics.SourceDetails(
+                            siddhiAppContext.getName(), Utils.getShortFilePath(fileUri)), System.currentTimeMillis());
                     properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
                     properties.put(Constants.PATH, fileUri);
                     FileServerConnectorProvider fileServerConnectorProvider =
@@ -715,14 +719,18 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                             }
                             vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
                             vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
-                            Metrics.getSourceFileStatus().replace(new Metrics.SourceDetails(siddhiAppContext.getName(),
-                                    Utils.getShortFilePath(fileUri)), Metrics.StreamStatus.COMPLETED);
+                            metrics.getSourceFileStatusMap().replace(new SourceMetrics.SourceDetails(
+                                    siddhiAppContext.getName(), Utils.getShortFilePath(fileUri)),
+                                    Metrics.StreamStatus.COMPLETED);
                             if (actionAfterProcess.equals(Constants.DELETE)) {
-                                Metrics.getNumberOfDeletion().inc();
+                                metrics.getNumberOfDeletion().labels(siddhiAppContext.getName(), Utils.getShortFilePath(
+                                        fileUri), String.valueOf(System.currentTimeMillis())).inc();
                             } else if (actionAfterProcess.equals(Constants.MOVE)) {
-                                Metrics.getNumberOfMoves().inc();
+                                metrics.getNumberOfMoves().labels(siddhiAppContext.getName(), Utils.getShortFilePath(
+                                        fileUri), Utils.getShortFilePath(moveAfterProcess),
+                                        String.valueOf(System.currentTimeMillis())).inc();
                             }
-                            Metrics.getSourceReadPercentage().labels(siddhiAppContext.getName(),
+                            metrics.getSourceReadPercentage().labels(siddhiAppContext.getName(),
                                     Utils.getShortFilePath(fileUri)).set(100);
                         }
                     } catch (ClientConnectorException e) {
@@ -735,8 +743,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 };
                 fileSourceConfiguration.getExecutorService().execute(runnableClient);
             }
-            Metrics.getSourceFileStatus().replace(new Metrics.SourceDetails(siddhiAppContext.getName(), fileUri),
-                    Metrics.StreamStatus.PROCESSING);
+            metrics.getSourceFileStatusMap().replace(new SourceMetrics.SourceDetails(siddhiAppContext.getName(),
+                            fileUri), Metrics.StreamStatus.PROCESSING);
         }
     }
 

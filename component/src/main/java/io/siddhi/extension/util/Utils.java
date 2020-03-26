@@ -179,28 +179,28 @@ public class Utils {
     }
 
     public static void addSiddhiApp(String siddhiAppName) {
-        boolean added = Metrics.getSiddhiApps().add(siddhiAppName);
+        boolean added = Metrics.getInstance().getSiddhiApps().add(siddhiAppName);
         if (added) {
-            Metrics.getTotalSiddhiApps().labels(siddhiAppName).inc();
+            Metrics.getInstance().getTotalSiddhiApps().labels(siddhiAppName).inc();
         }
     }
 
     public static String getFileName(String fileURI) {
         fileURI = getFilePath(fileURI);
-        if (Metrics.getFileNames().containsKey(fileURI)) {
-            return Metrics.getFileNames().get(fileURI);
+        if (Metrics.getInstance().getFileNames().containsKey(fileURI)) {
+            return Metrics.getInstance().getFileNames().get(fileURI);
         }
         String[] arr = fileURI.split("/");
         int n = arr.length;
         StringBuilder fileName = new StringBuilder();
         fileName.append(arr[n - 1]);
-        if (!Metrics.getFileNames().containsValue(fileName.toString())) {
+        if (!Metrics.getInstance().getFileNames().containsValue(fileName.toString())) {
             return fileName.toString();
         }
         for (int i = n - 2; i >= 0; i--) {
             fileName.insert(0, "/").insert(0, arr[i]);
-            if (!Metrics.getFileNames().containsValue(fileName.toString())) {
-                Metrics.getFileNames().put(fileURI, fileName.toString());
+            if (!Metrics.getInstance().getFileNames().containsValue(fileName.toString())) {
+                Metrics.getInstance().getFileNames().put(fileURI, fileName.toString());
                 break;
             }
         }

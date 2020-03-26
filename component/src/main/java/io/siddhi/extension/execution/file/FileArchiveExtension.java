@@ -146,6 +146,7 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileArchiveExtension.class);
     private Pattern pattern = null;
     private int inputExecutorLength;
+    private String siddhiAppName;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
@@ -157,6 +158,8 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
             pattern = Pattern.compile(
                     ((ConstantExpressionExecutor) attributeExpressionExecutors[3]).getValue().toString());
         }
+        siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
+        Utils.addSiddhiApp(siddhiAppName);
         return null;
     }
 
@@ -209,8 +212,11 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
             generateFileList(uri, sourceFile, fileList, excludeSubdirectories);
             try {
                 zip(uri, destinationFile, fileList);
-                Metrics.getNumberOfArchives().inc();
+
             } catch (IOException e) {
+                Metrics.getInstance().getNumberOfArchives().labels(siddhiAppName, Utils.getShortFilePath(uri),
+                        Utils.getShortFilePath(destinationDirUri), archiveType, String.valueOf(
+                                System.currentTimeMillis())).set(0);
                 throw new SiddhiAppRuntimeException("IOException occurred when archiving  " + uri, e);
             }
         } else {
@@ -218,14 +224,20 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
                 if (archiveType.compareToIgnoreCase(TAR_FILE_EXTENSION) == 0) {
                     addToTarArchiveCompression(
                             getTarArchiveOutputStream(destinationFile), sourceFile, uri);
-                    Metrics.getNumberOfArchives().inc();
+
                 } else {
                     throw new SiddhiAppRuntimeException("Unsupported archive type: " + archiveType);
                 }
             } catch (IOException e) {
+                Metrics.getInstance().getNumberOfArchives().labels(siddhiAppName, Utils.getShortFilePath(uri),
+                        Utils.getShortFilePath(destinationDirUri), archiveType, String.valueOf(
+                                System.currentTimeMillis())).set(0);
                 throw new SiddhiAppRuntimeException("Exception occurred when archiving " + uri, e);
             }
         }
+        Metrics.getInstance().getNumberOfArchives().labels(siddhiAppName, Utils.getShortFilePath(uri),
+                Utils.getShortFilePath( destinationDirUri), archiveType, String.valueOf(
+                        System.currentTimeMillis())).set(1);
         return new Object[0];
     }
 

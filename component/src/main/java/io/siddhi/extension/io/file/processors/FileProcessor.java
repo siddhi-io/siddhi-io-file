@@ -24,6 +24,7 @@ import io.siddhi.core.stream.input.source.SourceEventListener;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.Metrics;
+import io.siddhi.extension.io.file.util.SourceMetrics;
 import io.siddhi.extension.util.Utils;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
@@ -61,11 +62,12 @@ public class FileProcessor implements CarbonMessageProcessor {
     private Stopwatch stopwatch;
     private String siddhiAppName;
     private String fileShortenPath;
-    private Metrics.SourceDetails sourceDetails;
+    private SourceMetrics.SourceDetails sourceDetails;
     private long lineCount;
     private long readingLine;
     private long totalReadByteSize;
     private double fileSize;
+    private SourceMetrics metrics;
 
     public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration,
                          String siddhiAppName) {
@@ -74,6 +76,7 @@ public class FileProcessor implements CarbonMessageProcessor {
         this.requiredProperties = fileSourceConfiguration.getRequiredProperties();
         this.mode = fileSourceConfiguration.getMode();
         this.siddhiAppName = siddhiAppName;
+        this.metrics = SourceMetrics.getInstance();
         if (Constants.REGEX.equalsIgnoreCase(mode) && fileSourceConfiguration.isTailingEnabled()) {
             sb = fileSourceConfiguration.getTailingRegexStringBuilder();
         } else {
@@ -87,29 +90,29 @@ public class FileProcessor implements CarbonMessageProcessor {
             stopwatch = Stopwatch.createStarted();
             fileSize = Utils.getFileSize(fileURI); //converts into KB
             String streamName = sourceEventListener.getStreamDefinition().getId();
-            eventCounter = Metrics.getSourceFilesEventCount().labels(siddhiAppName, fileShortenPath,
+            eventCounter = metrics.getSourceFilesEventCount().labels(siddhiAppName, fileShortenPath,
                     fileName, Utils.capitalizeFirstLetter(mode), streamName);
-            readBytesMetrics = Metrics.getReadBytes().labels(siddhiAppName, fileShortenPath);
-            Metrics.getSourceFileSize().labels(siddhiAppName, fileShortenPath).set(fileSize);
-            Metrics.getSourceDroppedEvents().labels(siddhiAppName, fileShortenPath);
-            Metrics.getSourceStartedTime().labels(siddhiAppName, Utils.getShortFilePath(fileURI)).set(
+            readBytesMetrics = metrics.getReadBytes().labels(siddhiAppName, fileShortenPath);
+            metrics.getSourceFileSize().labels(siddhiAppName, fileShortenPath).set(fileSize);
+            metrics.getSourceDroppedEvents().labels(siddhiAppName, fileShortenPath);
+            metrics.getSourceStartedTime().labels(siddhiAppName, Utils.getShortFilePath(fileURI)).set(
                     System.currentTimeMillis());
-            boolean add = Metrics.getFilesURI().add(fileURI);
+            boolean add = metrics.getFilesURI().add(fileURI);
             if (add) {
                 try {
                     lineCount = Utils.getLinesCount(fileURI);
-                    Metrics.getSourceNoOfLines().labels(siddhiAppName, fileShortenPath).inc(lineCount);
+                    metrics.getSourceNoOfLines().labels(siddhiAppName, fileShortenPath).inc(lineCount);
                     if (fileSourceConfiguration.isTailingEnabled()) {
-                        Metrics.getSourceTailingEnable().labels(siddhiAppName, fileShortenPath).set(1);
+                        metrics.getSourceTailingEnable().labels(siddhiAppName, fileShortenPath).set(1);
                     } else {
-                        Metrics.getSourceTailingEnable().labels(siddhiAppName, fileShortenPath).set(0);
+                        metrics.getSourceTailingEnable().labels(siddhiAppName, fileShortenPath).set(0);
                     }
                 } catch (IOException e) {
                     log.error("Error occurred while getting the lines count in '" + fileURI + "'.", e);
                 }
             }
         });
-        sourceDetails = new Metrics.SourceDetails(siddhiAppName, fileShortenPath);
+        sourceDetails = new SourceMetrics.SourceDetails(siddhiAppName, fileShortenPath);
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
@@ -255,7 +258,6 @@ public class FileProcessor implements CarbonMessageProcessor {
                         }
                         sourceEventListener.onEvent(event, getRequiredPropertyValues(carbonMessage));
                         readBytes += content.length;
-                        readingLine++;
                         increaseTailingMetrics();
                     }
                     String tmp;
@@ -270,9 +272,10 @@ public class FileProcessor implements CarbonMessageProcessor {
             }
             increaseMetrics(content.length, stopwatch.elapsed().toMillis());
             totalReadByteSize += content.length;
+            readingLine++;
             return true;
         } else {
-            Metrics.getSourceDroppedEvents().labels(siddhiAppName, fileShortenPath).inc();
+            metrics.getSourceDroppedEvents().labels(siddhiAppName, fileShortenPath).inc();
             return false;
         }
     }
@@ -306,19 +309,19 @@ public class FileProcessor implements CarbonMessageProcessor {
     private void increaseMetrics(int byteLength, long elapseTime) {
         eventCounter.inc();
         readBytesMetrics.inc(byteLength);
-        Metrics.getSourceElapsedTime().labels(siddhiAppName, fileShortenPath).set(elapseTime);
-        Metrics.getSourceReadPercentage().labels(siddhiAppName, fileShortenPath).set(
+        metrics.getSourceElapsedTime().labels(siddhiAppName, fileShortenPath).set(elapseTime);
+        metrics.getSourceReadPercentage().labels(siddhiAppName, fileShortenPath).set(
                 totalReadByteSize / fileSize * 100);
     }
 
     private void increaseTailingMetrics() {
         if (readingLine >= lineCount) {
-            Metrics.getSourceNoOfLines().labels(siddhiAppName, fileShortenPath).inc();
+            metrics.getSourceNoOfLines().labels(siddhiAppName, fileShortenPath).inc();
         }
         fileSize = Utils.getFileSize(fileSourceConfiguration.getCurrentlyReadingFileURI());
-        Metrics.getSourceFileSize().labels(siddhiAppName, fileShortenPath).set(fileSize);
-        Metrics.getSourceFileStatus().replace(sourceDetails, Metrics.StreamStatus.PROCESSING);
-        Metrics.getTailEnabledFiles().replace(sourceDetails, System.currentTimeMillis());
+        metrics.getSourceFileSize().labels(siddhiAppName, fileShortenPath).set(fileSize);
+        metrics.getSourceFileStatusMap().replace(sourceDetails, Metrics.StreamStatus.PROCESSING);
+        metrics.getTailEnabledFilesMap().replace(sourceDetails, System.currentTimeMillis());
     }
 
 }
