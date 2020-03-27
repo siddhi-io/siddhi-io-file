@@ -42,6 +42,7 @@ public class FileSourceConfiguration {
     private String protocolForMoveAfterProcess = null;
     private long timeout = 5000;
     private String headerPresent = "false";
+    private String readOnlyHeader = "false";
 
     private FileServerConnector fileServerConnector;
     private RemoteFileSystemServerConnector fileSystemServerConnector;
@@ -249,5 +250,13 @@ public class FileSourceConfiguration {
 
     public void setHeaderPresent(String headerPresent) {
         this.headerPresent = headerPresent;
+    }
+
+    public String getReadOnlyHeader() {
+        return readOnlyHeader;
+    }
+
+    public void setReadOnlyHeader(String readOnlyHeader) {
+        this.readOnlyHeader = readOnlyHeader;
     }
 }

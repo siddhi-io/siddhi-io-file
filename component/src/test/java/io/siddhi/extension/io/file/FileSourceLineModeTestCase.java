@@ -1258,4 +1258,64 @@ public class FileSourceLineModeTestCase {
         AssertJUnit.assertEquals("Number of events", 3, count.get());
         siddhiAppRuntime.shutdown();
     }
+
+    @Test
+    public void siddhiIOFileTestForSkipReadOnlyHeader() throws InterruptedException {
+        log.info("test SiddhiIOFile read.only.header=false parameter Test");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')\n" +
+                "@source(type='file', mode='line', file.uri='file:" + newRoot + "/line/header/test.txt', " +
+                "read.only.header='false', tailing='false', " +
+                "@map(type='csv', delimiter='|'))\n" +
+                "define stream FileReaderStream (code string, serialNo string, amount string);\n" +
+                "@sink(type='log')\n" +
+                "define stream FileResultStream (code string, serialNo string, amount string);\n";
+
+        String query = "" +
+                "from FileReaderStream\n" +
+                "select *\n" +
+                "insert into FileResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("FileResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                count.incrementAndGet();
+            }
+        });
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 7, count.get(), 6000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIOFileTestForReadOnlyHeader() throws InterruptedException {
+        log.info("test SiddhiIOFile read.only.header parameter Test");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')\n" +
+                "@source(type='file', mode='line', file.uri='file:" + newRoot + "/line/header/test.txt', " +
+                "read.only.header='true', action.after.process='keep', tailing='false', \n" +
+                "@map(type='csv', delimiter='|'))\n" +
+                "define stream FileReaderStream (code string, serialNo string, amount string);\n" +
+                "@sink(type='log')\n" +
+                "define stream FileResultStream (code string, serialNo string, amount string);\n";
+
+        String query = "" +
+                "from FileReaderStream\n" +
+                "select *\n" +
+                "insert into FileResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("FileResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                count.incrementAndGet();
+            }
+        });
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 1, count.get(), 3000);
+        siddhiAppRuntime.shutdown();
+    }
 }
