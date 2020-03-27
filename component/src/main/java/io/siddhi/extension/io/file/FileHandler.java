@@ -164,10 +164,8 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
     }
 
     @Override
-    public StateFactory<FileHandlerState> init(SourceEventListener sourceEventListener,
-                                               OptionHolder optionHolder,
-                                               String[] requiredProperties,
-                                               ConfigReader configReader,
+    public StateFactory<FileHandlerState> init(SourceEventListener sourceEventListener, OptionHolder optionHolder,
+                                               String[] requiredProperties, ConfigReader configReader,
                                                SiddhiAppContext siddhiAppContext) throws SiddhiAppValidationException {
         this.sourceEventListener = sourceEventListener;
         if (optionHolder.isOptionExists(Constants.URI)) {
