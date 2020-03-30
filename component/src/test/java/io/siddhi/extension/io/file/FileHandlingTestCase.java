@@ -86,7 +86,7 @@ public class FileHandlingTestCase {
         log.info("Siddhi IO File Testcase 1 - Directory");
         String app = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener', " +
-                "uri='file:" + newRoot + "')\n" +
+                "dir.uri='file:" + newRoot + "')\n" +
                 "define stream FileListenerStream(filepath string, filename string, status string);\n" +
                 "define stream ResultStream(filepath string, filename string, status string);\n" +
                 "from FileListenerStream\n" +
@@ -131,7 +131,7 @@ public class FileHandlingTestCase {
         log.info("Siddhi IO File Testcase 1");
         String app = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener', " +
-                "uri='" + newRoot + "')\n" +
+                "dir.uri='" + newRoot + "')\n" +
                 "define stream FileListenerStream(filepath string, filename string, status string);\n" +
                 "define stream ResultStream(filepath string, filename string, status string);\n" +
                 "from FileListenerStream\n" +
@@ -178,7 +178,7 @@ public class FileHandlingTestCase {
         }
         String app = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener', " +
-                "uri='" + newRoot + "', file.name.list = 'action.txt')\n" +
+                "dir.uri='" + newRoot + "', file.name.list = 'action.txt')\n" +
                 "define stream FileListenerStream (filepath string, filename string, status string); \n" +
                 "@sink(type='log')" +
                 "define stream ResultStream (filepath string, filename string, status string); " +
@@ -224,7 +224,7 @@ public class FileHandlingTestCase {
         File newFile = new File(newRoot + "/changedDestination.txt");
         String app = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener', " +
-                "uri='" + newRoot + "')\n" +
+                "dir.uri='" + newRoot + "')\n" +
                 "define stream FileListenerStream (filepath string, filename string, status string); \n" +
                 "@sink(type='log')" +
                 "define stream ResultStream (filepath string, filename string, status string); " +
@@ -281,7 +281,7 @@ public class FileHandlingTestCase {
         }
         String app = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener', " +
-                "uri='" + newRoot + "', file.name.list= 'destination, destination.txt')\n" +
+                "dir.uri='" + newRoot + "', file.name.list= 'destination, destination.txt')\n" +
                 "define stream FileListenerStream (filepath string, filename string, status string); \n" +
                 "@sink(type='log')" +
                 "define stream ResultStream (filepath string, filename string, status string); " +
@@ -325,7 +325,7 @@ public class FileHandlingTestCase {
         File newFile = new File(newRoot +  "/action.txt");
         String app = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener', " +
-                "uri='file:" + newRoot + "')\n" +
+                "dir.uri='file:" + newRoot + "')\n" +
                 "define stream FileListenerStream(filepath string, filename string, status string);\n" +
                 "define stream ResultStream(filepath string, filename string, status string);\n" +
                 "from FileListenerStream\n" +
@@ -381,7 +381,7 @@ public class FileHandlingTestCase {
         log.info("Siddhi IO File Exception - Monitoring value must in integer");
         String streams = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener'," +
-                "uri='" + newRoot + "', monitoring.interval= 'interval')\n" +
+                "dir.uri='" + newRoot + "', monitoring.interval= 'interval')\n" +
                 "define stream FileListenerStream(filepath string, filename string, status string);\n" +
                 "define stream ResultStream(filepath string, filename string, status string);";
 
@@ -406,7 +406,7 @@ public class FileHandlingTestCase {
         }
         String app = "" +
                 "@App:name('SiddhiAppFileNotFound') @source(type='fileeventlistener', " +
-                "uri='file:" + newRoot + "/action.txt')" +
+                "dir.uri='file:" + newRoot + "/action.txt')" +
                 "define stream FileListenerStream(filepath string, filename string, status string);\n" +
                 "define stream ResultStream(filepath string, filename string, status string);\n" +
                 "from FileListenerStream\n" +
@@ -425,7 +425,7 @@ public class FileHandlingTestCase {
         log.info("Siddhi IO File Exception - Folder is not found");
         String streams = "" +
                 "@App:name('SiddhiAppURINotFound') @source(type='fileeventlistener'," +
-                "uri='" + newRoot + "', file.name.list= 'interval')\n" +
+                "dir.uri='" + newRoot + "', file.name.list= 'interval')\n" +
                 "define stream FileListenerStream(filepath string, length int, last_modified string);\n" +
                 "define stream ResultStream(filepath string,length int, last_modified string);";
 
@@ -466,7 +466,7 @@ public class FileHandlingTestCase {
         log.info("Siddhi IO File Exception - File given in the fileNameList should be available");
         String streams = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener'," +
-                "uri='" + newRoot + "', file.name.list = 'action.txt')\n" +
+                "dir.uri='" + newRoot + "', file.name.list = 'action.txt')\n" +
                 "define stream FileListenerStream(filepath string, filename string, status string);\n" +
                 "define stream ResultStream(filepath string, filename string, status string);";
 
@@ -487,7 +487,7 @@ public class FileHandlingTestCase {
         log.info("Test Siddhi IO File Function URI must be folder");
         String app = "" +
                 "@App:name('SiddhiAppFileNotFound') @source(type='fileeventlistener', " +
-                "uri='file:" + newRoot + "/action')" +
+                "dir.uri='file:" + newRoot + "/action')" +
                 "define stream FileListenerStream(filepath string, filename string, status string);\n" +
                 "define stream ResultStream(filepath string, filename string, status string);\n" +
                 "from FileListenerStream\n" +

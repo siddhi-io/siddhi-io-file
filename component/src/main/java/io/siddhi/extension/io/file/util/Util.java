@@ -40,14 +40,15 @@ public class Util {
         }
         if (fileObjectList.contains(file.getAbsolutePath())) {
             listenerEventsURLValidated = true;
-        }
-        //If the fileObjectList contains this file
-        for (String fileObjectPath : fileObjectList) {
-            File fileObject = new File(fileObjectPath);
-            if (fileObject.isDirectory()) {
-                //If a fileObject is a folder then the events for the files in the folder should thrown.
-                if (file.getAbsolutePath().startsWith(fileObjectPath)) {
-                    listenerEventsURLValidated = true;
+        } else {
+            //If the fileObjectList contains this file
+            for (String fileObjectPath : fileObjectList) {
+                File fileObject = new File(fileObjectPath);
+                if (fileObject.isDirectory()) {
+                    //If a fileObject is a folder then the events for the files in the folder should thrown.
+                    if (file.getAbsolutePath().startsWith(fileObjectPath)) {
+                        listenerEventsURLValidated = true;
+                    }
                 }
             }
         }

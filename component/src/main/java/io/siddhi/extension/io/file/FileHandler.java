@@ -64,7 +64,7 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                 "which have been created or modified or deleted in the execution time." ,
         parameters = {
                 @Parameter(
-                        name = "uri",
+                        name = "dir.uri",
                         description =
                                 "This parameter is used to specify a folder to be processed. " +
                                         "All the files inside this directory will be processed. " +
@@ -83,8 +83,9 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                 ),
                 @Parameter(
                         name = "file.name.list",
-                        description = "This parameter is used to contain the name of the files which are available " +
-                                "in the folder and which has to be monitored.\n",
+                        description = "This parameter is used to filter the files to be monitored in the" +
+                                " given directory uri (dir.uri). The files should be entered comma separated eg:" +
+                                " 'abc.txt,xyz.csv'\n",
                         optional = true,
                         type = {DataType.STRING},
                         defaultValue = "<Empty_String>"
@@ -93,8 +94,8 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
         examples = {
                 @Example(
                         syntax = "" +
-                                "@source(type='fileeventlistener', uri='file://abc/xyz, file.name.list = 'xyz.txt, " +
-                                "test') \n" +
+                                "@source(type='fileeventlistener', dir.uri='file://abc/xyz, file.name.list = " +
+                                "'xyz.txt, test') \n" +
                                 "define stream FileListenerStream (filepath string, filename string, " +
                                 "status string);\n" +
                                 "@sink(type='log')\n" +
@@ -107,11 +108,11 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                                 "Under above configuration, An event is triggered if the files in the file.name.list " +
                                 "gets created, modified or deleted.\nAn event is created " +
                                 "with the filepath, filename and status of the file. " +
-                                "Then that will be received by the FooStream..\n"
+                                "Then that will be received by the FooStream.\n"
                 ),
                 @Example(
                         syntax = "" +
-                                "@source(type='fileeventlistener',uri='file://abc/xyz') \n" +
+                                "@source(type='fileeventlistener',dir.uri='file://abc/xyz') \n" +
                                 "define stream FileListenerStream (filepath string, filename string, " +
                                 "status string);\n" +
                                 "@sink(type='log')\n" +
@@ -121,14 +122,15 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                                 "insert into FooStream;",
 
                         description = "" +
-                                "Under above configuration,  An event is triggered if any file under the given" +
-                                "URI gets created, modified or deleted in the execution time. " +
+                                "Under above configuration,  An event is triggered if any file under the given " +
+                                "directory uri gets created, modified or deleted in the execution time. " +
                                 "An event is created with the filepath, filename " +
-                                "and status of the file.Then that will be received by the FooStream..\n"
+                                "and status of the file.Then that will be received by the FooStream.\n"
                 ),
                 @Example(
                         syntax = "" +
-                                "@source(type='fileeventlistener',uri='file://abc/xyz', monitoring.interval='200')\n" +
+                                "@source(type='fileeventlistener',dir.uri='file://abc/xyz', " +
+                                "monitoring.interval='200')\n" +
                                 "define stream FileListenerStream (filepath string, filename string, " +
                                 "status string);\n" +
                                 "@sink(type='log')\n" +
@@ -138,10 +140,10 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                                 "insert into FooStream;",
 
                         description = "" +
-                                "Under above configuration, An event is triggered if any file under the given URI " +
-                                "gets created, modified or deleted in the execution time. " +
+                                "Under above configuration, An event is triggered if any file under the given " +
+                                "directory uri gets created, modified or deleted in the execution time. " +
                                 "An event is created with the filepath, filename and " +
-                                "status of the file. Then that will be received by the FooStream. If there " +
+                                "status of the file. Then that will be received by the FooStream.\nIf there " +
                                 "are any changes a new event will be generated in every 200 milliseconds.\n"
                 ),
         }
@@ -168,8 +170,8 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
                                                String[] requiredProperties, ConfigReader configReader,
                                                SiddhiAppContext siddhiAppContext) throws SiddhiAppValidationException {
         this.sourceEventListener = sourceEventListener;
-        if (optionHolder.isOptionExists(Constants.URI)) {
-            listeningDirUri = optionHolder.validateAndGetStaticValue(Constants.URI);
+        if (optionHolder.isOptionExists(Constants.DIR_URI)) {
+            listeningDirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
         }
         //Validation for URI
         if (listeningDirUri == null || listeningDirUri.isEmpty()) {
@@ -250,7 +252,6 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         }
     }
 
-    //
     public void initiateFileAlterationObserver() {
         FileAlterationObserver observer = new FileAlterationObserver(listeningDirUri);
         observer.addListener(new FileAlterationImpl(sourceEventListener, fileObjectList));
