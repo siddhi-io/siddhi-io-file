@@ -68,7 +68,7 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                         description =
                                 "This parameter is used to specify a folder to be processed. " +
                                         "All the files inside this directory will be processed. " +
-                                        "This uri MUST have the respective protocol specified.",
+                                        "This uri MUST have the respective protocol specified.\n",
                         optional = false,
                         type = {DataType.STRING}
                 ),
@@ -85,7 +85,7 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                         name = "file.name.list",
                         description = "This parameter is used to filter the files to be monitored in the" +
                                 " given directory uri (dir.uri). The files should be entered comma separated eg:" +
-                                " 'abc.txt,xyz.csv'\n",
+                                " 'abc.txt,xyz.csv'",
                         optional = true,
                         type = {DataType.STRING},
                         defaultValue = "<Empty_String>"
