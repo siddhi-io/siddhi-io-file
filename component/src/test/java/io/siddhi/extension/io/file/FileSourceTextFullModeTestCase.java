@@ -428,6 +428,7 @@ public class FileSourceTextFullModeTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='text.full'," +
                 "file.uri='file:/" + dirUri + "/text_full_single/apache.json', " +
+                "action.after.process='delete'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";

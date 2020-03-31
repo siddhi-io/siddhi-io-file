@@ -47,10 +47,12 @@ public class Constants {
     public static final String ADD_EVENT_SEPARATOR = "add.line.separator";
     public static final String FILE_READ_WAIT_TIMEOUT = "file.read.wait.timeout";
     public static final int WAIT_TILL_DONE = 5000;
+    public static final String HEADER_PRESENT = "header.present";
 
     /* configuration param values*/
     public static final String MOVE = "move";
     public static final String DELETE = "delete";
+    public static final String KEEP = "keep";
     public static final String TEXT_FULL = "text.full";
     public static final String BINARY_FULL = "binary.full";
     public static final String REGEX = "regex";
