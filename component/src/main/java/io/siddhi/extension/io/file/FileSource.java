@@ -233,7 +233,7 @@ import java.util.regex.PatternSyntaxException;
                                 "header line or not. This can either have value true or false. If it's set to " +
                                 "`true` then it indicates a file contains a header line, and it will not process",
                         optional = true, defaultValue = "false",
-                        type = {DataType.BOOL}),
+                        type = {DataType.BOOL})
         },
         examples = {
                 @Example(
