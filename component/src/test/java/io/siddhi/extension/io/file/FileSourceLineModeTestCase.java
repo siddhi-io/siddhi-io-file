@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Test cases for siddhi-io-file source.
  * mode = line.
- * */
+ */
 public class FileSourceLineModeTestCase {
     private static final Logger log = Logger.getLogger(FileSourceLineModeTestCase.class);
     private AtomicInteger count = new AtomicInteger();
@@ -62,6 +62,7 @@ public class FileSourceLineModeTestCase {
         newRoot = new File(dirUri);
         moveAfterProcessDir = rootPath + "/moved_files";
     }
+
     @BeforeMethod
     public void doBeforeMethod() {
         count.set(0);
@@ -76,6 +77,7 @@ public class FileSourceLineModeTestCase {
                     " which are required for tests. Hence aborting tests.", e);
         }
     }
+
     @AfterMethod
     public void doAfterMethod() {
         try {
@@ -148,7 +150,7 @@ public class FileSourceLineModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test (dependsOnMethods = "siddhiIoFileTest1")
+    @Test(dependsOnMethods = "siddhiIoFileTest1")
     public void siddhiIoFileTest2() throws InterruptedException {
         log.info("test SiddhiIoFile [mode=line] Test 2");
         String streams = "" +
@@ -208,7 +210,7 @@ public class FileSourceLineModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test (dependsOnMethods = "siddhiIoFileTest2")
+    @Test(dependsOnMethods = "siddhiIoFileTest2")
     public void siddhiIoFileTest3() throws InterruptedException {
         log.info("test SiddhiIoFile [mode=line] Test 3");
         String streams = "" +
@@ -293,9 +295,9 @@ public class FileSourceLineModeTestCase {
                     bufferedWriter.newLine();
                     bufferedWriter.flush();
                     bufferedWriter.close();
-                    } catch (IOException e) {
-                        log.error(e.getMessage());
-                    }
+                } catch (IOException e) {
+                    log.error(e.getMessage());
+                }
             }
         });
         t2.start();
@@ -304,6 +306,7 @@ public class FileSourceLineModeTestCase {
         AssertJUnit.assertEquals("Number of events", 7, count.get());
         siddhiAppRuntime.shutdown();
     }
+
     @Test(dependsOnMethods = "siddhiIoFileTest3")
     public void siddhiIoFileTest4() throws InterruptedException {
         log.info("test SiddhiIoFile [mode=line] Test 4");
@@ -519,7 +522,7 @@ public class FileSourceLineModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test (dependsOnMethods = "siddhiIoFileTest7")
+    @Test(dependsOnMethods = "siddhiIoFileTest7")
     public void siddhiIoFileTest8() throws InterruptedException {
         log.info("test SiddhiIoFile [mode=line] Test 8");
         String streams = "" +
@@ -602,7 +605,7 @@ public class FileSourceLineModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test (dependsOnMethods = "siddhiIoFileTest9")
+    @Test(dependsOnMethods = "siddhiIoFileTest9")
     public void siddhiIoFileTest10() throws InterruptedException {
         log.info("test SiddhiIoFile [mode=line] Test 10");
         String streams = "" +
@@ -659,7 +662,7 @@ public class FileSourceLineModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test (dependsOnMethods = "siddhiIoFileTest10")
+    @Test(dependsOnMethods = "siddhiIoFileTest10")
     public void siddhiIoFileTest11() throws InterruptedException {
         log.info("test SiddhiIoFile [mode=line] Test 11");
         String streams = "" +
@@ -719,7 +722,7 @@ public class FileSourceLineModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test (dependsOnMethods = "siddhiIoFileTest11")
+    @Test(dependsOnMethods = "siddhiIoFileTest11")
     public void siddhiIoFileTest12() throws InterruptedException {
         log.info("test SiddhiIoFile [mode=line] Test 12");
         String streams = "" +
@@ -873,7 +876,7 @@ public class FileSourceLineModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test (dependsOnMethods = "siddhiIoFileTest12")
+    @Test(dependsOnMethods = "siddhiIoFileTest12")
     public void siddhiIoFileTest14() throws InterruptedException {
         log.info("test SiddhiIoFile [mode=line] Test 14");
         String streams = "" +
@@ -1104,8 +1107,8 @@ public class FileSourceLineModeTestCase {
                 "action.after.process='delete', " +
                 "tailing='false', " +
                 "@map(type='json', enclosing.element=\"$.event\", " +
-                    "@attributes(symbol = \"symbol\", price = \"price\", volume = \"volume\", " +
-                        "eof = 'trp:eof', fp = 'trp:file.path')))\n" +
+                "@attributes(symbol = \"symbol\", price = \"price\", volume = \"volume\", " +
+                "eof = 'trp:eof', fp = 'trp:file.path')))\n" +
                 "define stream FooStream (symbol string, price float, volume long, eof String, fp String); " +
                 "define stream BarStream (symbol string, price float, volume long, eof String, fp String); ";
         String query = "" +
@@ -1143,17 +1146,17 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                    "file.uri='file:" + newRoot + "/line/header/test.txt', " +
-                    "header.present='true'," +
-                    "action.after.process='delete', " +
-                    "tailing='false', " +
-                    "@map( type='csv', delimiter='|', " +
-                        "@attributes(code = '0', serialNo = '1', amount = '2', fileName = 'trp:file.path', " +
-                                    "eof = 'trp:eof')))\n" +
+                "file.uri='file:" + newRoot + "/line/header/test.txt', " +
+                "header.present='true'," +
+                "action.after.process='delete', " +
+                "tailing='false', " +
+                "@map( type='csv', delimiter='|', " +
+                "@attributes(code = '0', serialNo = '1', amount = '2', fileName = 'trp:file.path', " +
+                "eof = 'trp:eof')))\n" +
                 "define stream FileReaderStream (code string, serialNo string, amount double, " +
-                    "fileName string, eof string); " +
+                "fileName string, eof string); " +
                 "define stream FileResultStream (code string, serialNo string, amount double, " +
-                    "fileName string, eof string); ";
+                "fileName string, eof string); ";
         String query = "" +
                 "from FileReaderStream " +
                 "select * " +
@@ -1256,6 +1259,66 @@ public class FileSourceLineModeTestCase {
         AssertJUnit.assertEquals(1, file.list().length);
         //assert event count
         AssertJUnit.assertEquals("Number of events", 3, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIOFileTestForSkipReadOnlyHeader() throws InterruptedException {
+        log.info("test SiddhiIOFile read.only.header=false parameter Test");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')\n" +
+                "@source(type='file', mode='line', file.uri='file:" + newRoot + "/line/header/test.txt', " +
+                "read.only.header='false', tailing='false', " +
+                "@map(type='csv', delimiter='|'))\n" +
+                "define stream FileReaderStream (code string, serialNo string, amount string);\n" +
+                "@sink(type='log')\n" +
+                "define stream FileResultStream (code string, serialNo string, amount string);\n";
+
+        String query = "" +
+                "from FileReaderStream\n" +
+                "select *\n" +
+                "insert into FileResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("FileResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                count.incrementAndGet();
+            }
+        });
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 7, count.get(), 6000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIOFileTestForReadOnlyHeader() throws InterruptedException {
+        log.info("test SiddhiIOFile read.only.header parameter Test");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')\n" +
+                "@source(type='file', mode='line', file.uri='file:" + newRoot + "/line/header/test.txt', " +
+                "read.only.header='true', action.after.process='keep', tailing='false', \n" +
+                "@map(type='csv', delimiter='|'))\n" +
+                "define stream FileReaderStream (code string, serialNo string, amount string);\n" +
+                "@sink(type='log')\n" +
+                "define stream FileResultStream (code string, serialNo string, amount string);\n";
+
+        String query = "" +
+                "from FileReaderStream\n" +
+                "select *\n" +
+                "insert into FileResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("FileResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                count.incrementAndGet();
+            }
+        });
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 1, count.get(), 3000);
         siddhiAppRuntime.shutdown();
     }
 }
