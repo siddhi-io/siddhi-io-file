@@ -205,7 +205,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
     }
 
     @Override
-    public void done() {}
+    public void done() {
+    }
 
     static class FileServerExecutor implements Runnable {
         ServerConnector fileServerConnector = null;

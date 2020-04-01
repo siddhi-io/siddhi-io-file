@@ -109,7 +109,7 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.6</version>
+                <version>2.5</version>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>
@@ -138,7 +138,7 @@
     <properties>
         <siddhi.version>5.1.5</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
-        <wso2.transport.file.version>6.0.64-SNAPSHOT</wso2.transport.file.version>
+        <wso2.transport.file.version>6.0.65</wso2.transport.file.version>
         <org.apache.commons-compress.version>1.19</org.apache.commons-compress.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>5.0.2</siddhi.map.json.version>

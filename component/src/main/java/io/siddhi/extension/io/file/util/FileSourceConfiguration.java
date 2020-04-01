@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 /**
  * Class for keep the configurations of a file source instance.
- * */
+ */
 public class FileSourceConfiguration {
 
     private boolean isTailingEnabled;

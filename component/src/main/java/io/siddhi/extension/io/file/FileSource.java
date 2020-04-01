@@ -222,7 +222,7 @@ import java.util.regex.PatternSyntaxException;
                 @Parameter(
                         name = "file.read.wait.timeout",
                         description = "This parameter is used to specify the maximum time period (in milliseconds) " +
-                                " till it waits before retrying to read the full file content.",
+                                " till it waits before retrying to read the full file content.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "1000"
@@ -231,10 +231,10 @@ import java.util.regex.PatternSyntaxException;
                         name = "header.present",
                         description = "This parameter used to specify a particular text file (eg: CSV) contains a " +
                                 "header line or not. This can either have value true or false. If it's set to " +
-                                "`true` then it indicates a file contains a header line, and it will not process",
+                                "`true` then it indicates a file contains a header line, and it will not process.\n",
                         optional = true, defaultValue = "false",
                         type = {DataType.BOOL}
-                        ),
+                ),
                 @Parameter(
                         name = "read.only.header",
                         description = "This parameter used to specify a particular text file (eg: CSV) contains a " +
