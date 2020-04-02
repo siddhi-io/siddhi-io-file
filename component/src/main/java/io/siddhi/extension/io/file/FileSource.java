@@ -222,7 +222,7 @@ import java.util.regex.PatternSyntaxException;
                 @Parameter(
                         name = "file.read.wait.timeout",
                         description = "This parameter is used to specify the maximum time period (in milliseconds) " +
-                                " till it waits before retrying to read the full file content.",
+                                " till it waits before retrying to read the full file content.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "1000"
@@ -231,9 +231,19 @@ import java.util.regex.PatternSyntaxException;
                         name = "header.present",
                         description = "This parameter used to specify a particular text file (eg: CSV) contains a " +
                                 "header line or not. This can either have value true or false. If it's set to " +
-                                "`true` then it indicates a file contains a header line, and it will not process",
+                                "`true` then it indicates a file contains a header line, and it will not process.\n",
                         optional = true, defaultValue = "false",
-                        type = {DataType.BOOL}),
+                        type = {DataType.BOOL}
+                ),
+                @Parameter(
+                        name = "read.only.header",
+                        description = "This parameter used to read only the header or the first line of a particular " +
+                                "text file (eg: CSV). This is only applicable if the mode is LINE. If it's set to " +
+                                "false, the full file content will be read line by line.",
+                        optional = true,
+                        type = {DataType.BOOL},
+                        defaultValue = "false"
+                ),
         },
         examples = {
                 @Example(
@@ -329,6 +339,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private ScheduledFuture scheduledFuture;
     private ConnectionCallback connectionCallback;
     private String headerPresent;
+    private String readOnlyHeader;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -440,6 +451,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
         fileReadWaitTimeout = optionHolder.validateAndGetStaticValue(Constants.FILE_READ_WAIT_TIMEOUT, "1000");
         headerPresent = optionHolder.validateAndGetStaticValue(Constants.HEADER_PRESENT, "false");
+        readOnlyHeader = optionHolder.validateAndGetStaticValue(Constants.READ_ONLY_HEADER, "false");
         validateParameters();
         createInitialSourceConf();
         updateSourceConf();
@@ -519,6 +531,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setTimeout(timeout);
         fileSourceConfiguration.setFileReadWaitTimeout(fileReadWaitTimeout);
         fileSourceConfiguration.setHeaderPresent(headerPresent);
+        fileSourceConfiguration.setReadOnlyHeader(readOnlyHeader);
     }
 
     private void updateSourceConf() {
@@ -632,6 +645,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             properties.put(Constants.MAX_LINES_PER_POLL, "10");
             properties.put(Constants.POLLING_INTERVAL, filePollingInterval);
             properties.put(Constants.HEADER_PRESENT, headerPresent);
+            properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
             if (actionAfterFailure != null) {
                 properties.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
             }
@@ -670,6 +684,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 properties.put(Constants.ACK_TIME_OUT, "1000");
                 properties.put(Constants.MODE, mode);
                 properties.put(Constants.HEADER_PRESENT, headerPresent);
+                properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
                 VFSClientConnector vfsClientConnector = new VFSClientConnector();
                 FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
                 vfsClientConnector.setMessageProcessor(fileProcessor);
