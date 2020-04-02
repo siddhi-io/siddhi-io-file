@@ -160,7 +160,7 @@ import java.util.regex.PatternSyntaxException;
                                 "This uri MUST have the respective protocol specified.\n",
                         type = {DataType.STRING},
                         optional = true,
-                        defaultValue = "file:/var/tmp"
+                        defaultValue = "<Empty_String>"
                 ),
 
                 @Parameter(
@@ -173,7 +173,7 @@ import java.util.regex.PatternSyntaxException;
                                 "This uri MUST have the respective protocol specified.\n",
                         type = {DataType.STRING},
                         optional = true,
-                        defaultValue = "file:/var/tmp"
+                        defaultValue = "<Empty_String>"
                 ),
 
                 @Parameter(
