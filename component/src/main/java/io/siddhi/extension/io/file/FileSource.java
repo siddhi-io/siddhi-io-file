@@ -237,9 +237,9 @@ import java.util.regex.PatternSyntaxException;
                 ),
                 @Parameter(
                         name = "read.only.header",
-                        description = "This parameter used to specify a particular text file (eg: CSV) contains a " +
-                                "header line or not. This can either have value true or false. If it's set to " +
-                                "`true` then an event will throw the header details.",
+                        description = "This parameter used to read only the header or the first line of a particular " +
+                                "text file (eg: CSV). This is only applicable if the mode is LINE. If it's set to " +
+                                "false, the full file content will be read line by line.",
                         optional = true,
                         type = {DataType.BOOL},
                         defaultValue = "false"
