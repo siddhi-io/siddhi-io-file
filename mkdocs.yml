@@ -8,9 +8,9 @@ extra_javascript:
 - javascripts/extra.js
 repo_name: Siddhi-IO-file
 repo_url: https://github.com/siddhi-io/siddhi-io-file
-copyright: Copyright &copy; 2011 - 2018 WSO2
+copyright: Copyright &copy; 2011 - 2020 WSO2
 theme:
-  name: mkdocs
+  name: material
   logo: images/siddhi-logo-w.svg
   favicon: images/favicon.ico
   palette:
@@ -31,8 +31,8 @@ markdown_extensions:
     permalink: true
 - codehilite:
     guess_lang: false
-#- pymdownx.tasklist:
-#    custom_checkbox: true
+- pymdownx.tasklist:
+    custom_checkbox: true
 - markdown.extensions.attr_list: null
 pages:
 - Welcome: index.md
@@ -67,4 +67,4 @@ pages:
   - 1.0.0-M11: api/1.0.0-M11.md
   - 1.0.0-M10: api/1.0.0-M10.md
   - 1.0.0: api/1.0.0.md
-#- License: about/license.md
+- License: about/license.md

@@ -80,10 +80,10 @@ public class FileHandlingTestCase {
 
     /**
      * Test cases for 'type = 'fileeventlistener
-     * */
+     */
     @Test
     public void siddhiIOFileTest1() throws InterruptedException {
-        log.info("Siddhi IO File Testcase 1 - Directory");
+        log.info("Siddhi IO File Testcase 1");
         String app = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener', " +
                 "dir.uri='file:" + newRoot + "')\n" +
@@ -110,13 +110,11 @@ public class FileHandlingTestCase {
                 }
             }
         });
-
         siddhiAppRuntime.start();
-        File newFile = new File(newRoot +  "/destination");
+        File newFile = new File(newRoot + "/destination");
         if (newFile.mkdir()) {
             log.debug("New folder has been created. ");
         }
-        log.info (newFile.lastModified());
         SiddhiTestHelper.waitForEvents(100, 1, count.get(), 3000);
         if (newFile.delete()) {
             log.debug("New folder is deleted. ");
@@ -127,11 +125,13 @@ public class FileHandlingTestCase {
     }
 
     @Test
-    public void siddhiIOFileTest2() throws InterruptedException {
-        log.info("Siddhi IO File Testcase 1");
+    public void fileHandlerPauseAndResume() throws InterruptedException, IOException {
+        log.info("Test PauseAndResume - 2");
+        File newFolder = new File(newRoot + "/destination");
+        File newFile = new File(newRoot + "/action.txt");
         String app = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener', " +
-                "dir.uri='" + newRoot + "')\n" +
+                "dir.uri='file:" + newRoot + "')\n" +
                 "define stream FileListenerStream(filepath string, filename string, status string);\n" +
                 "define stream ResultStream(filepath string, filename string, status string);\n" +
                 "from FileListenerStream\n" +
@@ -140,7 +140,9 @@ public class FileHandlingTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
+        Collection<List<Source>> sources = siddhiAppRuntime.getSources();
         siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
+
             @Override
             public void receive(Event[] events) {
                 EventPrinter.print(events);
@@ -148,8 +150,8 @@ public class FileHandlingTestCase {
                 for (Event event : events) {
                     if (n == 0 || n == 1) {
                         Assert.assertEquals(newRoot + "/destination", event.getData(0));
-                    } else if (n == 2) {
-                        Assert.assertEquals(newRoot + "/destination/action", event.getData(0));
+                    } else if (n == 2 || n == 3) {
+                        Assert.assertEquals(newRoot + "/action.txt", event.getData(0));
                     } else {
                         Assert.fail("More events received than expected.");
                     }
@@ -157,22 +159,32 @@ public class FileHandlingTestCase {
             }
         });
         siddhiAppRuntime.start();
-        if (new File(newRoot +  "/destination").mkdir()) {
-            log.debug ("New folder  has been created. ");
+        if (newFolder.mkdir()) {
+            log.debug("New folder has been created. ");
         }
         SiddhiTestHelper.waitForEvents(100, 1, count.get(), 3000);
-        if (new File(newRoot +  "/destination/action").mkdir()) {
-            log.debug ("New folder  has been created. ");
+        if (newFolder.delete()) {
+            log.debug("New folder is deleted. ");
+        }
+        SiddhiTestHelper.waitForEvents(100, 2, count.get(), 3000);
+        sources.forEach(e -> e.forEach(Source::pause));
+        if (newFile.createNewFile()) {
+            log.debug("New file has been created");
         }
         SiddhiTestHelper.waitForEvents(100, 3, count.get(), 3000);
+        if (newFile.delete()) {
+            log.debug("File is deleted ");
+        }
+        sources.forEach(e -> e.forEach(Source::resume));
+        SiddhiTestHelper.waitForEvents(100, 4, count.get(), 3000);
         siddhiAppRuntime.shutdown();
-        Assert.assertEquals(3, count.get());
+        Assert.assertEquals(4, count.get());
     }
 
     @Test
     public void siddhiIOFileTest3() throws InterruptedException, IOException {
-        log.info("Siddhi IO File Testcase 4 - file without file:/");
-        File newFile = new File(newRoot +  "/action.txt");
+        log.info("Siddhi IO File Testcase 3");
+        File newFile = new File(newRoot + "/action.txt");
         if (newFile.createNewFile()) {
             log.debug("New file has been created to validate the path");
         }
@@ -219,7 +231,7 @@ public class FileHandlingTestCase {
 
     @Test
     public void siddhiIOFileTest4() throws InterruptedException, IOException {
-        log.info("Siddhi IO File Testcase 5 rename or move");
+        log.info("Siddhi IO File Testcase 4 rename or move");
         File currentFile = new File(newRoot + "/destination.txt");
         File newFile = new File(newRoot + "/changedDestination.txt");
         String app = "" +
@@ -270,7 +282,7 @@ public class FileHandlingTestCase {
 
     @Test
     public void siddhiIOFileTest5() throws InterruptedException, IOException {
-        log.info("Siddhi IO File Testcase 6 delete() ");
+        log.info("Siddhi IO File Testcase 5");
         File newFile = new File(newRoot + "/destination.txt");
         File newFolder = new File(newRoot + "/destination");
         if (newFile.createNewFile()) {
@@ -318,14 +330,12 @@ public class FileHandlingTestCase {
         Assert.assertEquals(3, count.get());
     }
 
-    @Test
-    public void fileHandlerPauseAndResume() throws InterruptedException, IOException {
-        log.info("PauseAndResume");
-        File newFolder = new File(newRoot +  "/destination");
-        File newFile = new File(newRoot +  "/action.txt");
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void siddhiIOFileTest6() throws InterruptedException {
+        log.info("Test Siddhi IO File Function 6 URI must be folder");
         String app = "" +
-                "@App:name('TestFileEventListener') @source(type='fileeventlistener', " +
-                "dir.uri='file:" + newRoot + "')\n" +
+                "@App:name('SiddhiAppFileNotFound') @source(type='fileeventlistener', " +
+                "dir.uri='file:" + newRoot + "/action')" +
                 "define stream FileListenerStream(filepath string, filename string, status string);\n" +
                 "define stream ResultStream(filepath string, filename string, status string);\n" +
                 "from FileListenerStream\n" +
@@ -334,51 +344,14 @@ public class FileHandlingTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
-        Collection<List<Source>> sources = siddhiAppRuntime.getSources();
-        siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-                int n = count.getAndIncrement();
-                for (Event event : events) {
-                    if (n == 0 || n == 1) {
-                        Assert.assertEquals(newRoot + "/destination", event.getData(0));
-                    } else if (n == 2 || n == 3) {
-                        Assert.assertEquals(newRoot + "/action.txt", event.getData(0));
-                    } else {
-                        Assert.fail("More events received than expected.");
-                    }
-                }
-            }
-        });
-
         siddhiAppRuntime.start();
-        if (newFolder.mkdir()) {
-            log.debug("New folder has been created. ");
-        }
-        SiddhiTestHelper.waitForEvents(100, 1, count.get(), 3000);
-        if (newFolder.delete()) {
-            log.debug("New folder is deleted. ");
-        }
-        SiddhiTestHelper.waitForEvents(100, 2, count.get(), 3000);
-        sources.forEach(e -> e.forEach(Source::pause));
-        if (newFile.createNewFile()) {
-            log.debug("New file has been created");
-        }
-        SiddhiTestHelper.waitForEvents(100, 3, count.get(), 3000);
-        if (newFile.delete()) {
-            log.debug("File is deleted ");
-        }
-        sources.forEach(e -> e.forEach(Source::resume));
-        SiddhiTestHelper.waitForEvents(100, 4, count.get(), 3000);
+        SiddhiTestHelper.waitForEvents(100, 0, count.get(), 1000);
         siddhiAppRuntime.shutdown();
-        Assert.assertEquals(4, count.get());
     }
 
     @Test(expectedExceptions = SiddhiAppValidationException.class)
-    public void siddhiIOFileTest6() throws InterruptedException {
-        log.info("Siddhi IO File Exception - Monitoring value must in integer");
+    public void siddhiIOFileTest7() throws InterruptedException {
+        log.info("Siddhi IO File Exception 7- Monitoring value must in integer");
         String streams = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener'," +
                 "dir.uri='" + newRoot + "', monitoring.interval= 'interval')\n" +
@@ -398,9 +371,9 @@ public class FileHandlingTestCase {
     }
 
     @Test(expectedExceptions = SiddhiAppCreationException.class)
-    public void siddhiIOFileTest7() throws InterruptedException, IOException {
-        log.info("Test Siddhi IO File Function URI must be folder");
-        File newFile = new File(newRoot +  "/action.txt");
+    public void siddhiIOFileTest8() throws InterruptedException, IOException {
+        log.info("Test Siddhi IO File 8 Function URI must be folder");
+        File newFile = new File(newRoot + "/action.txt");
         if (newFile.createNewFile()) {
             log.debug("File is created");
         }
@@ -421,8 +394,8 @@ public class FileHandlingTestCase {
     }
 
     @Test(expectedExceptions = SiddhiAppCreationException.class)
-    public void siddhiIOFileTest8() throws InterruptedException {
-        log.info("Siddhi IO File Exception - Folder is not found");
+    public void siddhiIOFileTest9() throws InterruptedException {
+        log.info("Siddhi IO File 9 Exception - Folder is not found");
         String streams = "" +
                 "@App:name('SiddhiAppURINotFound') @source(type='fileeventlistener'," +
                 "dir.uri='" + newRoot + "', file.name.list= 'interval')\n" +
@@ -442,8 +415,8 @@ public class FileHandlingTestCase {
     }
 
     @Test(expectedExceptions = SiddhiAppCreationException.class)
-    public void siddhiIOFileTest9() throws InterruptedException {
-        log.info("Siddhi IO File Exception - URI must provided");
+    public void siddhiIOFileTest10() throws InterruptedException {
+        log.info("Siddhi IO File Exception 10 - URI must provided");
         String streams = "" +
                 "@App:name('SiddhiAppURINotFound') @source(type='fileeventlistener')" +
                 "define stream FileListenerStream(filepath string, filename string, status string);\n" +
@@ -462,8 +435,8 @@ public class FileHandlingTestCase {
     }
 
     @Test(expectedExceptions = SiddhiAppCreationException.class)
-    public void siddhiIOFileTest10() throws InterruptedException {
-        log.info("Siddhi IO File Exception - File given in the fileNameList should be available");
+    public void siddhiIOFileTest11() throws InterruptedException {
+        log.info("Siddhi IO File Exception 11 - File given in the fileNameList should be available");
         String streams = "" +
                 "@App:name('TestFileEventListener') @source(type='fileeventlistener'," +
                 "dir.uri='" + newRoot + "', file.name.list = 'action.txt')\n" +
@@ -477,25 +450,6 @@ public class FileHandlingTestCase {
 
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        siddhiAppRuntime.start();
-        SiddhiTestHelper.waitForEvents(100, 0, count.get(), 1000);
-        siddhiAppRuntime.shutdown();
-    }
-
-    @Test(expectedExceptions = SiddhiAppCreationException.class)
-    public void siddhiIOFileTest11() throws InterruptedException {
-        log.info("Test Siddhi IO File Function URI must be folder");
-        String app = "" +
-                "@App:name('SiddhiAppFileNotFound') @source(type='fileeventlistener', " +
-                "dir.uri='file:" + newRoot + "/action')" +
-                "define stream FileListenerStream(filepath string, filename string, status string);\n" +
-                "define stream ResultStream(filepath string, filename string, status string);\n" +
-                "from FileListenerStream\n" +
-                "select *\n" +
-                "insert into ResultStream;";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
         siddhiAppRuntime.start();
         SiddhiTestHelper.waitForEvents(100, 0, count.get(), 1000);
         siddhiAppRuntime.shutdown();
