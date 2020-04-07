@@ -31,7 +31,9 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
-import io.siddhi.extension.io.file.util.Metrics;
+import io.siddhi.extension.io.file.util.metrics.FileArchiveMetrics;
+import io.siddhi.extension.io.file.util.metrics.FileCopyMetrics;
+import io.siddhi.extension.io.file.util.metrics.Metrics;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -39,6 +41,7 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.Selectors;
 import org.apache.log4j.Logger;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -128,6 +131,7 @@ public class FileCopyExtension extends StreamFunctionProcessor {
     private Pattern pattern = null;
     private int inputExecutorLength;
     private String siddhiAppName;
+    private FileCopyMetrics fileCopyMetrics;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
@@ -139,8 +143,10 @@ public class FileCopyExtension extends StreamFunctionProcessor {
             pattern = Pattern.compile(((ConstantExpressionExecutor)
                     attributeExpressionExecutors[2]).getValue().toString());
         }
-        siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
-        Utils.addSiddhiApp(siddhiAppName);
+        if (MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+            siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
+            fileCopyMetrics = new FileCopyMetrics(siddhiAppName);
+        }
         return null;
     }
 
@@ -226,6 +232,11 @@ public class FileCopyExtension extends StreamFunctionProcessor {
     private void copyFileToDestination(FileObject sourceFileObject, String destinationDirUri, Pattern pattern,
                                        FileObject rootSourceFileObject) {
         FileObject destinationFileObject = null;
+        if (fileCopyMetrics != null) {
+            fileCopyMetrics.set_source(Utils.getShortFilePath(sourceFileObject.getName().getPath()));
+            fileCopyMetrics.setDestination(Utils.getShortFilePath(destinationDirUri));
+            fileCopyMetrics.setTime(System.currentTimeMillis());
+        }
         try {
             String fileName = sourceFileObject.getName().getBaseName();
             String destinationPath;
@@ -243,13 +254,13 @@ public class FileCopyExtension extends StreamFunctionProcessor {
                 destinationFileObject.copyFrom(sourceFileObject, Selectors.SELECT_ALL);
                 destinationFileObject.close();
             }
-            Metrics.getInstance().getNumberOfCopy().labels(siddhiAppName, Utils.getShortFilePath(sourceFileObject
-                            .getName().getPath()), Utils.getShortFilePath(destinationDirUri), String.valueOf(
-                                    System.currentTimeMillis())).set(1);
+            if (fileCopyMetrics !=  null) {
+                fileCopyMetrics.getCopyMetric(1);
+            }
         } catch (FileSystemException e) {
-            Metrics.getInstance().getNumberOfCopy().labels(siddhiAppName, Utils.getShortFilePath(sourceFileObject
-                    .getName().getPath()), Utils.getShortFilePath(destinationDirUri), String.valueOf(
-                    System.currentTimeMillis())).set(0);
+            if (fileCopyMetrics != null) {
+                fileCopyMetrics.getCopyMetric(0);
+            }
             throw new SiddhiAppRuntimeException("Exception occurred when doing file operations when copying for " +
                     "file: " + sourceFileObject.getName().getPath(), e);
         } finally {

@@ -30,7 +30,8 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
-import io.siddhi.extension.io.file.util.Metrics;
+import io.siddhi.extension.io.file.util.metrics.FileArchiveMetrics;
+import io.siddhi.extension.io.file.util.metrics.Metrics;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -40,6 +41,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.log4j.Logger;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -147,6 +149,7 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
     private Pattern pattern = null;
     private int inputExecutorLength;
     private String siddhiAppName;
+    private FileArchiveMetrics fileArchiveMetrics;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
@@ -159,7 +162,9 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
                     ((ConstantExpressionExecutor) attributeExpressionExecutors[3]).getValue().toString());
         }
         siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
-        Utils.addSiddhiApp(siddhiAppName);
+        if (MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+            fileArchiveMetrics = new FileArchiveMetrics(siddhiAppName);
+        }
         return null;
     }
 
@@ -205,8 +210,15 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
                     "Exception occurred when creating the subdirectories for the destination directory  " +
                             destinationDirUriObject.getName().getPath(), e);
         }
+        if (fileArchiveMetrics !=  null) {
+            fileArchiveMetrics.set_source(Utils.getShortFilePath(uri));
+            fileArchiveMetrics.setDestination(Utils.getShortFilePath(destinationDirUri));
+            fileArchiveMetrics.setType(Utils.getShortFilePath(archiveType));
+            fileArchiveMetrics.setTime(System.currentTimeMillis());
+        }
         File sourceFile = new File(uri);
         String destinationFile = destinationDirUri + sourceFile.getName();
+
         if (archiveType.compareToIgnoreCase(ZIP_FILE_EXTENSION) == 0) {
             List<String> fileList = new ArrayList<>();
             generateFileList(uri, sourceFile, fileList, excludeSubdirectories);
@@ -214,9 +226,9 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
                 zip(uri, destinationFile, fileList);
 
             } catch (IOException e) {
-                Metrics.getInstance().getNumberOfArchives().labels(siddhiAppName, Utils.getShortFilePath(uri),
-                        Utils.getShortFilePath(destinationDirUri), archiveType, String.valueOf(
-                                System.currentTimeMillis())).set(0);
+                if (fileArchiveMetrics !=  null) {
+                    fileArchiveMetrics.getArchiveMetric(0);
+                }
                 throw new SiddhiAppRuntimeException("IOException occurred when archiving  " + uri, e);
             }
         } else {
@@ -229,15 +241,15 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
                     throw new SiddhiAppRuntimeException("Unsupported archive type: " + archiveType);
                 }
             } catch (IOException e) {
-                Metrics.getInstance().getNumberOfArchives().labels(siddhiAppName, Utils.getShortFilePath(uri),
-                        Utils.getShortFilePath(destinationDirUri), archiveType, String.valueOf(
-                                System.currentTimeMillis())).set(0);
+                if (fileArchiveMetrics !=  null) {
+                    fileArchiveMetrics.getArchiveMetric(0);
+                }
                 throw new SiddhiAppRuntimeException("Exception occurred when archiving " + uri, e);
             }
         }
-        Metrics.getInstance().getNumberOfArchives().labels(siddhiAppName, Utils.getShortFilePath(uri),
-                Utils.getShortFilePath( destinationDirUri), archiveType, String.valueOf(
-                        System.currentTimeMillis())).set(1);
+        if (fileArchiveMetrics !=  null) {
+            fileArchiveMetrics.getArchiveMetric(1);
+        }
         return new Object[0];
     }
 

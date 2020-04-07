@@ -34,13 +34,16 @@ import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.file.util.Constants;
-import io.siddhi.extension.io.file.util.Metrics;
-import io.siddhi.extension.io.file.util.SinkMetrics;
+import io.siddhi.extension.io.file.util.metrics.Metrics;
+import io.siddhi.extension.io.file.util.metrics.SinkMetrics;
+import io.siddhi.extension.io.file.util.metrics.StreamStatus;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.StreamDefinition;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
+import org.wso2.carbon.si.metrics.core.internal.MetricsManager;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 
 import java.io.UnsupportedEncodingException;
@@ -143,6 +146,7 @@ public class FileSink extends Sink {
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder,
                                 ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
+        siddhiAppContext.getStatisticsManager().startReporting();
         this.siddhiAppName = siddhiAppContext.getName();
         uriOption = optionHolder.validateAndGetOption(Constants.FILE_URI);
         String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
@@ -158,7 +162,9 @@ public class FileSink extends Sink {
                 Boolean.parseBoolean(optionHolder.validateAndGetStaticValue(Constants.ADD_EVENT_SEPARATOR)) :
                 !mapType.equalsIgnoreCase("csv");
         mapType = Utils.capitalizeFirstLetter(mapType);
-        metrics = SinkMetrics.getInstance();
+        if (MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+            metrics = new SinkMetrics(siddhiAppContext.getName(), mapType, streamName);
+        }
         return null;
     }
 
@@ -168,34 +174,14 @@ public class FileSink extends Sink {
     }
 
     public void connect() throws ConnectionUnavailableException {
-//        metrics.getSinkFileStatusMap().putIfAbsent(getID() , Metrics.StreamStatus.CONNECTING);
         vfsClientConnector = new VFSClientConnector();
-        metrics.createServer();
-        metrics.updateMetrics(siddhiAppContext.getExecutorService());
-        Utils.addSiddhiApp(siddhiAppName);
-//        metrics.getSinkFileStatusMap().put(getID(), System.currentTimeMillis());
-//        metrics.getSinkFileStatusMap().replace(getID(), Metrics.StreamStatus.PROCESSING);
+        if (metrics != null) {
+            metrics.updateMetrics(siddhiAppContext.getExecutorService());
+        }
     }
 
     public void disconnect() {
-        metrics.getSiddhiApps().remove(siddhiAppName);
-        /*for (String filePath: files) {
-            String fileName = Utils.getFileName(filePath);
-            Metrics.getSinkFiles().remove(siddhiAppName, filePath, fileName, mapType, streamName);
-            Metrics.getSinkNoOfLines().remove(siddhiAppName, filePath, fileName);
-            Metrics.getWriteBytes().remove(siddhiAppName, filePath, fileName);
-            Metrics.getSinkDroppedEvents().remove(siddhiAppName, filePath, fileName);
-            Metrics.getSinkLastPublishedTime().remove(siddhiAppName, filePath);
-            Metrics.getSinkFileSize().remove(siddhiAppName, filePath, fileName);
-            Metrics.getSinkElapsedTimeMap().remove(filePath);
-            Metrics.getFilesURI().remove(filePath);
-            Metrics.getSinkStreamStatusMetrics().remove(siddhiAppName, filePath, fileName, streamName);
-            Metrics.getSinkElapsedTime().remove(filePath);
-        }
-        Metrics.getSinkStreamStatus().remove(getID());
-        Metrics.getSinkFilesMap().remove(getID());
-        Metrics.getSinkFilesIdleStatus().remove(getID());*/
-//        metrics.stopServer();
+//        metrics.getSiddhiApps().remove(siddhiAppName);
     }
 
     public void destroy() {
@@ -206,8 +192,7 @@ public class FileSink extends Sink {
         byte[] byteArray = new byte[0];
         boolean canBeWritten = true;
         String uri = uriOption.getValue(dynamicOptions);
-        String fileName = Utils.getFileName(uri);
-        String shortenUri = Utils.getShortFilePath(uri);
+        metrics.setFilePath(uri);
         if (payload instanceof byte[]) {
             byteArray = (byte[]) payload;
         } else {
@@ -221,7 +206,7 @@ public class FileSink extends Sink {
             } catch (UnsupportedEncodingException e) {
                 canBeWritten = false;
                 log.error("Received payload does not support UTF-8 encoding. Hence dropping the event." , e);
-                metrics.getSinkDroppedEvents().labels(siddhiAppName, shortenUri).inc();
+                metrics.getSinkDroppedEvents().inc();
             }
         }
 
@@ -229,36 +214,35 @@ public class FileSink extends Sink {
             BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(byteArray), true);
             properties.put(Constants.URI, uri);
             int byteSize = byteArray.length;
-            SinkMetrics.SinkDetails sinkDetails = new SinkMetrics.SinkDetails(siddhiAppName, shortenUri);
             try {
                 boolean send = vfsClientConnector.send(binaryCarbonMessage, null, properties);
                 if (send) {
                     siddhiAppContext.getExecutorService().execute(() -> {
-                        double fileSize = Utils.getFileSize(uri);
-                        metrics.getSinkFilesEventCount().labels(siddhiAppName, shortenUri, fileName, mapType,
-                                streamName).inc();
-                        metrics.getSinkDroppedEvents().labels(siddhiAppName, shortenUri);
-                        metrics.getWriteBytes().labels(siddhiAppName, shortenUri).inc(byteSize);
-                        metrics.getSinkFileSize().labels(siddhiAppName, shortenUri).set(fileSize);
+                        long fileSize = Utils.getFileSize(uri);
+                        metrics.getSinkFilesEventCount().inc();
+                        metrics.getSinkDroppedEvents();
+                        metrics.getWriteBytes().inc(byteSize);
+                        metrics.getSinkFileSize().inc(fileSize);
                         boolean added = metrics.getFilesURI().add(uri);
-                        if (added) {
-                            metrics.getSinkElapsedTimeMap().put(shortenUri, Stopwatch.createStarted());
-                        }
-                        if (metrics.getSinkFileLastPublishedTimeMap().containsKey(sinkDetails)) {
-                            metrics.getSinkFileLastPublishedTimeMap().replace(sinkDetails, System.currentTimeMillis());
-                            metrics.getSinkFileStatusMap().replace(sinkDetails, Metrics.StreamStatus.PROCESSING);
+                        if (metrics.getSinkFileLastPublishedTimeMap().containsKey(uri)) {
+                            metrics.getSinkFileLastPublishedTimeMap().replace(uri, System.currentTimeMillis());
+                            metrics.getSinkFileStatusMap().replace(uri, StreamStatus.PROCESSING);
                         } else {
-                            metrics.getSinkFileLastPublishedTimeMap().put(sinkDetails, System.currentTimeMillis());
-                            metrics.getSinkFileStatusMap().put(sinkDetails, Metrics.StreamStatus.PROCESSING);
+                            metrics.getSinkFileLastPublishedTimeMap().put(uri, System.currentTimeMillis());
+                            metrics.getSinkFileStatusMap().put(uri, StreamStatus.PROCESSING);
                         }
-                        metrics.getSinkLastPublishedTime().labels(siddhiAppName, shortenUri).set(
-                                System.currentTimeMillis());
-                        metrics.getSinkLinesCount().labels(siddhiAppName, shortenUri).inc();
+                        metrics.getSinkLinesCount().inc();
+                        if (added) {
+                            metrics.getSinkElapsedTimeMap().put(uri, Stopwatch.createStarted());
+                            metrics.setSinkLastPublishedTime();
+                            metrics.setSinkElapsedTime(uri);
+                            metrics.setSinkFileStatusMetrics(uri);
+                        }
                     });
                 }
             } catch (ClientConnectorException e) {
-                metrics.getSinkFileStatusMap().replace(sinkDetails, Metrics.StreamStatus.RETRY);
-                metrics.getSinkDroppedEvents().labels(siddhiAppName, shortenUri).inc();
+                metrics.getSinkFileStatusMap().replace(uri, StreamStatus.RETRY);
+                metrics.getSinkDroppedEvents().inc();
                 throw new ConnectionUnavailableException("Writing data into the file " + uri + " failed during the " +
                         "execution of '" + siddhiAppName + "' SiddhiApp, due to " +
                         e.getMessage(), e);

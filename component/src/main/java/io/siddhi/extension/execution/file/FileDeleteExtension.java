@@ -28,7 +28,8 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
-import io.siddhi.extension.io.file.util.Metrics;
+import io.siddhi.extension.io.file.util.metrics.FileDeleteMetrics;
+import io.siddhi.extension.io.file.util.metrics.Metrics;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -36,6 +37,7 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.Selectors;
 import org.apache.log4j.Logger;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,14 +70,17 @@ import java.util.List;
 )
 public class FileDeleteExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileDeleteExtension.class);
-    private String sidhhiAppName;
+    private String siddhiAppName;
+    private FileDeleteMetrics fileDeleteMetrics;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
                                 ConfigReader configReader, boolean outputExpectsExpiredEvents,
                                 SiddhiQueryContext siddhiQueryContext) {
-        this.sidhhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
-        Utils.addSiddhiApp(sidhhiAppName);
+        if (MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+            this.siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
+            fileDeleteMetrics = new FileDeleteMetrics(siddhiAppName);
+        }
         return null;
     }
 
@@ -97,14 +102,18 @@ public class FileDeleteExtension extends StreamFunctionProcessor {
     @Override
     protected Object[] process(Object data) {
         String fileDeletePathUri = (String) data;
+        if (fileDeleteMetrics != null) {
+            fileDeleteMetrics.set_source(fileDeletePathUri);
+            fileDeleteMetrics.setTime(System.currentTimeMillis());
+        }
         try {
             FileObject rootFileObject = Utils.getFileObject(fileDeletePathUri);
             rootFileObject.findFiles(Selectors.SELECT_ALL);
-            Metrics.getInstance().getNumberOfDeletion().labels(sidhhiAppName, Utils.getShortFilePath(fileDeletePathUri),
-                    String.valueOf(System.currentTimeMillis())).set(1);
+            if (fileDeleteMetrics != null) {
+                fileDeleteMetrics.getDeleteMetric(1);
+            }
         } catch (FileSystemException e) {
-            Metrics.getInstance().getNumberOfDeletion().labels(sidhhiAppName, Utils.getShortFilePath(fileDeletePathUri),
-                    String.valueOf(System.currentTimeMillis())).set(0);
+            fileDeleteMetrics.getDeleteMetric(0);
             throw new SiddhiAppRuntimeException("Failure occurred when deleting the file " + fileDeletePathUri, e);
         }
         return new Object[0];
