@@ -19,7 +19,7 @@
 package io.siddhi.extension.util;
 
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
-import io.siddhi.extension.io.file.util.Metrics;
+import io.siddhi.extension.io.file.util.metrics.Metrics;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -136,7 +136,7 @@ public class Utils {
         }
     }
 
-    public static double getFileSize(String filePathUri) {
+    public static long getFileSize(String filePathUri) {
         filePathUri = getFilePath(filePathUri);
         File file = new File(filePathUri);
         return file.length();
@@ -168,7 +168,7 @@ public class Utils {
         CharsetDecoder dec = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.IGNORE);
         Path path = Paths.get(uri);
         try (Reader r = Channels.newReader(FileChannel.open(path), dec, -1);
-            BufferedReader br = new BufferedReader(r)) {
+             BufferedReader br = new BufferedReader(r)) {
             return br.lines()
                     .filter(line -> line.length() != 0).count();
         }
@@ -178,29 +178,22 @@ public class Utils {
         return str.substring(0, 1).toUpperCase(Locale.ENGLISH) + str.substring(1);
     }
 
-    public static void addSiddhiApp(String siddhiAppName) {
-        boolean added = Metrics.getInstance().getSiddhiApps().add(siddhiAppName);
-        if (added) {
-            Metrics.getInstance().getTotalSiddhiApps().labels(siddhiAppName).inc();
-        }
-    }
-
-    public static String getFileName(String fileURI) {
+    public static String getFileName(String fileURI, Metrics metrics) {
         fileURI = getFilePath(fileURI);
-        if (Metrics.getInstance().getFileNames().containsKey(fileURI)) {
-            return Metrics.getInstance().getFileNames().get(fileURI);
+        if (metrics.getFileNames().containsKey(fileURI)) {
+            return metrics.getFileNames().get(fileURI);
         }
         String[] arr = fileURI.split("/");
         int n = arr.length;
         StringBuilder fileName = new StringBuilder();
         fileName.append(arr[n - 1]);
-        if (!Metrics.getInstance().getFileNames().containsValue(fileName.toString())) {
+        if (!metrics.getFileNames().containsValue(fileName.toString())) {
             return fileName.toString();
         }
         for (int i = n - 2; i >= 0; i--) {
             fileName.insert(0, "/").insert(0, arr[i]);
-            if (!Metrics.getInstance().getFileNames().containsValue(fileName.toString())) {
-                Metrics.getInstance().getFileNames().put(fileURI, fileName.toString());
+            if (!metrics.getFileNames().containsValue(fileName.toString())) {
+                metrics.getFileNames().put(fileURI, fileName.toString());
                 break;
             }
         }
@@ -209,8 +202,8 @@ public class Utils {
 
     public static String getShortFilePath(String fileURI) {
         fileURI = getFilePath(fileURI);
-        if (fileURI.length() < 40) {
-            return "../" + fileURI;
+        if (fileURI.length() <= 40) {
+            return fileURI;
         }
         int n = fileURI.length();
         int i = n - 41; // to get last 40 characters
@@ -219,6 +212,6 @@ public class Utils {
             i--;
             c = fileURI.charAt(i);
         }
-        return ".." + fileURI.substring(i);
+        return fileURI.substring(i);
     }
 }
