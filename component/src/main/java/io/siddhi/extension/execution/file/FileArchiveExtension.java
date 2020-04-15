@@ -31,7 +31,6 @@ import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.extension.io.file.util.metrics.FileArchiveMetrics;
-import io.siddhi.extension.io.file.util.metrics.Metrics;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -162,7 +161,8 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
                     ((ConstantExpressionExecutor) attributeExpressionExecutors[3]).getValue().toString());
         }
         siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
-        if (MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+        if (MetricsDataHolder.getInstance().getMetricService() != null &&
+                MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
             fileArchiveMetrics = new FileArchiveMetrics(siddhiAppName);
         }
         return null;
@@ -211,7 +211,7 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
                             destinationDirUriObject.getName().getPath(), e);
         }
         if (fileArchiveMetrics !=  null) {
-            fileArchiveMetrics.set_source(Utils.getShortFilePath(uri));
+            fileArchiveMetrics.setSource(Utils.getShortFilePath(uri));
             fileArchiveMetrics.setDestination(Utils.getShortFilePath(destinationDirUri));
             fileArchiveMetrics.setType(Utils.getShortFilePath(archiveType));
             fileArchiveMetrics.setTime(System.currentTimeMillis());

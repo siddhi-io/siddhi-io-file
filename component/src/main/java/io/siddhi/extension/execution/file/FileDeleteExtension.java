@@ -29,7 +29,6 @@ import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.extension.io.file.util.metrics.FileDeleteMetrics;
-import io.siddhi.extension.io.file.util.metrics.Metrics;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -77,7 +76,8 @@ public class FileDeleteExtension extends StreamFunctionProcessor {
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
                                 ConfigReader configReader, boolean outputExpectsExpiredEvents,
                                 SiddhiQueryContext siddhiQueryContext) {
-        if (MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+        if (MetricsDataHolder.getInstance().getMetricService() != null &&
+                MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
             this.siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
             fileDeleteMetrics = new FileDeleteMetrics(siddhiAppName);
         }
@@ -103,7 +103,7 @@ public class FileDeleteExtension extends StreamFunctionProcessor {
     protected Object[] process(Object data) {
         String fileDeletePathUri = (String) data;
         if (fileDeleteMetrics != null) {
-            fileDeleteMetrics.set_source(fileDeletePathUri);
+            fileDeleteMetrics.setSource(fileDeletePathUri);
             fileDeleteMetrics.setTime(System.currentTimeMillis());
         }
         try {

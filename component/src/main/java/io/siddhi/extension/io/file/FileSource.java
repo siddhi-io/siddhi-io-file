@@ -38,13 +38,9 @@ import io.siddhi.extension.io.file.processors.FileProcessor;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
-import io.siddhi.extension.io.file.util.metrics.FileDeleteMetrics;
-import io.siddhi.extension.io.file.util.metrics.FileMoveMetrics;
-import io.siddhi.extension.io.file.util.metrics.Metrics;
-import io.siddhi.extension.io.file.util.metrics.SinkMetrics;
+import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
 import io.siddhi.extension.io.file.util.metrics.SourceMetrics;
 import io.siddhi.extension.io.file.util.metrics.StreamStatus;
-import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.annotation.Annotation;
 import io.siddhi.query.api.annotation.Element;
@@ -451,10 +447,10 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         createInitialSourceConf();
         updateSourceConf();
         getPattern();
-        if (MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+        if (MetricsDataHolder.getInstance().getMetricService() != null &&
+                MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
             metrics = new SourceMetrics(siddhiAppContext.getName(), Utils.capitalizeFirstLetter(mode),
                     sourceEventListener.getStreamDefinition().getId());
-             // TODO: 4/4/20 Find a way to make it more generic
         }
         return () -> new FileSourceState();
     }
@@ -653,6 +649,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 properties.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
             }
             if (metrics != null) {
+                fileSourceConfiguration.setCurrentlyReadingFileURI(fileUri);
+                metrics.setFilePath(fileUri);
                 metrics.getSourceFileStatusMap().putIfAbsent((Utils.getShortFilePath(fileUri)),
                         StreamStatus.CONNECTING);
                 metrics.getStartedTimeMetric(System.currentTimeMillis());
@@ -713,13 +711,14 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                                 metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileUri),
                                         StreamStatus.COMPLETED);
                                 if (actionAfterProcess.equals(Constants.DELETE)) {
-                                    metrics.getFileDeleteMetrics().set_source(Utils.getShortFilePath(fileUri));
+                                    metrics.getFileDeleteMetrics().setSource(Utils.getShortFilePath(fileUri));
                                     metrics.getFileDeleteMetrics().setTime(System.currentTimeMillis());
                                     metrics.getFileDeleteMetrics().getDeleteMetric(1);
                                 } else if (actionAfterProcess.equals(Constants.MOVE)) {
                                     metrics.getFileMoveMetrics().setTime(System.currentTimeMillis());
                                     metrics.getFileMoveMetrics().set_source(Utils.getShortFilePath(fileUri));
-                                    metrics.getFileMoveMetrics().setDestination(Utils.getShortFilePath(moveAfterProcess));
+                                    metrics.getFileMoveMetrics().setDestination(Utils.getShortFilePath(
+                                            moveAfterProcess));
                                     metrics.getFileMoveMetrics().getMoveMetric(1);
                                 }
                                 metrics.getReadPercentageMetric(() -> 100);

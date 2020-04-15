@@ -65,6 +65,7 @@ public class FileProcessor implements CarbonMessageProcessor {
     private SourceMetrics metrics;
     private long startedTime;
     private long completedTime;
+    private boolean send;
 
     public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration,
                          SourceMetrics sourceMetrics) {
@@ -125,11 +126,13 @@ public class FileProcessor implements CarbonMessageProcessor {
                             (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
                     sourceEventListener.onEvent(new String(content, Constants.UTF_8),
                             getRequiredPropertyValues(carbonMessage));
+                    send = true;
                 }
             } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
                     carbonCallback.done(carbonMessage);
                     sourceEventListener.onEvent(content, getRequiredPropertyValues(carbonMessage));
+                    send = true;
                 }
             } else if (Constants.LINE.equalsIgnoreCase(mode)) {
                 if (!fileSourceConfiguration.isTailingEnabled()) {
@@ -140,6 +143,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                         if (line.length() > 0) {
                             readBytes = line.length();
                             sourceEventListener.onEvent(line.trim(), getRequiredPropertyValues(carbonMessage));
+                            send = true;
                         }
                     }
                     carbonCallback.done(carbonMessage);
@@ -149,6 +153,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                         fileSourceConfiguration.updateFilePointer(
                                 (Long) carbonMessage.getProperties().get(Constants.CURRENT_POSITION));
                         sourceEventListener.onEvent(msg, getRequiredPropertyValues(carbonMessage));
+                        send = true;
                         if (metrics != null) {
                             increaseTailingMetrics();
                         }
@@ -195,15 +200,18 @@ public class FileProcessor implements CarbonMessageProcessor {
                                 carbonMessage.setProperty
                                         (org.wso2.transport.file.connector.server.util.Constants.EOF, false);
                                 sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                                send = true;
                             }
                             carbonMessage.setProperty
                                     (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
                             sourceEventListener.onEvent(event, getRequiredPropertyValues(carbonMessage));
+                            send = true;
                         } else if (matchFound) {
                             if (prevEvent != null) {
                                 carbonMessage.setProperty
                                         (org.wso2.transport.file.connector.server.util.Constants.EOF, false);
                                 sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                                send = true;
                             }
                             prevEvent = event;
                         } else {
@@ -214,6 +222,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                                     carbonMessage.setProperty
                                             (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
                                     sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                                    send = true;
                                 }
                             }
                         }
@@ -235,6 +244,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                             event = m.group(0);
                             sourceEventListener.onEvent
                                     (sb.substring(sb.indexOf(event)), getRequiredPropertyValues(carbonMessage));
+                            send = true;
                         }
                     }
                     if (carbonCallback != null) {
@@ -258,6 +268,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                             remainedLength = sb.length() - event.length() - remainedLength - 1;
                         }
                         sourceEventListener.onEvent(event, getRequiredPropertyValues(carbonMessage));
+                        send = true;
                         readBytes += content.length;
                         if (metrics != null) {
                             increaseTailingMetrics();
@@ -273,11 +284,12 @@ public class FileProcessor implements CarbonMessageProcessor {
                     }
                 }
             }
-            if (metrics != null) {
+            if (metrics != null && send) {
                 increaseMetrics(content.length);
                 totalReadByteSize += content.length;
                 readingLine++;
                 completedTime = System.currentTimeMillis();
+                send = false;
             }
             return true;
         } else {

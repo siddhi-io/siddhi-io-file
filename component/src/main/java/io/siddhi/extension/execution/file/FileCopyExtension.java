@@ -31,9 +31,7 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
-import io.siddhi.extension.io.file.util.metrics.FileArchiveMetrics;
 import io.siddhi.extension.io.file.util.metrics.FileCopyMetrics;
-import io.siddhi.extension.io.file.util.metrics.Metrics;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -130,7 +128,6 @@ public class FileCopyExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileCopyExtension.class);
     private Pattern pattern = null;
     private int inputExecutorLength;
-    private String siddhiAppName;
     private FileCopyMetrics fileCopyMetrics;
 
     @Override
@@ -143,8 +140,9 @@ public class FileCopyExtension extends StreamFunctionProcessor {
             pattern = Pattern.compile(((ConstantExpressionExecutor)
                     attributeExpressionExecutors[2]).getValue().toString());
         }
-        if (MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
-            siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
+        if (MetricsDataHolder.getInstance().getMetricService() != null &&
+                MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+            String siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
             fileCopyMetrics = new FileCopyMetrics(siddhiAppName);
         }
         return null;
@@ -233,7 +231,7 @@ public class FileCopyExtension extends StreamFunctionProcessor {
                                        FileObject rootSourceFileObject) {
         FileObject destinationFileObject = null;
         if (fileCopyMetrics != null) {
-            fileCopyMetrics.set_source(Utils.getShortFilePath(sourceFileObject.getName().getPath()));
+            fileCopyMetrics.setSource(Utils.getShortFilePath(sourceFileObject.getName().getPath()));
             fileCopyMetrics.setDestination(Utils.getShortFilePath(destinationDirUri));
             fileCopyMetrics.setTime(System.currentTimeMillis());
         }

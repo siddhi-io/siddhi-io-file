@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.siddhi.extension.io.file.util.metrics;
 
 import io.siddhi.extension.util.Utils;
@@ -16,16 +34,16 @@ import java.util.concurrent.ExecutorService;
  */
 public class SourceMetrics extends Metrics {
     private static final Logger log = Logger.getLogger(SourceMetrics.class);
-    private Map<String, StreamStatus> sourceFileStatusMap = new HashMap<>();
-    private Map<String, Long> lastConsumedTimeMap = new HashMap<>(); //to get the last consumed time
+    private final Map<String, StreamStatus> sourceFileStatusMap = new HashMap<>();
+    private final Map<String, Long> lastConsumedTimeMap = new HashMap<>(); //to get the last consumed time
 
     private boolean isStarted;
     private String filePath;
     private String fileName;
-    private String readingMode;
-    private String streamName;
-    private FileDeleteMetrics fileDeleteMetrics;
-    private FileMoveMetrics fileMoveMetrics;
+    private final String readingMode;
+    private final String streamName;
+    private final FileDeleteMetrics fileDeleteMetrics;
+    private final FileMoveMetrics fileMoveMetrics;
 
     public SourceMetrics(String siddhiAppName, String readingMode, String streamName) {
         super(siddhiAppName);
@@ -33,34 +51,12 @@ public class SourceMetrics extends Metrics {
         this.streamName = streamName;
         this.fileDeleteMetrics = new FileDeleteMetrics(siddhiAppName);
         this.fileMoveMetrics = new FileMoveMetrics(siddhiAppName);
-        /*sourceFilesEventCount = Counter.build().help("file summary").labelNames("app_name", "file_path",
-                "file_name", "mode", "stream_name").name("source_file_event_count").register();
-        readBytes = Counter.build().help("no of bytes completed").labelNames("app_name", "file_path")
-                .name("source_file_total_read_byte").register();
-        sourceNoOfLines = Counter.build().help("no of lines in the file").labelNames("app_name", "file_path")
-                .name("source_file_lines_count").register();
-        sourceElapsedTime = Gauge.build().help("no of seconds taken to complete reading").labelNames("app_name",
-                "file_path").name("source_file_elapse_time").register();
-        sourceFileStatusMetrics = Gauge.build()
-                .help("Stream status").labelNames("app_name", "file_path").name("source_file_status").register();
-        sourceDroppedEvents = Counter.build().help("no of dropped events")
-                .labelNames("app_name", "file_path").name("source_file_dropped_events").register();
-        sourceFileSize = Gauge.build().help("size of files which are used by source").labelNames("app_name",
-                "file_path").name("source_file_size").register();
-        sourceStartedTime = Gauge.build().help("Source started time in millis").labelNames("app_name", "file_path")
-                .name("source_file_started_time").register();
-        sourceCompletedTime = Gauge.build().help("Source completed time in millis").labelNames("app_name",
-                "file_path").name("source_file_completed_time").register();
-        sourceTailingEnable = Gauge.build().help("To check if file is reading while tailing enable").labelNames
-                ("app_name", "file_path").name("source_file_tailing_enable").register();
-        sourceReadPercentage = Gauge.build().name("source_file_read_percentage").help("Read percentage of the " +
-                "currently reading file").labelNames("app_name", "file_path").register();*/
     }
 
     public Counter getSourceFileEventCountMetric() {
         return MetricsDataHolder.getInstance().getMetricService()
                 .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.event.count.%s.%s.%s.%s",
-                        siddhiAppName, fileName, readingMode, streamName, filePath), Level.INFO);
+                        siddhiAppName, fileName + ".filename", readingMode, streamName, filePath), Level.INFO);
     }
 
     public Counter getReadByteMetric() {
@@ -79,12 +75,6 @@ public class SourceMetrics extends Metrics {
         MetricsDataHolder.getInstance().getMetricService()
                 .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.%s.%s",
                         siddhiAppName, "elapse_time", filePath), Level.INFO, gauge);
-    }
-
-    public void getElapseTimeMetric(long elapseTime) {
-        MetricsDataHolder.getInstance().getMetricService()
-                .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.%s.%s",
-                        siddhiAppName, "elapse_time", filePath), Level.INFO, () -> elapseTime);
     }
 
     public Counter getDroppedEventCountMetric() {
@@ -131,14 +121,14 @@ public class SourceMetrics extends Metrics {
     }
 
     public void setFilePath(String fileURI) {
-        this.filePath = Utils.getShortFilePath(fileURI);;
-        this.fileName = Utils.getFileName(fileURI, this).split("\\.")[0];
+        this.filePath = Utils.getShortFilePath(fileURI);
+        this.fileName = Utils.getFileName(fileURI, this);
         this.fileMoveMetrics.set_source(filePath);
-        this.fileDeleteMetrics.set_source(filePath);
+        this.fileDeleteMetrics.setSource(filePath);
 
     }
 
-    public synchronized void updateMetrics(ExecutorService executorService) {
+    public void updateMetrics(ExecutorService executorService) {
         if (!isStarted) {
             executorService.execute(() -> {
                 isStarted = true;
@@ -182,7 +172,7 @@ public class SourceMetrics extends Metrics {
      */
     private class FileStatusGauge implements Gauge<Integer> {
 
-        private String fileURI;
+        private final String fileURI;
 
         private FileStatusGauge(String fileURI) {
             this.fileURI = fileURI;

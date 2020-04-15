@@ -18,12 +18,8 @@
 
 package io.siddhi.extension.io.file.util.metrics;
 
-import org.apache.log4j.Logger;
-import org.wso2.carbon.metrics.core.Counter;
-import org.wso2.carbon.metrics.core.Gauge;
 import org.wso2.carbon.metrics.core.Level;
 import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
-import org.wso2.carbon.si.metrics.core.internal.MetricsManagement;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,13 +27,10 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Parent class of the SinkMetrics class and the SourceMetrics class. This class also holds the metrics to monitor
- * the file operations.
+ * Parent class of the SinkMetrics, SourceMetrics, File Operation metrics classes.
  */
 public class Metrics {
 
-    private static final Logger log = Logger.getLogger(Metrics.class);
-    protected static volatile boolean isServerStarted;
     protected Set<String> filesURI;
     protected Map<String, String> fileNamesMap; //fileURI, fileName
     protected String siddhiAppName;
@@ -48,17 +41,10 @@ public class Metrics {
         fileNamesMap = new HashMap<>();
         MetricsDataHolder.getInstance().getMetricService()
                 .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File", siddhiAppName), Level.INFO).inc();
-        // TODO: 4/4/20 Add to the  config
     }
 
     public Set<String> getFilesURI() {
         return filesURI;
-    }
-
-    public static Counter getTotalSiddhiApps(String siddhiApp) {
-        return MetricsDataHolder.getInstance().getMetricService()
-                .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Sinks",
-                        siddhiApp), Level.INFO);
     }
 
     public Map<String, String> getFileNames() {
