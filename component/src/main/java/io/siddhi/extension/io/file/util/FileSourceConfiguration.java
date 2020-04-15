@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 /**
  * Class for keep the configurations of a file source instance.
- * */
+ */
 public class FileSourceConfiguration {
 
     private boolean isTailingEnabled;
@@ -42,6 +42,7 @@ public class FileSourceConfiguration {
     private String protocolForMoveAfterProcess = null;
     private long timeout = 5000;
     private String headerPresent = "false";
+    private String readOnlyHeader = "false";
 
     private FileServerConnector fileServerConnector;
     private RemoteFileSystemServerConnector fileSystemServerConnector;
@@ -260,5 +261,13 @@ public class FileSourceConfiguration {
 
     public void setCurrentlyReadingFileURI(String currentlyReadingFileURI) {
         this.currentlyReadingFileURI = currentlyReadingFileURI;
+    }
+
+    public String getReadOnlyHeader() {
+        return readOnlyHeader;
+    }
+
+    public void setReadOnlyHeader(String readOnlyHeader) {
+        this.readOnlyHeader = readOnlyHeader;
     }
 }

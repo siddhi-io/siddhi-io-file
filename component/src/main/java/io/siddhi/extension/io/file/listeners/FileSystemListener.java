@@ -161,6 +161,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             fileSourceConfiguration.getFileReadWaitTimeout());
                     properties.put(Constants.MODE, mode);
                     properties.put(Constants.HEADER_PRESENT, fileSourceConfiguration.getHeaderPresent());
+                    properties.put(Constants.READ_ONLY_HEADER, fileSourceConfiguration.getReadOnlyHeader());
                     if (fileSourceConfiguration.isTailingEnabled()) {
                         fileSourceConfiguration.setTailedFileURI(fileURI);
                         if (metrics != null) {
@@ -227,7 +228,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
     }
 
     @Override
-    public void done() {}
+    public void done() {
+    }
 
     static class FileServerExecutor implements Runnable {
         ServerConnector fileServerConnector = null;

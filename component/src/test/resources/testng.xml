@@ -28,6 +28,7 @@
             <class name="io.siddhi.extension.io.file.FileSourceBinaryModeTestCase"/>
             <class name="io.siddhi.extension.io.file.FileSinkTestCase"/>
             <class name="io.siddhi.extension.io.file.FileFunctionsTestCase"/>
+            <class name="io.siddhi.extension.io.file.FileHandlingTestCase"/>
         </classes>
     </test>
 </suite>

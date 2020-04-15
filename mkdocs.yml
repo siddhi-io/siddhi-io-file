@@ -8,7 +8,7 @@ extra_javascript:
 - javascripts/extra.js
 repo_name: Siddhi-IO-file
 repo_url: https://github.com/siddhi-io/siddhi-io-file
-copyright: Copyright &copy; 2011 - 2018 WSO2
+copyright: Copyright &copy; 2011 - 2020 WSO2
 theme:
   name: material
   logo: images/siddhi-logo-w.svg
@@ -38,6 +38,8 @@ pages:
 - Welcome: index.md
 - API Docs:
   - latest: api/latest.md
+  - 2.0.9: api/2.0.9.md
+  - 2.0.8: api/2.0.8.md
   - 2.0.7: api/2.0.7.md
   - 2.0.6: api/2.0.6.md
   - 2.0.5: api/2.0.5.md

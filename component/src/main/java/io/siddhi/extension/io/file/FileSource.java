@@ -86,7 +86,9 @@ import java.util.regex.PatternSyntaxException;
                                         "All the files inside this directory will be processed. \n" +
                                         "Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
                                         "This uri MUST have the respective protocol specified.",
-                        type = {DataType.STRING}
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "file:/var/tmp"
                 ),
 
                 @Parameter(
@@ -95,7 +97,9 @@ import java.util.regex.PatternSyntaxException;
                                 "Used to specify a file to be processed. \n" +
                                         " Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
                                         "This uri MUST have the respective protocol specified.\n",
-                        type = {DataType.STRING}
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "file:/var/temp/tmp.text"
                 ),
 
                 @Parameter(
@@ -158,7 +162,9 @@ import java.util.regex.PatternSyntaxException;
                                 "This should be the absolute path of the file that going to be created after moving " +
                                 "is done.\n" +
                                 "This uri MUST have the respective protocol specified.\n",
-                        type = {DataType.STRING}
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "<Empty_String>"
                 ),
 
                 @Parameter(
@@ -169,7 +175,9 @@ import java.util.regex.PatternSyntaxException;
                                 "This should be the absolute path of the file that going to be created after moving " +
                                 "is done.\n" +
                                 "This uri MUST have the respective protocol specified.\n",
-                        type = {DataType.STRING}
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "<Empty_String>"
                 ),
 
                 @Parameter(
@@ -222,7 +230,7 @@ import java.util.regex.PatternSyntaxException;
                 @Parameter(
                         name = "file.read.wait.timeout",
                         description = "This parameter is used to specify the maximum time period (in milliseconds) " +
-                                " till it waits before retrying to read the full file content.",
+                                " till it waits before retrying to read the full file content.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "1000"
@@ -231,9 +239,19 @@ import java.util.regex.PatternSyntaxException;
                         name = "header.present",
                         description = "This parameter used to specify a particular text file (eg: CSV) contains a " +
                                 "header line or not. This can either have value true or false. If it's set to " +
-                                "`true` then it indicates a file contains a header line, and it will not process",
+                                "`true` then it indicates a file contains a header line, and it will not process.\n",
                         optional = true, defaultValue = "false",
-                        type = {DataType.BOOL}),
+                        type = {DataType.BOOL}
+                ),
+                @Parameter(
+                        name = "read.only.header",
+                        description = "This parameter used to read only the header or the first line of a particular " +
+                                "text file (eg: CSV). This is only applicable if the mode is LINE. If it's set to " +
+                                "false, the full file content will be read line by line.",
+                        optional = true,
+                        type = {DataType.BOOL},
+                        defaultValue = "false"
+                ),
         },
         examples = {
                 @Example(
@@ -301,7 +319,6 @@ import java.util.regex.PatternSyntaxException;
 )
 public class FileSource extends Source<FileSource.FileSourceState> {
     private static final Logger log = Logger.getLogger(FileSource.class);
-
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private RemoteFileSystemConnectorFactory fileSystemConnectorFactory;
@@ -311,7 +328,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String[] requiredProperties;
     private boolean isTailingEnabled = true;
     private SiddhiAppContext siddhiAppContext;
-
     private String mode;
     private String actionAfterProcess;
     private String actionAfterFailure = null;
@@ -326,11 +342,12 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String dirPollingInterval;
     private String filePollingInterval;
     private String fileReadWaitTimeout;
-    String headerPresent;
     private long timeout = 5000;
     private boolean fileServerConnectorStarted = false;
     private ScheduledFuture scheduledFuture;
     private ConnectionCallback connectionCallback;
+    private String headerPresent;
+    private String readOnlyHeader;
     private SourceMetrics metrics;
 
     @Override
@@ -443,6 +460,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
         fileReadWaitTimeout = optionHolder.validateAndGetStaticValue(Constants.FILE_READ_WAIT_TIMEOUT, "1000");
         headerPresent = optionHolder.validateAndGetStaticValue(Constants.HEADER_PRESENT, "false");
+        readOnlyHeader = optionHolder.validateAndGetStaticValue(Constants.READ_ONLY_HEADER, "false");
         validateParameters();
         createInitialSourceConf();
         updateSourceConf();
@@ -529,6 +547,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setTimeout(timeout);
         fileSourceConfiguration.setFileReadWaitTimeout(fileReadWaitTimeout);
         fileSourceConfiguration.setHeaderPresent(headerPresent);
+        fileSourceConfiguration.setReadOnlyHeader(readOnlyHeader);
     }
 
     private void updateSourceConf() {
@@ -642,6 +661,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             properties.put(Constants.MAX_LINES_PER_POLL, "10");
             properties.put(Constants.POLLING_INTERVAL, filePollingInterval);
             properties.put(Constants.HEADER_PRESENT, headerPresent);
+            properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
             if (actionAfterFailure != null) {
                 properties.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
             }
@@ -691,6 +711,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 properties.put(Constants.ACK_TIME_OUT, "1000");
                 properties.put(Constants.MODE, mode);
                 properties.put(Constants.HEADER_PRESENT, headerPresent);
+                properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
                 VFSClientConnector vfsClientConnector = new VFSClientConnector();
                 FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, metrics);
                 vfsClientConnector.setMessageProcessor(fileProcessor);

@@ -20,9 +20,11 @@ package io.siddhi.extension.io.file.util;
 
 /**
  * Constants used in siddhi-io-file extension.
- * */
+ */
 public class Constants {
-    private Constants(){}
+    private Constants() {
+    }
+
     /* configuration parameters*/
     public static final String URI = "uri";
     public static final String PATH = "path";
@@ -39,13 +41,16 @@ public class Constants {
     public static final String END_REGEX = "end.regex";
     public static final String DIR_URI = "dir.uri";
     public static final String FILE_URI = "file.uri";
+    public static final String FILE_NAME_LIST = "file.name.list";
     public static final String DIRECTORY_POLLING_INTERVAL = "dir.polling.interval";
     public static final String FILE_POLLING_INTERVAL = "file.polling.interval";
+    public static final String MONITORING_INTERVAL = "monitoring.interval";
     public static final String TIMEOUT = "timeout";
     public static final String ADD_EVENT_SEPARATOR = "add.line.separator";
     public static final String FILE_READ_WAIT_TIMEOUT = "file.read.wait.timeout";
     public static final int WAIT_TILL_DONE = 5000;
     public static final String HEADER_PRESENT = "header.present";
+    public static final String READ_ONLY_HEADER = "read.only.header";
 
     /* configuration param values*/
     public static final String MOVE = "move";
