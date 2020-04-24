@@ -37,7 +37,9 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -103,8 +105,8 @@ public class FileSourceTextFullModeTestCase {
     }
 
     /**
-    * Test cases for 'mode = text.full'.
-    * */
+     * Test cases for 'mode = text.full'.
+     */
     @Test
     public void siddhiIoFileTest1() throws InterruptedException {
         log.info("test SiddhiIoFile [mode = text.full] 1");
@@ -474,8 +476,8 @@ public class FileSourceTextFullModeTestCase {
                 "action.after.process='delete', " +
                 "tailing='false', " +
                 "@map(type='json', enclosing.element=\"$.event\", " +
-                    "@attributes(symbol = \"symbol\", price = \"price\", volume = \"volume\", " +
-                        "eof = 'trp:eof', fp = 'trp:file.path')))\n" +
+                "@attributes(symbol = \"symbol\", price = \"price\", volume = \"volume\", " +
+                "eof = 'trp:eof', fp = 'trp:file.path')))\n" +
                 "define stream FooStream (symbol string, price float, volume long, eof String, fp String); " +
                 "define stream BarStream (symbol string, price float, volume long, eof String, fp String); ";
         String query = "" +
@@ -550,6 +552,128 @@ public class FileSourceTextFullModeTestCase {
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         siddhiAppRuntime.start();
         Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIoFileTestCronSupport() throws InterruptedException, IOException {
+        log.info("Siddhi IO File Cron Support");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file',mode='text.full'," +
+                "dir.uri='file:/" + dirUri + "/text_full_single', " +
+                "action.after.process='move', tailing='false', cron.expression='*/5 * * * * ?', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "', " +
+                "@map(type='json'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.incrementAndGet();
+                log.info("Count is : " + n + " Time is : " + new Date(System.currentTimeMillis()));
+                for (Event event : events) {
+                    AssertJUnit.assertTrue(companies.contains(event.getData(0).toString()));
+                }
+            }
+        });
+
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(waitTime, 1, count, timeout);
+        File file2 = new File(dirUri + "/text_full/cloudbees.json");
+        File file3 = new File(dirUri + "/text_full_single/cloudbees.json");
+        FileUtils.copyFile(file2, file3);
+        SiddhiTestHelper.waitForEvents(waitTime, 2, count, timeout);
+
+        File file = new File(moveAfterProcessDir);
+        AssertJUnit.assertEquals(2, Objects.requireNonNull(file.list()).length);
+
+        //assert event count
+        AssertJUnit.assertEquals("Number of events", 2, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void siddhiIoFileTest10() throws InterruptedException {
+        log.info("Cron is not null and action.after.process is in default value");
+        String streams = "" +
+                "@App:name('SiddhiApp')" +
+                "@source(type='file', file.uri='file:/" + dirUri + "/text_full_single/apache.json', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "/apache.json', " +
+                "cron.expression='*/5 * * * * ?', tailing='false', @map(type='csv'))\n" +
+                "define stream InputStream (symbol string, price float, volume long);" +
+                "@sink(type='log')" +
+                "define stream OutputStream (symbol string, price float, volume long);";
+
+        String query = "" +
+                "from InputStream " +
+                "select * " +
+                "insert into OutputStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 0, count.get(), 1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void siddhiIoFileTest11() throws InterruptedException {
+        log.info("Cron is not null tailing is true");
+        String streams = "" +
+                "@App:name('SiddhiApp')" +
+                "@source(type='file', file.uri='file:/" + dirUri + "/text_full_single/apache.json', " +
+                "action.after.process='MOVE', cron.expression='*/5 * * * * ?', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "/apache.json', " +
+                "tailing='true', @map(type='csv'))\n" +
+                "define stream InputStream (symbol string, price float, volume long);" +
+                "@sink(type='log')" +
+                "define stream OutputStream (symbol string, price float, volume long);";
+
+        String query = "" +
+                "from InputStream " +
+                "select * " +
+                "insert into OutputStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 0, count.get(), 1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void siddhiIoFileTest12() throws InterruptedException {
+        log.info("Move after process is null but cron is not null");
+        String streams = "" +
+                "@App:name('SiddhiApp')" +
+                "@source(type='file', file.uri='file:/" + dirUri + "/text_full_single/apache.json', " +
+                "action.after.process='MOVE', " +
+                "cron.expression='*/5 * * * * ?', tailing='false', @map(type='csv'))\n" +
+                "define stream InputStream (symbol string, price float, volume long);" +
+                "@sink(type='log')" +
+                "define stream OutputStream (symbol string, price float, volume long);";
+
+        String query = "" +
+                "from InputStream " +
+                "select * " +
+                "insert into OutputStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 0, count.get(), 1000);
         siddhiAppRuntime.shutdown();
     }
 }
