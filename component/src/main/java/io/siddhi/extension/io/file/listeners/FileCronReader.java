@@ -48,41 +48,37 @@ import java.util.Map;
  * FileCron Listener is executted when the cron expression is given. If the current time satisfied by the cron
  * expression then the file processing will be executed.
  */
-public class FileCronListener implements Job {
+public class FileCronReader implements Job {
     private static final Logger log = Logger.getLogger(FileSystemListener.class);
     SourceEventListener sourceEventListener;
 
-    public FileCronListener() {
+    public FileCronReader() {
     }
 
     public static void scheduleJob(FileSourceConfiguration fileSourceConfiguration, FileProcessor fileProcessor,
                                    VFSClientConnector vfsClientConnector) {
         try {
-            JobKey jobKey = new JobKey("job", "group");
+            JobKey jobKey = new JobKey(Constants.JOB_NAME, Constants.JOB_GROUP);
 
             Scheduler scheduler = new StdSchedulerFactory().getScheduler();
             fileSourceConfiguration.setScheduler(scheduler);
             if (scheduler.checkExists(jobKey)) {
                 scheduler.deleteJob(jobKey);
             }
-
             scheduler.start();
             JobDataMap dataMap = new JobDataMap();
             dataMap.put(Constants.FILE_SOURCE_CONFIGURATION, fileSourceConfiguration);
             dataMap.put(Constants.FILE_PROCESSOR, fileProcessor);
             dataMap.put(Constants.VFS_CLIENT_CONNECTOR, vfsClientConnector);
-
-            JobDetail cron = JobBuilder.newJob(FileCronListener.class)
+            JobDetail cron = JobBuilder.newJob(FileCronReader.class)
                     .usingJobData(dataMap)
                     .withIdentity(jobKey)
                     .build();
-
             Trigger trigger = TriggerBuilder
                     .newTrigger()
-                    .withIdentity("TriggerName", "group")
+                    .withIdentity(Constants.TRIGGER_NAME, Constants.TRIGGER_GROUP)
                     .withSchedule(
                             CronScheduleBuilder.cronSchedule(fileSourceConfiguration.getCronExpression())).build();
-
             scheduler.scheduleJob(cron, trigger);
         } catch (SchedulerException e) {
             log.error("The error occurs at scheduler start : " + e);
@@ -112,7 +108,7 @@ public class FileCronListener implements Job {
                         VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                         FileSystemListener fileSystemListener = new FileSystemListener
                                 (sourceEventListener, fileSourceConfiguration);
-                        fileSystemListener.runProgram(vfsClientConnector, carbonCallback, properties, fileURI,
+                        fileSystemListener.initialProcessFile(vfsClientConnector, carbonCallback, properties, fileURI,
                                 fileSourceConfiguration, fileProcessor);
                     }
                 }

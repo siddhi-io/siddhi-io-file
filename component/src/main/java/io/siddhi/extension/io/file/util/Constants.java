@@ -94,6 +94,11 @@ public class Constants {
     public static final String FILE_PROCESSOR = "FileProcessor";
     public static final String VFS_CLIENT_CONNECTOR = "VFSClientConnector";
     public static final String FILE_SOURCE_CONFIGURATION = "FileSourceConfiguration";
+    public static final String JOB_GROUP = "JobGroup";
+    public static final String JOB_NAME = "JobName";
+    public static final String TRIGGER_NAME = "TriggerName";
+    public static final String TRIGGER_GROUP = "TriggerGroup";
+
 
     /*source property keys*/
     public static final String TAILED_FILE = "tailedFile";

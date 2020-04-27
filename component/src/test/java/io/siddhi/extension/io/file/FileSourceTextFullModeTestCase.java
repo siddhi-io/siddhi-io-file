@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Test cases for siddhi-io-file source.
- * */
+ */
 public class FileSourceTextFullModeTestCase {
     private static final Logger log = Logger.getLogger(FileSourceTextFullModeTestCase.class);
     private AtomicInteger count = new AtomicInteger();
@@ -563,7 +563,7 @@ public class FileSourceTextFullModeTestCase {
                 "@source(type='file',mode='text.full'," +
                 "dir.uri='file:/" + dirUri + "/text_full_single', " +
                 "action.after.process='move', tailing='false', cron.expression='*/5 * * * * ?', " +
-                "move.after.process='file:/" + moveAfterProcessDir + "', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "/text_full', " +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -596,7 +596,7 @@ public class FileSourceTextFullModeTestCase {
         FileUtils.copyFile(file2, file3);
         SiddhiTestHelper.waitForEvents(waitTime, 2, count, timeout);
 
-        File file = new File(moveAfterProcessDir);
+        File file = new File(moveAfterProcessDir + "/text_full");
         AssertJUnit.assertEquals(2, Objects.requireNonNull(file.list()).length);
 
         //assert event count

@@ -70,7 +70,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import static io.siddhi.extension.io.file.listeners.FileCronListener.scheduleJob;
+import static io.siddhi.extension.io.file.listeners.FileCronReader.scheduleJob;
 import static org.quartz.CronExpression.isValidExpression;
 
 
@@ -523,7 +523,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             }
             Scheduler scheduler = fileSourceConfiguration.getScheduler();
             if (scheduler != null) {
-                scheduler.deleteJob(new JobKey("job", "group"));
+                scheduler.deleteJob(new JobKey(Constants.JOB_NAME, Constants.JOB_GROUP));
             }
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Failed to stop the file server when shutting down the siddhi app '" +
@@ -710,7 +710,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             properties.put(Constants.POLLING_INTERVAL, filePollingInterval);
             properties.put(Constants.HEADER_PRESENT, headerPresent);
             properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
-            properties.put(Constants.CRON_EXPRESSION, cronExpression);
             if (actionAfterFailure != null) {
                 properties.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
             }
@@ -750,7 +749,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 properties.put(Constants.MODE, mode);
                 properties.put(Constants.HEADER_PRESENT, headerPresent);
                 properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
-                properties.put(Constants.CRON_EXPRESSION, cronExpression);
                 VFSClientConnector vfsClientConnector = new VFSClientConnector();
                 FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
                 vfsClientConnector.setMessageProcessor(fileProcessor);

@@ -1349,6 +1349,7 @@ public class FileSourceLineModeTestCase {
         });
         siddhiAppRuntime.start();
         SiddhiTestHelper.waitForEvents(100, 7, count.get(), 7000);
+        AssertJUnit.assertEquals("Number of events", 7, count.get());
         siddhiAppRuntime.shutdown();
     }
 }

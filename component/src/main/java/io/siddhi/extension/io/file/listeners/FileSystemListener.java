@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -90,9 +90,9 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.CRON_EXPRESSION, fileSourceConfiguration.getCronExpression());
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                     if (fileSourceConfiguration.getCronExpression() != null) {
-                        FileCronListener.scheduleJob(fileSourceConfiguration, fileProcessor, vfsClientConnector);
+                        FileCronReader.scheduleJob(fileSourceConfiguration, fileProcessor, vfsClientConnector);
                     } else {
-                        runProgram(vfsClientConnector, carbonCallback, properties, fileURI,
+                        initialProcessFile(vfsClientConnector, carbonCallback, properties, fileURI,
                                 fileSourceConfiguration, fileProcessor);
                     }
                 } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
@@ -110,9 +110,9 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.CRON_EXPRESSION, fileSourceConfiguration.getCronExpression());
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                     if (fileSourceConfiguration.getCronExpression() != null) {
-                        FileCronListener.scheduleJob(fileSourceConfiguration, fileProcessor, vfsClientConnector);
+                        FileCronReader.scheduleJob(fileSourceConfiguration, fileProcessor, vfsClientConnector);
                     } else {
-                        runProgram(vfsClientConnector, carbonCallback, properties, fileURI,
+                        initialProcessFile(vfsClientConnector, carbonCallback, properties, fileURI,
                                 fileSourceConfiguration, fileProcessor);
                     }
                 } else if (Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)) {
@@ -157,9 +157,9 @@ public class FileSystemListener implements RemoteFileSystemListener {
                         vfsClientConnector.setMessageProcessor(fileProcessor);
                         VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                         if (fileSourceConfiguration.getCronExpression() != null) {
-                            FileCronListener.scheduleJob(fileSourceConfiguration, fileProcessor, vfsClientConnector);
+                            FileCronReader.scheduleJob(fileSourceConfiguration, fileProcessor, vfsClientConnector);
                         } else {
-                            runProgram(vfsClientConnector, carbonCallback, properties, fileURI,
+                            initialProcessFile(vfsClientConnector, carbonCallback, properties, fileURI,
                                     fileSourceConfiguration, fileProcessor);
                         }
                     }
@@ -171,10 +171,9 @@ public class FileSystemListener implements RemoteFileSystemListener {
         }
     }
 
-    public void runProgram(VFSClientConnector vfsClientConnector,
-                           VFSClientConnectorCallback carbonCallback,
-                           Map<String, String> properties, String fileURI,
-                           FileSourceConfiguration fileSourceConfiguration, FileProcessor fileProcessor) {
+    public void initialProcessFile(VFSClientConnector vfsClientConnector, VFSClientConnectorCallback carbonCallback,
+                                   Map<String, String> properties, String fileURI,
+                                   FileSourceConfiguration fileSourceConfiguration, FileProcessor fileProcessor) {
         vfsClientConnector.setMessageProcessor(fileProcessor);
         BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
                 fileURI.getBytes(StandardCharsets.UTF_8)), true);
