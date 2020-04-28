@@ -142,12 +142,6 @@ public class Utils {
         return file.length();
     }
 
-    /*public static String getFileName(String uri) {
-        String[] path = uri.split("/");
-        String fileName = path[path.length - 1];
-        return fileName.replace("%20", " ");
-    }*/
-
     private static String getFilePath(String uri) {
         if (uri.startsWith("file:")) {
             uri = uri.replaceFirst("file:", "");
@@ -156,11 +150,6 @@ public class Utils {
     }
 
     public static long getLinesCount(String uri) throws IOException {
-        /*if (uri.startsWith("file:")) {
-            uri = uri.replaceFirst("file:", "");
-        }
-        uri = uri.replace("%20", " ");
-        return Files.lines(Paths.get(uri)).filter(line -> line.length() != 0).count();*/
         if (uri.startsWith("file:")) {
             uri = uri.replaceFirst("file:", "");
         }

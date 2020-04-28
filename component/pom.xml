@@ -156,7 +156,7 @@
                             org.wso2.transport.file.*,
                             org.apache.commons.net.*,
                             org.quartz.*,
-                            io.siddhi.extension.util.*,
+                            io.siddhi.extension.util.*
                         </Private-Package>
                         <Export-Package>
                             io.siddhi.extension.io.file.*,
