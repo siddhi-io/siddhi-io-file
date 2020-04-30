@@ -47,10 +47,10 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import static io.siddhi.extension.io.file.util.GenerateAppProperties.constructPath;
-import static io.siddhi.extension.io.file.util.GenerateAppProperties.generateProperties;
-import static io.siddhi.extension.io.file.util.GenerateAppProperties.getFileName;
-import static io.siddhi.extension.io.file.util.GenerateAppProperties.reProcessFileGenerateProperties;
+import static io.siddhi.extension.io.file.util.Util.constructPath;
+import static io.siddhi.extension.io.file.util.Util.generateProperties;
+import static io.siddhi.extension.io.file.util.Util.getFileName;
+import static io.siddhi.extension.io.file.util.Util.reProcessFileGenerateProperties;
 
 /**
  * FileCronExecutor is executed when the cron expression is given. If the current time satisfied by the cron
@@ -62,6 +62,9 @@ public class FileCronExecutor implements Job {
     public FileCronExecutor() {
     }
 
+    /**
+     * To initialize the cron job to execute at given cron expression
+     */
     public static void scheduleJob(FileSourceConfiguration fileSourceConfiguration,
                                    SourceEventListener sourceEventListener, SiddhiAppContext siddhiAppContext) {
         try {
@@ -96,6 +99,9 @@ public class FileCronExecutor implements Job {
         }
     }
 
+    /**
+     * Method gets called when the cron Expression satisfies the system time
+     */
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
         JobDataMap dataMap = jobExecutionContext.getJobDetail().getJobDataMap();
@@ -118,6 +124,9 @@ public class FileCronExecutor implements Job {
         }
     }
 
+    /**
+     * Action taken while processing a file
+     */
     public void processFile(String fileURI, JobExecutionContext jobExecutionContext,
                             SourceEventListener sourceEventListener) {
         JobDataMap dataMap = jobExecutionContext.getJobDetail().getJobDataMap();
@@ -146,14 +155,15 @@ public class FileCronExecutor implements Job {
                 log.error(String.format("Failed to get callback from vfs-client  for file '%s'.",
                         fileURI), e);
             }
-            if (!fileSourceConfiguration.getActionAfterProcess().equalsIgnoreCase(Constants.KEEP)) {
-                reProcessFile(vfsClientConnector, carbonCallback, properties, fileURI, fileSourceConfiguration);
-            }
+            reProcessFile(vfsClientConnector, carbonCallback, properties, fileURI, fileSourceConfiguration);
         } catch (ClientConnectorException e) {
             log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
         }
     }
 
+    /**
+     * Method use to move file from one path to another if action.after.process is 'move'
+     */
     public void reProcessFile(VFSClientConnector vfsClientConnector,
                               VFSClientConnectorCallback vfsClientConnectorCallback,
                               Map<String, String> properties, String fileUri,

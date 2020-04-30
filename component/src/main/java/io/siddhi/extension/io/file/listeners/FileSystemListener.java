@@ -43,10 +43,10 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import static io.siddhi.extension.io.file.util.GenerateAppProperties.constructPath;
-import static io.siddhi.extension.io.file.util.GenerateAppProperties.generateProperties;
-import static io.siddhi.extension.io.file.util.GenerateAppProperties.getFileName;
-import static io.siddhi.extension.io.file.util.GenerateAppProperties.reProcessFileGenerateProperties;
+import static io.siddhi.extension.io.file.util.Util.constructPath;
+import static io.siddhi.extension.io.file.util.Util.generateProperties;
+import static io.siddhi.extension.io.file.util.Util.getFileName;
+import static io.siddhi.extension.io.file.util.Util.reProcessFileGenerateProperties;
 
 /**
  * Test {@link RemoteFileSystemListener} implementation for testing purpose.
