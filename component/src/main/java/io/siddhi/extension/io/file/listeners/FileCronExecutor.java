@@ -18,12 +18,12 @@
 
 package io.siddhi.extension.io.file.listeners;
 
+import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.stream.input.source.SourceEventListener;
 import io.siddhi.extension.io.file.processors.FileProcessor;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.Job;
@@ -43,16 +43,17 @@ import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+import static io.siddhi.extension.io.file.util.GenerateAppProperties.constructPath;
 import static io.siddhi.extension.io.file.util.GenerateAppProperties.generateProperties;
+import static io.siddhi.extension.io.file.util.GenerateAppProperties.getFileName;
+import static io.siddhi.extension.io.file.util.GenerateAppProperties.reProcessFileGenerateProperties;
 
 /**
- * FileCron Listener is executted when the cron expression is given. If the current time satisfied by the cron
+ * FileCronExecutor is executed when the cron expression is given. If the current time satisfied by the cron
  * expression then the file processing will be executed.
  */
 public class FileCronExecutor implements Job {
@@ -62,7 +63,7 @@ public class FileCronExecutor implements Job {
     }
 
     public static void scheduleJob(FileSourceConfiguration fileSourceConfiguration,
-                                   SourceEventListener sourceEventListener) {
+                                   SourceEventListener sourceEventListener, SiddhiAppContext siddhiAppContext) {
         try {
             JobKey jobKey = new JobKey(Constants.JOB_NAME, Constants.JOB_GROUP);
 
@@ -76,6 +77,7 @@ public class FileCronExecutor implements Job {
             JobDataMap dataMap = new JobDataMap();
             dataMap.put(Constants.FILE_SOURCE_CONFIGURATION, fileSourceConfiguration);
             dataMap.put(Constants.SOURCE_EVENT_LISTENER, sourceEventListener);
+
             // Define instances of Jobs
             JobDetail cron = JobBuilder.newJob(FileCronExecutor.class)
                     .usingJobData(dataMap)
@@ -90,7 +92,7 @@ public class FileCronExecutor implements Job {
             // Tell quartz to schedule the job using our trigger
             scheduler.scheduleJob(cron, trigger);
         } catch (SchedulerException e) {
-            log.error("The error occurs at scheduler start : " + e);
+            log.error("The error occurs at scheduler start in SiddhiApp " + siddhiAppContext.getName() + " : " + e);
         }
     }
 
@@ -156,57 +158,28 @@ public class FileCronExecutor implements Job {
                               VFSClientConnectorCallback vfsClientConnectorCallback,
                               Map<String, String> properties, String fileUri,
                               FileSourceConfiguration fileSourceConfiguration) {
-        String actionAfterProcess = fileSourceConfiguration.getActionAfterProcess();
-        properties.put(Constants.URI, fileUri);
-        properties.put(Constants.ACK_TIME_OUT, "1000");
         BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
                 fileUri.getBytes(StandardCharsets.UTF_8)), true);
         String moveAfterProcess = fileSourceConfiguration.getMoveAfterProcess();
+        Map<String, String> reGeneratedProperties = reProcessFileGenerateProperties(fileSourceConfiguration, fileUri,
+                properties);
         try {
-            if (fileSourceConfiguration.getActionAfterProcess() != null) {
-                properties.put(Constants.URI, fileUri);
-                properties.put(Constants.ACTION, actionAfterProcess);
-                File file = new File(fileSourceConfiguration.getUri());
-                if (fileSourceConfiguration.getMoveAfterProcess() != null) {
-                    if (file.isFile()) {
-                        properties.put(Constants.DESTINATION, fileSourceConfiguration.getMoveAfterProcess());
-                    } else {
-                        String destination = constructPath(moveAfterProcess, getFileName(fileUri,
-                                fileSourceConfiguration.getProtocolForMoveAfterProcess()));
-                        if (destination != null) {
-                            properties.put(Constants.DESTINATION, destination);
-                        }
-                    }
+            File file = new File(fileSourceConfiguration.getUri());
+            if (file.isFile()) {
+                reGeneratedProperties.put(Constants.DESTINATION, moveAfterProcess);
+            } else {
+                String destination = constructPath(moveAfterProcess, getFileName(fileUri,
+                        fileSourceConfiguration.getProtocolForMoveAfterProcess()));
+                if (destination != null) {
+                    reGeneratedProperties.put(Constants.DESTINATION, destination);
                 }
-                vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, properties);
-                vfsClientConnectorCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileUri);
             }
+            vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, reGeneratedProperties);
+            vfsClientConnectorCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileUri);
         } catch (ClientConnectorException e) {
             log.error(String.format("Failure occurred in vfs-client while reading the file '%s '.", fileUri), e);
         } catch (InterruptedException e) {
             log.error(String.format("Failed to get callback from vfs-client for file '%s '.", fileUri), e);
-        }
-    }
-
-    private String getFileName(String uri, String protocol) {
-        try {
-            URL url = new URL(String.format("%s%s%s", protocol, File.separator, uri));
-            return FilenameUtils.getName(url.getPath());
-        } catch (MalformedURLException e) {
-            log.error(String.format("Failed to extract file name from the uri '%s '.", uri), e);
-            return null;
-        }
-    }
-
-    private String constructPath(String baseUri, String fileName) {
-        if (baseUri != null && fileName != null) {
-            if (baseUri.endsWith(File.separator)) {
-                return String.format("%s%s", baseUri, fileName);
-            } else {
-                return String.format("%s%s%s", baseUri, File.separator, fileName);
-            }
-        } else {
-            return null;
         }
     }
 }

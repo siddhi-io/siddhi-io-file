@@ -259,8 +259,9 @@ import static org.quartz.CronExpression.isValidExpression;
                 ),
                 @Parameter(
                         name = "cron.expression",
-                        description = "This is used to specify a timestamp in cron expression. In order to process " +
-                                "the files the given expression should be satisfied by the current time .",
+                        description = "This is used to specify a timestamp in cron expression. " +
+                                "The file or files in the given dir.uri or file.uri will be processed when the " +
+                                "given expression satisfied by the system time.",
                         optional = true,
                         type = {DataType.STRING},
                         defaultValue = "None"
@@ -680,7 +681,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         createInitialSourceConf();
         fileSourceConfiguration.setExecutorService(executorService);
         if (fileSourceConfiguration.getCronExpression() != null) {
-            scheduleJob(fileSourceConfiguration, sourceEventListener);
+            scheduleJob(fileSourceConfiguration, sourceEventListener, siddhiAppContext);
         } else {
             if (dirUri != null) {
                 Map<String, String> properties = getFileSystemServerProperties();

@@ -24,7 +24,6 @@ import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
@@ -40,13 +39,14 @@ import org.wso2.transport.remotefilesystem.message.RemoteFileSystemBaseMessage;
 import org.wso2.transport.remotefilesystem.message.RemoteFileSystemEvent;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+import static io.siddhi.extension.io.file.util.GenerateAppProperties.constructPath;
 import static io.siddhi.extension.io.file.util.GenerateAppProperties.generateProperties;
+import static io.siddhi.extension.io.file.util.GenerateAppProperties.getFileName;
+import static io.siddhi.extension.io.file.util.GenerateAppProperties.reProcessFileGenerateProperties;
 
 /**
  * Test {@link RemoteFileSystemListener} implementation for testing purpose.
@@ -214,52 +214,27 @@ public class FileSystemListener implements RemoteFileSystemListener {
     private void reProcessFile(VFSClientConnector vfsClientConnector,
                                VFSClientConnectorCallback vfsClientConnectorCallback,
                                Map<String, String> properties, String fileUri) {
-        String actionAfterProcess = fileSourceConfiguration.getActionAfterProcess();
-        properties.put(Constants.URI, fileUri);
-        properties.put(Constants.ACK_TIME_OUT, "1000");
+        Map<String, String> reGeneratedProperties = reProcessFileGenerateProperties(fileSourceConfiguration, fileUri,
+                properties);
         BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
                 fileUri.getBytes(StandardCharsets.UTF_8)), true);
         String moveAfterProcess = fileSourceConfiguration.getMoveAfterProcess();
         try {
             if (fileSourceConfiguration.getActionAfterProcess() != null) {
-                properties.put(Constants.URI, fileUri);
-                properties.put(Constants.ACTION, actionAfterProcess);
                 if (fileSourceConfiguration.getMoveAfterProcess() != null) {
                     String destination = constructPath(moveAfterProcess, getFileName(fileUri,
                             fileSourceConfiguration.getProtocolForMoveAfterProcess()));
                     if (destination != null) {
-                        properties.put(Constants.DESTINATION, destination);
+                        reGeneratedProperties.put(Constants.DESTINATION, destination);
                     }
                 }
-                vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, properties);
+                vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, reGeneratedProperties);
                 vfsClientConnectorCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileUri);
             }
         } catch (ClientConnectorException e) {
             log.error(String.format("Failure occurred in vfs-client while reading the file '%s'.", fileUri), e);
         } catch (InterruptedException e) {
             log.error(String.format("Failed to get callback from vfs-client for file '%s'.", fileUri), e);
-        }
-    }
-
-    private String getFileName(String uri, String protocol) {
-        try {
-            URL url = new URL(String.format("%s%s%s", protocol, File.separator, uri));
-            return FilenameUtils.getName(url.getPath());
-        } catch (MalformedURLException e) {
-            log.error(String.format("Failed to extract file name from the uri '%s'.", uri), e);
-            return null;
-        }
-    }
-
-    private String constructPath(String baseUri, String fileName) {
-        if (baseUri != null && fileName != null) {
-            if (baseUri.endsWith(File.separator)) {
-                return String.format("%s%s", baseUri, fileName);
-            } else {
-                return String.format("%s%s%s", baseUri, File.separator, fileName);
-            }
-        } else {
-            return null;
         }
     }
 }

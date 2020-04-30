@@ -557,7 +557,7 @@ public class FileSourceTextFullModeTestCase {
 
     @Test
     public void siddhiIoFileTestCronSupportForDirectory() throws InterruptedException, IOException {
-        log.info("Siddhi IO File Cron Support");
+        log.info("Siddhi IO File Test for cron Support for directory");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file',mode='text.full'," +
@@ -606,7 +606,7 @@ public class FileSourceTextFullModeTestCase {
 
     @Test
     public void siddhiIOFileTestCronExpressionInDirectory() throws InterruptedException, IOException {
-        log.info("Siddhi IO File Cron Support");
+        log.info("Siddhi IO File for Cron Support to check whether Cron Expression satisfies the time");
         long[] time = new long[3];
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +

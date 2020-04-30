@@ -1324,7 +1324,7 @@ public class FileSourceLineModeTestCase {
 
     @Test
     public void siddhiIOFileTestCronSupportForFile() throws InterruptedException {
-        log.info("Siddhi IO File test for Cron support");
+        log.info("Siddhi IO File test for Cron support via file.uri");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
