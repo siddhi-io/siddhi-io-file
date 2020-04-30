@@ -1323,7 +1323,7 @@ public class FileSourceLineModeTestCase {
     }
 
     @Test
-    public void siddhiFileTestCronSupport() throws InterruptedException {
+    public void siddhiIOFileTestCronSupportForFile() throws InterruptedException {
         log.info("Siddhi IO File test for Cron support");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
@@ -1348,7 +1348,7 @@ public class FileSourceLineModeTestCase {
             }
         });
         siddhiAppRuntime.start();
-        SiddhiTestHelper.waitForEvents(100, 7, count.get(), 7000);
+        SiddhiTestHelper.waitForEvents(100, 7, count.get(), 6000);
         AssertJUnit.assertEquals("Number of events", 7, count.get());
         siddhiAppRuntime.shutdown();
     }

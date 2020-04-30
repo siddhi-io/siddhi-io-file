@@ -91,8 +91,7 @@ public class Constants {
     public static final String ANNOTATION_TYPE_ELEMENT_NAME = "type";
     public static final String MAP_ANNOTATION_BINARY_TYPE = "binary";
     public static final String SOURCE_ANNOTATION_FILE_TYPE_NAME = "file";
-    public static final String FILE_PROCESSOR = "FileProcessor";
-    public static final String VFS_CLIENT_CONNECTOR = "VFSClientConnector";
+    public static final String SOURCE_EVENT_LISTENER = "SourceEventListener";
     public static final String FILE_SOURCE_CONFIGURATION = "FileSourceConfiguration";
     public static final String JOB_GROUP = "JobGroup";
     public static final String JOB_NAME = "JobName";

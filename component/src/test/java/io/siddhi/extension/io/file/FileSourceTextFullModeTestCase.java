@@ -556,7 +556,7 @@ public class FileSourceTextFullModeTestCase {
     }
 
     @Test
-    public void siddhiIoFileTestCronSupport() throws InterruptedException, IOException {
+    public void siddhiIoFileTestCronSupportForDirectory() throws InterruptedException, IOException {
         log.info("Siddhi IO File Cron Support");
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
@@ -597,10 +597,61 @@ public class FileSourceTextFullModeTestCase {
         SiddhiTestHelper.waitForEvents(waitTime, 2, count, timeout);
 
         File file = new File(moveAfterProcessDir + "/text_full");
-        AssertJUnit.assertEquals(2, Objects.requireNonNull(file.list()).length);
+        AssertJUnit.assertEquals(2, (Objects.requireNonNull(file.list()).length));
 
         //assert event count
         AssertJUnit.assertEquals("Number of events", 2, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIOFileTestCronExpressionInDirectory() throws InterruptedException, IOException {
+        log.info("Siddhi IO File Cron Support");
+        long[] time = new long[3];
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', dir.uri='file:/" + dirUri + "/text_full_single', " +
+                "action.after.process='move', tailing='false', cron.expression='*/5 * * * * ?', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "/text_full', " +
+                "@map(type='json'))" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.incrementAndGet();
+                time[n] = System.currentTimeMillis();
+                log.info("Count is : " + n + " Time is : " + new Date(System.currentTimeMillis()));
+                for (Event event : events) {
+                    AssertJUnit.assertTrue(companies.contains(event.getData(0).toString()));
+                }
+            }
+        });
+
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(waitTime, 1, count, timeout);
+        File file2 = new File(dirUri + "/text_full/cloudbees.json");
+        File file3 = new File(dirUri + "/text_full_single/cloudbees.json");
+        FileUtils.copyFile(file2, file3);
+        SiddhiTestHelper.waitForEvents(waitTime, 2, count, timeout);
+        long val = time[2] - time[1];
+        log.info("Difference between " + time[2] + " and " + time[1] + " : " + val);
+        if (val < 4000) {
+            AssertJUnit.fail("Cron Time is not satisfied");
+        } else {
+            //assert event count
+            AssertJUnit.assertEquals("Number of events", 2, count.get());
+        }
         siddhiAppRuntime.shutdown();
     }
 
@@ -661,6 +712,30 @@ public class FileSourceTextFullModeTestCase {
                 "@source(type='file', file.uri='file:/" + dirUri + "/text_full_single/apache.json', " +
                 "action.after.process='MOVE', " +
                 "cron.expression='*/5 * * * * ?', tailing='false', @map(type='csv'))\n" +
+                "define stream InputStream (symbol string, price float, volume long);" +
+                "@sink(type='log')" +
+                "define stream OutputStream (symbol string, price float, volume long);";
+
+        String query = "" +
+                "from InputStream " +
+                "select * " +
+                "insert into OutputStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 0, count.get(), 1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void siddhiIoFileTest13() throws InterruptedException {
+        log.info("Cron expression is not valid");
+        String streams = "" +
+                "@App:name('SiddhiApp')" +
+                "@source(type='file', file.uri='file:/" + dirUri + "/text_full_single/apache.json', " +
+                "action.after.process='MOVE', move.after.process='file:/" + moveAfterProcessDir + "/apache.json', " +
+                "cron.expression='* 5 * * * * ?', tailing='false', @map(type='csv'))\n" +
                 "define stream InputStream (symbol string, price float, volume long);" +
                 "@sink(type='log')" +
                 "define stream OutputStream (symbol string, price float, volume long);";
