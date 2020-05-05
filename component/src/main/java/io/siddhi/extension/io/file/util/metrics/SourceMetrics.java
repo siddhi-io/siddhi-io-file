@@ -141,8 +141,8 @@ public class SourceMetrics extends Metrics {
                                     sourceFileStatusMap.replace(filePath, StreamStatus.IDLE);
                                 }
                             });
-                            Thread.sleep(500);
                         }
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         log.error("Error while updating the status of files.", e);
                     }
