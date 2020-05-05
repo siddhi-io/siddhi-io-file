@@ -201,6 +201,9 @@ public class Utils {
             i--;
             c = fileURI.charAt(i);
         }
-        return fileURI.substring(i);
+        if (i == 0) {
+            return fileURI;
+        }
+        return ".." + fileURI.substring(i);
     }
 }
