@@ -53,7 +53,8 @@ import java.util.Map;
         name = "file" ,
         namespace = "sink" ,
         description = "" +
-                "This extension publishes (writes) event data that is processed within Siddhi to files. \n" +
+                "The File Sink component of the 'siddhi-io-fie' extension publishes (writes) event data that is " +
+                "processed within Siddhi to files. \n" +
                 "Siddhi-io-file sink provides support to write both textual and binary data into files\n",
         parameters = {
                 @Parameter(name = "file.uri",

@@ -60,25 +60,26 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
         name = "fileeventlistener" ,
         namespace = "source" ,
         description = "" +
-                "This extension allows you to get the details of files that have been created, modified or deleted" +
-                " during execution time." ,
+                "The 'fileeventlistener' component of the 'siddhi-io-fie' extension allows you to get the details of" +
+                " files that have been created, modified or deleted during execution time." ,
         parameters = {
                 @Parameter(
                         name = "dir.uri",
                         description =
-                                "The path to the directory to be processed. During execution time, all the files " +
-                                        "within this directory are processed unless you have entered speific files " +
-                                        "to be processed via the 'file.name.list' parameter. The URI specified must " +
-                                        "include the file handling protocol to be used for file processing. e.g., If" +
-                                        " the file handling protocol to be used is 'ftp', the URI must be presented " +
-                                        "as 'ftp://<DIRECTORY_PATH>>'.\n",
+                                "The path to the directory to be processed. During execution time, Siddhi by default" +
+                                        " processes all the files within this directory. However, if you have entered" +
+                                        " specific files to be processed via the 'file.name.list' parameter, only " +
+                                        "those files are processed. The URI specified must " +
+                                        "include the file handling protocol to be used for file processing.\n " +
+                                        "e.g., If the file handling protocol to be used is 'ftp', the URI must be " +
+                                        "provided as 'ftp://<DIRECTORY_PATH>>'.\n",
                         optional = false,
                         type = {DataType.STRING}
                 ),
                 @Parameter(
                         name = "monitoring.interval",
                         description =
-                                "The time duration (in milliseconds) for which the extension must monitor changes to" +
+                                "The time duration (in milliseconds) for which the system must monitor changes to" +
                                         " the files in the specified directory.\n",
                         type = {DataType.STRING},
                         optional = true,
