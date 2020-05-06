@@ -340,6 +340,6 @@ public class FileSystemListener implements RemoteFileSystemListener {
             metrics.getFileMoveMetrics().setTime(System.currentTimeMillis());
             metrics.getFileMoveMetrics().getMoveMetric(value);
         }
-        metrics.getReadPercentageMetric(() -> 100);
+        metrics.setReadPercentage(100.0);
     }
 }

@@ -742,7 +742,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                                             moveAfterProcess));
                                     metrics.getFileMoveMetrics().getMoveMetric(1);
                                 }
-                                metrics.getReadPercentageMetric(() -> 100);
+                                metrics.setReadPercentage(100);
                                 metrics.getCompletedTimeMetric(System.currentTimeMillis());
                             }
                         }

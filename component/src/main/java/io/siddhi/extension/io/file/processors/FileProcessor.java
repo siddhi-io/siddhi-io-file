@@ -32,7 +32,6 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TransportSender;
-import org.wso2.carbon.metrics.core.Gauge;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -92,6 +91,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                     try {
                         lineCount = Utils.getLinesCount(fileURI);
                         metrics.getFileSizeMetric(() -> fileSize);
+                        metrics.getReadPercentageMetric();
                         metrics.getReadLineCountMetric().inc(lineCount);
                         metrics.getDroppedEventCountMetric();
                         if (fileSourceConfiguration.isTailingEnabled()) {
@@ -330,7 +330,7 @@ public class FileProcessor implements CarbonMessageProcessor {
         metrics.getSourceFileEventCountMetric().inc();
         metrics.getReadByteMetric().inc(byteLength);
         metrics.getElapseTimeMetric(() -> stopwatch.elapsed().toMillis());
-        metrics.getReadPercentageMetric((Gauge<Double>) () -> totalReadByteSize / fileSize * 100);
+        metrics.setReadPercentage(totalReadByteSize / fileSize * 100);
     }
 
     private void increaseTailingMetrics() {

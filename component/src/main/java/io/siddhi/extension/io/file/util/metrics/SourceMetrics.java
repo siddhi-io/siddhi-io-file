@@ -44,6 +44,7 @@ public class SourceMetrics extends Metrics {
     private final String streamName;
     private final FileDeleteMetrics fileDeleteMetrics;
     private final FileMoveMetrics fileMoveMetrics;
+    private double readPercentage;
 
     public SourceMetrics(String siddhiAppName, String readingMode, String streamName) {
         super(siddhiAppName);
@@ -114,10 +115,10 @@ public class SourceMetrics extends Metrics {
                         siddhiAppName, "tailing_enable", filePath), Level.INFO, () -> enable);
     }
 
-    public void getReadPercentageMetric(Gauge gauge) {
+    public void getReadPercentageMetric() {
         MetricsDataHolder.getInstance().getMetricService()
                 .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.%s.%s",
-                        siddhiAppName, "read_percentage", filePath), Level.INFO, gauge);
+                        siddhiAppName, "read_percentage", filePath), Level.INFO, () -> readPercentage);
     }
 
     public void setFilePath(String fileURI) {
@@ -166,6 +167,10 @@ public class SourceMetrics extends Metrics {
      public Map<String, Long> getTailEnabledFilesMap() {
          return lastConsumedTimeMap;
      }
+
+    public void setReadPercentage(double readPercentage) {
+        this.readPercentage = readPercentage;
+    }
 
     /**
      * Gauge implementation to get the status of the file.
