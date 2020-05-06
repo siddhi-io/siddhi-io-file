@@ -60,32 +60,36 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
         name = "fileeventlistener" ,
         namespace = "source" ,
         description = "" +
-                "Fileeventlistener provides the functionality for user to get the details of files " +
-                "which have been created or modified or deleted in the execution time." ,
+                "This extension allows you to get the details of files that have been created, modified or deleted" +
+                " during execution time." ,
         parameters = {
                 @Parameter(
                         name = "dir.uri",
                         description =
-                                "This parameter is used to specify a folder to be processed. " +
-                                        "All the files inside this directory will be processed. " +
-                                        "This uri MUST have the respective protocol specified.\n",
+                                "The path to the directory to be processed. During execution time, all the files " +
+                                        "within this directory are processed unless you have entered speific files " +
+                                        "to be processed via the 'file.name.list' parameter. The URI specified must " +
+                                        "include the file handling protocol to be used for file processing. e.g., If" +
+                                        " the file handling protocol to be used is 'ftp', the URI must be presented " +
+                                        "as 'ftp://<DIRECTORY_PATH>>'.\n",
                         optional = false,
                         type = {DataType.STRING}
                 ),
                 @Parameter(
                         name = "monitoring.interval",
                         description =
-                                "This parameter is used to specify the time interval (in milliseconds) " +
-                                        "that the process monitor the changes for.\n",
+                                "The time duration (in milliseconds) for which the extension must monitor changes to" +
+                                        " the files in the specified directory.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "100"
                 ),
                 @Parameter(
                         name = "file.name.list",
-                        description = "This parameter is used to filter the files to be monitored in the" +
-                                " given directory uri (dir.uri). The files should be entered comma separated eg:" +
-                                " 'abc.txt,xyz.csv'",
+                        description = "If you want to carry out processing for only for one or more specific files in" +
+                                " the the given directory URI, you can use this parameter to specify those files as " +
+                                "a comma-separated list. \n" +
+                                "e.g., 'abc.txt,xyz.csv'",
                         optional = true,
                         type = {DataType.STRING},
                         defaultValue = "<Empty_String>"
@@ -105,10 +109,11 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                                 "insert into FooStream;",
 
                         description = "" +
-                                "Under above configuration, An event is triggered if the files in the file.name.list " +
-                                "gets created, modified or deleted.\nAn event is created " +
-                                "with the filepath, filename and status of the file. " +
-                                "Then that will be received by the FooStream.\n"
+                                "In the above configuration, the system monitors the given directory URI to check " +
+                                "whether any file named either 'xyz.txt' or 'test' gets created, modified or deleted." +
+                                " If any such activity is detected, an input event is generated in the 'FooStream' " +
+                                "stream. The information included in the event are the filepath, filename, and the " +
+                                "status of the file.\n"
                 ),
                 @Example(
                         syntax = "" +
@@ -122,10 +127,10 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                                 "insert into FooStream;",
 
                         description = "" +
-                                "Under above configuration,  An event is triggered if any file under the given " +
-                                "directory uri gets created, modified or deleted in the execution time. " +
-                                "An event is created with the filepath, filename " +
-                                "and status of the file.Then that will be received by the FooStream.\n"
+                                "In the above configuration, the system monitors the given directory URI to check " +
+                                "whether any file gets created, modified or deleted. If any such activity is " +
+                                "detected, an input event is generated in the 'FooStream' stream. The information " +
+                                "included in the event are the filepath, filename, and the status of the file.\n"
                 ),
                 @Example(
                         syntax = "" +
@@ -140,11 +145,11 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                                 "insert into FooStream;",
 
                         description = "" +
-                                "Under above configuration, An event is triggered if any file under the given " +
-                                "directory uri gets created, modified or deleted in the execution time. " +
-                                "An event is created with the filepath, filename and " +
-                                "status of the file. Then that will be received by the FooStream.\nIf there " +
-                                "are any changes a new event will be generated in every 200 milliseconds.\n"
+                                "In the above configuration, the system monitors the given directory URI every 200" +
+                                " milliseconds to check whether any file gets created, modified or deleted. If any" +
+                                " such activity is detected, an input event is generated in the 'FooStream' stream. " +
+                                "The information included in the event are the filepath, filename, and the status of" +
+                                " the file.\n"
                 ),
         }
 )
