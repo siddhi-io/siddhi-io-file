@@ -364,7 +364,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String headerPresent;
     private String readOnlyHeader;
     private String cronExpression;
-    private Scheduler scheduler;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -579,7 +578,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setHeaderPresent(headerPresent);
         fileSourceConfiguration.setReadOnlyHeader(readOnlyHeader);
         fileSourceConfiguration.setCronExpression(cronExpression);
-        fileSourceConfiguration.setScheduler(scheduler);
     }
 
     private void updateSourceConf() {
