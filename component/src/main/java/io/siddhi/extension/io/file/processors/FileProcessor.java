@@ -20,10 +20,10 @@ package io.siddhi.extension.io.file.processors;
 
 import com.google.common.base.Stopwatch;
 import io.siddhi.core.stream.input.source.SourceEventListener;
+import io.siddhi.extension.io.file.metrics.SourceMetrics;
+import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
-import io.siddhi.extension.io.file.util.metrics.SourceMetrics;
-import io.siddhi.extension.io.file.util.metrics.StreamStatus;
 import io.siddhi.extension.util.Utils;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;

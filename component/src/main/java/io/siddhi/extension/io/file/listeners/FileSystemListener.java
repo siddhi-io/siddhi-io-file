@@ -19,13 +19,13 @@
 package io.siddhi.extension.io.file.listeners;
 
 import io.siddhi.core.stream.input.source.SourceEventListener;
+import io.siddhi.extension.io.file.metrics.SourceMetrics;
+import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.processors.FileProcessor;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
-import io.siddhi.extension.io.file.util.metrics.SourceMetrics;
-import io.siddhi.extension.io.file.util.metrics.StreamStatus;
 import io.siddhi.extension.util.Utils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;

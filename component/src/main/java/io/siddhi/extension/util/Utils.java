@@ -19,7 +19,7 @@
 package io.siddhi.extension.util;
 
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
-import io.siddhi.extension.io.file.util.metrics.Metrics;
+import io.siddhi.extension.io.file.metrics.Metrics;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;

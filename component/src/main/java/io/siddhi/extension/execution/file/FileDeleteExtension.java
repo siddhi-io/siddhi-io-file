@@ -28,7 +28,7 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
-import io.siddhi.extension.io.file.util.metrics.FileDeleteMetrics;
+import io.siddhi.extension.io.file.metrics.FileDeleteMetrics;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -77,8 +77,11 @@ public class FileDeleteExtension extends StreamFunctionProcessor {
                                 SiddhiQueryContext siddhiQueryContext) {
         if (MetricsDataHolder.getInstance().getMetricService() != null &&
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
-            String siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
-            fileDeleteMetrics = new FileDeleteMetrics(siddhiAppName);
+            if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                    "prometheus")) {
+                String siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
+                fileDeleteMetrics = new FileDeleteMetrics(siddhiAppName);
+            }
         }
         return null;
     }

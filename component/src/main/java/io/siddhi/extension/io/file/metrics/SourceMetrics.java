@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package io.siddhi.extension.io.file.util.metrics;
+package io.siddhi.extension.io.file.metrics;
 
 import io.siddhi.extension.util.Utils;
 import org.apache.log4j.Logger;

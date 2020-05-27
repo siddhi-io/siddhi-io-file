@@ -34,13 +34,13 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.file.listeners.FileSystemListener;
+import io.siddhi.extension.io.file.metrics.SourceMetrics;
+import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.processors.FileProcessor;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
-import io.siddhi.extension.io.file.util.metrics.SourceMetrics;
-import io.siddhi.extension.io.file.util.metrics.StreamStatus;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.annotation.Annotation;
 import io.siddhi.query.api.annotation.Element;
@@ -467,8 +467,11 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         getPattern();
         if (MetricsDataHolder.getInstance().getMetricService() != null &&
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
-            metrics = new SourceMetrics(siddhiAppContext.getName(), Utils.capitalizeFirstLetter(mode),
-                    sourceEventListener.getStreamDefinition().getId());
+            if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                    "prometheus")) {
+                metrics = new SourceMetrics(siddhiAppContext.getName(), Utils.capitalizeFirstLetter(mode),
+                        sourceEventListener.getStreamDefinition().getId());
+            }
         }
         return () -> new FileSourceState();
     }

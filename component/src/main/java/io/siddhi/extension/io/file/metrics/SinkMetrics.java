@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package io.siddhi.extension.io.file.util.metrics;
+package io.siddhi.extension.io.file.metrics;
 
 import com.google.common.base.Stopwatch;
 import io.siddhi.extension.util.Utils;

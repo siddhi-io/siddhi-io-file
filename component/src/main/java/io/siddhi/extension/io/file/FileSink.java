@@ -33,9 +33,9 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.file.metrics.SinkMetrics;
+import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.util.Constants;
-import io.siddhi.extension.io.file.util.metrics.SinkMetrics;
-import io.siddhi.extension.io.file.util.metrics.StreamStatus;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.StreamDefinition;
 import org.apache.log4j.Logger;
@@ -159,8 +159,11 @@ public class FileSink extends Sink {
         mapType = Utils.capitalizeFirstLetter(mapType);
         if (MetricsDataHolder.getInstance().getMetricService() != null &&
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
-            String streamName = streamDefinition.getId();
-            metrics = new SinkMetrics(siddhiAppContext.getName(), mapType, streamName);
+            if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                    "prometheus")) {
+                String streamName = streamDefinition.getId();
+                metrics = new SinkMetrics(siddhiAppContext.getName(), mapType, streamName);
+            }
         }
         return null;
     }

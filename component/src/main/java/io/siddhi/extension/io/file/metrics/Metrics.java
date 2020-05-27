@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package io.siddhi.extension.io.file.util.metrics;
+package io.siddhi.extension.io.file.metrics;
 
 import org.wso2.carbon.metrics.core.Level;
 import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;

@@ -1,4 +1,4 @@
-package io.siddhi.extension.io.file.util.metrics;
+package io.siddhi.extension.io.file.metrics;
 
 /**
  * Enum that defines stream status.

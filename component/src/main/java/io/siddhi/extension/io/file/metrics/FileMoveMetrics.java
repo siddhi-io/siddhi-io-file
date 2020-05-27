@@ -15,45 +15,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.siddhi.extension.io.file.util.metrics;
+
+package io.siddhi.extension.io.file.metrics;
 
 import org.wso2.carbon.metrics.core.Level;
 import org.wso2.carbon.si.metrics.core.internal.MetricsManagement;
 
 /**
- * Class which is holds the metrics to monitor Archive files operations.
+ * Class which is holds the metrics to monitor Move file operations.
  */
-public class FileArchiveMetrics extends Metrics {
+public class FileMoveMetrics extends Metrics {
 
+    private String source;
     private String destination;
-    private String type;
-    protected String source;
-    protected Long time;
+    private long time;
 
-    public FileArchiveMetrics(String siddhiAppName) {
+    public FileMoveMetrics(String siddhiAppName) {
         super(siddhiAppName);
     }
 
-    public void getArchiveMetric(int status) {
+    public void getMoveMetric(int status) {
         MetricsManagement.getInstance().getMetricService()
-                .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Operations.Archived.%s.%s.%s.%s",
-                        siddhiAppName, type, time + ".time", source + ".source", destination + ".destination"),
-                        Level.INFO, () -> status);
+                .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Operations.Move.%s.%s.%s",
+                        siddhiAppName, time + ".time", source + ".source", destination + ".destination"), Level.INFO,
+                        () -> status);
+    }
+
+    public void set_source(String source) {
+        this.source = source;
     }
 
     public void setDestination(String destination) {
         this.destination = destination;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public void setTime(Long time) {
+    public void setTime(long time) {
         this.time = time;
     }
 }

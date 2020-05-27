@@ -30,7 +30,7 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
-import io.siddhi.extension.io.file.util.metrics.FileArchiveMetrics;
+import io.siddhi.extension.io.file.metrics.FileArchiveMetrics;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -163,7 +163,10 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
         siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
         if (MetricsDataHolder.getInstance().getMetricService() != null &&
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
-            fileArchiveMetrics = new FileArchiveMetrics(siddhiAppName);
+            if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                    "prometheus")) {
+                fileArchiveMetrics = new FileArchiveMetrics(siddhiAppName);
+            }
         }
         return null;
     }

@@ -1,4 +1,4 @@
-package io.siddhi.extension.io.file.util.metrics;
+package io.siddhi.extension.io.file.metrics;
 /*
  * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
