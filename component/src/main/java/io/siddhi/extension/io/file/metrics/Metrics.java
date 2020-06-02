@@ -35,7 +35,7 @@ public class Metrics {
     protected Map<String, String> fileNamesMap; //fileURI, fileName
     protected String siddhiAppName;
 
-    public Metrics(String siddhiAppName) {
+    protected Metrics(String siddhiAppName) {
         this.siddhiAppName = siddhiAppName;
         filesURI = new HashSet<>();
         fileNamesMap = new HashMap<>();

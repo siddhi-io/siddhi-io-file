@@ -140,10 +140,15 @@ public class FileMoveExtension extends StreamFunctionProcessor {
         }
         if (MetricsDataHolder.getInstance().getMetricService() != null &&
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
-            String siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
-            if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
-                    "prometheus")) {
-                fileMoveMetrics = new FileMoveMetrics(siddhiAppName);
+            try {
+                if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                        "prometheus")) {
+                    String siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
+                    fileMoveMetrics = new FileMoveMetrics(siddhiAppName);
+                }
+            } catch (IllegalArgumentException e) {
+                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialise in "
+                        + inputDefinition.getId() + ".");
             }
         }
         return null;

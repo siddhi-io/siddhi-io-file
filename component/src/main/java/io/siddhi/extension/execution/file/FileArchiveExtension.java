@@ -163,9 +163,14 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
         siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
         if (MetricsDataHolder.getInstance().getMetricService() != null &&
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
-            if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
-                    "prometheus")) {
-                fileArchiveMetrics = new FileArchiveMetrics(siddhiAppName);
+            try {
+                if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                        "prometheus")) {
+                    fileArchiveMetrics = new FileArchiveMetrics(siddhiAppName);
+                }
+            } catch (IllegalArgumentException e) {
+                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialise in "
+                        + inputDefinition.getId() + ".");
             }
         }
         return null;

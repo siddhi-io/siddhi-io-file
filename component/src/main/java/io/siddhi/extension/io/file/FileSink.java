@@ -142,7 +142,6 @@ public class FileSink extends Sink {
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder,
                                 ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
-        siddhiAppContext.getStatisticsManager().startReporting();
         this.siddhiAppName = siddhiAppContext.getName();
         uriOption = optionHolder.validateAndGetOption(Constants.FILE_URI);
         String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
@@ -159,10 +158,14 @@ public class FileSink extends Sink {
         mapType = Utils.capitalizeFirstLetter(mapType);
         if (MetricsDataHolder.getInstance().getMetricService() != null &&
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
-            if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
-                    "prometheus")) {
-                String streamName = streamDefinition.getId();
-                metrics = new SinkMetrics(siddhiAppContext.getName(), mapType, streamName);
+            try {
+                if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                        "prometheus")) {
+                    metrics = new SinkMetrics(siddhiAppContext.getName(), mapType, streamDefinition.getId());
+                }
+            } catch (IllegalArgumentException e) {
+                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialise in "
+                        + streamDefinition.getId() + ".");
             }
         }
         return null;
