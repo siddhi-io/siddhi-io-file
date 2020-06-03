@@ -18,6 +18,7 @@
 
 package io.siddhi.extension.io.file.util;
 
+import org.quartz.Scheduler;
 import org.wso2.transport.file.connector.server.FileServerConnector;
 import org.wso2.transport.remotefilesystem.server.connector.contract.RemoteFileSystemServerConnector;
 
@@ -56,6 +57,9 @@ public class FileSourceConfiguration {
     private String actionAfterFailure = null;
     private String moveAfterProcess = null;
     private String fileReadWaitTimeout;
+    private String cronExpression = null;
+    private String uri = null;
+    private Scheduler scheduler = null;
 
     private String currentlyReadingFileURI;
     // once app is disconnected
@@ -269,5 +273,29 @@ public class FileSourceConfiguration {
 
     public void setReadOnlyHeader(String readOnlyHeader) {
         this.readOnlyHeader = readOnlyHeader;
+    }
+
+    public String getCronExpression() {
+        return cronExpression;
+    }
+
+    public void setCronExpression(String cronExpression) {
+        this.cronExpression = cronExpression;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
+
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
+
+    public Scheduler getScheduler() {
+        return scheduler;
     }
 }

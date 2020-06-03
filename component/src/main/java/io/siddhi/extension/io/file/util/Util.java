@@ -19,15 +19,22 @@
 package io.siddhi.extension.io.file.util;
 
 import io.siddhi.core.event.Event;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Util Class.
  * This method used to get the fileHandlerEvent
  */
 public class Util {
+    private static final Logger log = Logger.getLogger(Util.class);
     public static Event getFileHandlerEvent(final File file, List<String> fileObjectList, Status enumStatus) {
         boolean listenerEventsURLValidated = false;
         String status;
@@ -57,5 +64,76 @@ public class Util {
             return new Event(System.currentTimeMillis(), obj);
         }
         return null;
+    }
+
+    public static String getFileName(String uri, String protocol) {
+        try {
+            URL url = new URL(String.format("%s%s%s", protocol, File.separator, uri));
+            return FilenameUtils.getName(url.getPath());
+        } catch (MalformedURLException e) {
+            log.error(String.format("Failed to extract file name from the uri '%s '.", uri), e);
+            return null;
+        }
+    }
+
+    public static String constructPath(String baseUri, String fileName) {
+        if (baseUri != null && fileName != null) {
+            if (baseUri.endsWith(File.separator)) {
+                return String.format("%s%s", baseUri, fileName);
+            } else {
+                return String.format("%s%s%s", baseUri, File.separator, fileName);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    public static Map<String, String> generateProperties(FileSourceConfiguration fileSourceConfiguration,
+                                                         String fileURI) {
+        Map<String, String> properties;
+        String mode = fileSourceConfiguration.getMode();
+        if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
+            properties = new HashMap<>();
+            properties.put(Constants.URI, fileURI);
+            properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
+            properties.put(Constants.ACTION, Constants.READ);
+            properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
+            properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
+                    fileSourceConfiguration.getFileReadWaitTimeout());
+            properties.put(Constants.MODE, mode);
+            properties.put(Constants.CRON_EXPRESSION, fileSourceConfiguration.getCronExpression());
+        } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+            properties = new HashMap<>();
+            properties.put(Constants.URI, fileURI);
+            properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
+            properties.put(Constants.ACTION, Constants.READ);
+            properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
+            properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
+                    fileSourceConfiguration.getFileReadWaitTimeout());
+            properties.put(Constants.MODE, mode);
+            properties.put(Constants.CRON_EXPRESSION, fileSourceConfiguration.getCronExpression());
+        } else {
+            properties = new HashMap<>();
+            properties.put(Constants.ACTION, Constants.READ);
+            properties.put(Constants.MAX_LINES_PER_POLL, "10");
+            properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
+            properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
+                    fileSourceConfiguration.getFileReadWaitTimeout());
+            properties.put(Constants.MODE, mode);
+            properties.put(Constants.HEADER_PRESENT, fileSourceConfiguration.getHeaderPresent());
+            properties.put(Constants.READ_ONLY_HEADER, fileSourceConfiguration.getReadOnlyHeader());
+            properties.put(Constants.CRON_EXPRESSION, fileSourceConfiguration.getCronExpression());
+            properties.put(Constants.URI, fileURI);
+        }
+        return properties;
+    }
+
+    public static Map<String, String> reProcessFileGenerateProperties(FileSourceConfiguration fileSourceConfiguration,
+                                                                      String fileURI, Map<String, String> properties) {
+        String actionAfterProcess = fileSourceConfiguration.getActionAfterProcess();
+        properties.put(Constants.URI, fileURI);
+        properties.put(Constants.ACK_TIME_OUT, "1000");
+        properties.put(Constants.ACTION, actionAfterProcess);
+        return properties;
     }
 }

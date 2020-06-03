@@ -47,8 +47,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
+
+import static io.siddhi.extension.io.file.util.Util.constructPath;
+import static io.siddhi.extension.io.file.util.Util.generateProperties;
+import static io.siddhi.extension.io.file.util.Util.getFileName;
+import static io.siddhi.extension.io.file.util.Util.reProcessFileGenerateProperties;
 
 /**
  * Test {@link RemoteFileSystemListener} implementation for testing purpose.
@@ -89,14 +93,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     vfsClientConnector = new VFSClientConnector();
                     fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, metrics);
                     vfsClientConnector.setMessageProcessor(fileProcessor);
-                    Map<String, String> properties = new HashMap<>();
-                    properties.put(Constants.URI, fileURI);
-                    properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
-                    properties.put(Constants.ACTION, Constants.READ);
-                    properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
-                    properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
-                            fileSourceConfiguration.getFileReadWaitTimeout());
-                    properties.put(Constants.MODE, mode);
+                    Map<String, String> properties = generateProperties(fileSourceConfiguration, fileURI);
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                     BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(
                             ByteBuffer.wrap(fileURI.getBytes(StandardCharsets.UTF_8)), true);
@@ -122,15 +119,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     vfsClientConnector = new VFSClientConnector();
                     fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, metrics);
                     vfsClientConnector.setMessageProcessor(fileProcessor);
-
-                    Map<String, String> properties = new HashMap<>();
-                    properties.put(Constants.URI, fileURI);
-                    properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
-                    properties.put(Constants.ACTION, Constants.READ);
-                    properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
-                    properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
-                            fileSourceConfiguration.getFileReadWaitTimeout());
-                    properties.put(Constants.MODE, mode);
+                    Map<String, String> properties = generateProperties(fileSourceConfiguration, fileURI);
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                     BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(
                             ByteBuffer.wrap(fileURI.getBytes(StandardCharsets.UTF_8)), true);
@@ -153,15 +142,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                         }
                     }
                 } else if (Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)) {
-                    Map<String, String> properties = new HashMap<>();
-                    properties.put(Constants.ACTION, Constants.READ);
-                    properties.put(Constants.MAX_LINES_PER_POLL, "10");
-                    properties.put(Constants.POLLING_INTERVAL, fileSourceConfiguration.getFilePollingInterval());
-                    properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
-                            fileSourceConfiguration.getFileReadWaitTimeout());
-                    properties.put(Constants.MODE, mode);
-                    properties.put(Constants.HEADER_PRESENT, fileSourceConfiguration.getHeaderPresent());
-                    properties.put(Constants.READ_ONLY_HEADER, fileSourceConfiguration.getReadOnlyHeader());
+                    Map<String, String> properties = generateProperties(fileSourceConfiguration, fileURI);
                     if (fileSourceConfiguration.isTailingEnabled()) {
                         fileSourceConfiguration.setTailedFileURI(fileURI);
                         if (metrics != null) {
@@ -189,7 +170,6 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             fileSourceConfiguration.getExecutorService().execute(fileServerExecutor);
                         }
                     } else {
-                        properties.put(Constants.URI, fileURI);
                         vfsClientConnector = new VFSClientConnector();
                         fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, metrics);
                         vfsClientConnector.setMessageProcessor(fileProcessor);
@@ -255,7 +235,9 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 log.error(String.format("Failed to start the server for file '%s'. " +
                         "Hence starting to process next file.", fileURI));
                 carbonCallback.done(carbonMessage);
-                metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileURI), StreamStatus.ERROR);
+                if (metrics != null) {
+                    metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileURI), StreamStatus.ERROR);
+                }
             }
         }
     }
@@ -263,9 +245,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
     private void reProcessFile(VFSClientConnector vfsClientConnector,
                                VFSClientConnectorCallback vfsClientConnectorCallback,
                                Map<String, String> properties, String fileUri) {
-        String actionAfterProcess = fileSourceConfiguration.getActionAfterProcess();
-        properties.put(Constants.URI, fileUri);
-        properties.put(Constants.ACK_TIME_OUT, "1000");
+        Map<String, String> reGeneratedProperties = reProcessFileGenerateProperties(fileSourceConfiguration, fileUri,
+                properties);
         BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
                 fileUri.getBytes(StandardCharsets.UTF_8)), true);
         String moveAfterProcess = fileSourceConfiguration.getMoveAfterProcess();
@@ -274,16 +255,14 @@ public class FileSystemListener implements RemoteFileSystemListener {
         }
         try {
             if (fileSourceConfiguration.getActionAfterProcess() != null) {
-                properties.put(Constants.URI, fileUri);
-                properties.put(Constants.ACTION, actionAfterProcess);
                 if (fileSourceConfiguration.getMoveAfterProcess() != null) {
                     String destination = constructPath(moveAfterProcess, getFileName(fileUri,
                             fileSourceConfiguration.getProtocolForMoveAfterProcess()));
                     if (destination != null) {
-                        properties.put(Constants.DESTINATION, destination);
+                        reGeneratedProperties.put(Constants.DESTINATION, destination);
                     }
                 }
-                vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, properties);
+                vfsClientConnector.send(carbonMessage, vfsClientConnectorCallback, reGeneratedProperties);
                 vfsClientConnectorCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileUri);
                 if (metrics != null) {
                     fileSourceConfiguration.getExecutorService().execute(() -> {
@@ -300,7 +279,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
             }
             log.error(String.format("Failure occurred in vfs-client while reading the file '%s'.", fileUri), e);
         } catch (InterruptedException e) {
-            log.error(String.format("Failed to get callback from vfs-client  for file '%s'.", fileUri), e);
+            log.error(String.format("Failed to get callback from vfs-client for file '%s'.", fileUri), e);
         } finally {
             if (metrics != null) {
                 metrics.setFilePath(fileUri);
