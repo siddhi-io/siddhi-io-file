@@ -1321,4 +1321,35 @@ public class FileSourceLineModeTestCase {
         SiddhiTestHelper.waitForEvents(100, 1, count.get(), 3000);
         siddhiAppRuntime.shutdown();
     }
+
+    @Test
+    public void siddhiIOFileTestCronSupportForFile() throws InterruptedException {
+        log.info("Siddhi IO File test for Cron support via file.uri");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='line'," +
+                "file.uri='file:" + newRoot + "/line/header/test.txt', cron.expression='*/5 * * * * ?', " +
+                "action.after.process='move', tailing='false', " +
+                "move.after.process='file:/" + moveAfterProcessDir + "/line/header/test.txt', " +
+                "@map( type='csv', delimiter='|'))" +
+                "define stream FileReaderStream (code string, serialNo string, amount double); " +
+                "define stream FileResultStream (code string, serialNo string, amount double); ";
+        String query = "" +
+                "from FileReaderStream " +
+                "select * " +
+                "insert into FileResultStream; ";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("FileResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                count.incrementAndGet();
+            }
+        });
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 7, count.get(), 6000);
+        AssertJUnit.assertEquals("Number of events", 7, count.get());
+        siddhiAppRuntime.shutdown();
+    }
 }
