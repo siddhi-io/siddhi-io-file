@@ -32,6 +32,7 @@ import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.extension.io.file.metrics.FileMoveMetrics;
+import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -142,13 +143,12 @@ public class FileMoveExtension extends StreamFunctionProcessor {
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
             try {
                 if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
-                        "prometheus")) {
+                        Constants.PROMETHEUS_REPORTER_NAME)) {
                     String siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
                     fileMoveMetrics = new FileMoveMetrics(siddhiAppName);
                 }
             } catch (IllegalArgumentException e) {
-                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialise in "
-                        + inputDefinition.getId() + ".");
+                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialized.");
             }
         }
         return null;

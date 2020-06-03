@@ -469,12 +469,12 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
             try {
                 if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
-                        "prometheus")) {
+                        Constants.PROMETHEUS_REPORTER_NAME)) {
                     metrics = new SourceMetrics(siddhiAppContext.getName(), Utils.capitalizeFirstLetter(mode),
                             sourceEventListener.getStreamDefinition().getId());
                 }
             } catch (IllegalArgumentException e) {
-                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialise.");
+                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialized.");
             }
         }
         return () -> new FileSourceState();

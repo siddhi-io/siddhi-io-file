@@ -160,12 +160,11 @@ public class FileSink extends Sink {
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
             try {
                 if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
-                        "prometheus")) {
+                        Constants.PROMETHEUS_REPORTER_NAME)) {
                     metrics = new SinkMetrics(siddhiAppContext.getName(), mapType, streamDefinition.getId());
                 }
             } catch (IllegalArgumentException e) {
-                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialise in "
-                        + streamDefinition.getId() + ".");
+                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialized.");
             }
         }
         return null;
