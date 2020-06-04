@@ -18,6 +18,7 @@
 
 package io.siddhi.extension.io.file;
 
+import com.google.common.base.Stopwatch;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -32,11 +33,15 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.file.metrics.SinkMetrics;
+import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.util.Constants;
+import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.StreamDefinition;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 
 import java.io.UnsupportedEncodingException;
@@ -121,6 +126,8 @@ public class FileSink extends Sink {
     private Option uriOption;
     private SiddhiAppContext siddhiAppContext;
     private boolean addEventSeparator;
+    private String siddhiAppName;
+    private SinkMetrics metrics;
 
 
     @Override
@@ -135,6 +142,7 @@ public class FileSink extends Sink {
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder,
                                 ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
+        this.siddhiAppName = siddhiAppContext.getName();
         uriOption = optionHolder.validateAndGetOption(Constants.FILE_URI);
         String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
         properties = new HashMap<>();
@@ -147,6 +155,18 @@ public class FileSink extends Sink {
         addEventSeparator = optionHolder.isOptionExists(Constants.ADD_EVENT_SEPARATOR) ?
                 Boolean.parseBoolean(optionHolder.validateAndGetStaticValue(Constants.ADD_EVENT_SEPARATOR)) :
                 !mapType.equalsIgnoreCase("csv");
+        mapType = Utils.capitalizeFirstLetter(mapType);
+        if (MetricsDataHolder.getInstance().getMetricService() != null &&
+                MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+            try {
+                if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                        Constants.PROMETHEUS_REPORTER_NAME)) {
+                    metrics = new SinkMetrics(siddhiAppContext.getName(), mapType, streamDefinition.getId());
+                }
+            } catch (IllegalArgumentException e) {
+                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialized.");
+            }
+        }
         return null;
     }
 
@@ -157,6 +177,9 @@ public class FileSink extends Sink {
 
     public void connect() throws ConnectionUnavailableException {
         vfsClientConnector = new VFSClientConnector();
+        if (metrics != null) {
+            metrics.updateMetrics(siddhiAppContext.getExecutorService());
+        }
     }
 
     public void disconnect() {
@@ -169,6 +192,10 @@ public class FileSink extends Sink {
             throws ConnectionUnavailableException {
         byte[] byteArray = new byte[0];
         boolean canBeWritten = true;
+        String uri = uriOption.getValue(dynamicOptions);
+        if (metrics != null) {
+            metrics.setFilePath(uri);
+        }
         if (payload instanceof byte[]) {
             byteArray = (byte[]) payload;
         } else {
@@ -182,18 +209,54 @@ public class FileSink extends Sink {
             } catch (UnsupportedEncodingException e) {
                 canBeWritten = false;
                 log.error("Received payload does not support UTF-8 encoding. Hence dropping the event." , e);
+                if (metrics != null) {
+                    metrics.getSinkDroppedEvents().inc();
+                }
             }
         }
 
         if (canBeWritten) {
-            String uri = uriOption.getValue(dynamicOptions);
             BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(byteArray), true);
             properties.put(Constants.URI, uri);
+            int byteSize = byteArray.length;
             try {
-                vfsClientConnector.send(binaryCarbonMessage, null, properties);
+                boolean send = vfsClientConnector.send(binaryCarbonMessage, null, properties);
+                if (metrics == null) {
+                    return;
+                }
+                if (send) {
+                    siddhiAppContext.getExecutorService().execute(() -> {
+                        long fileSize = Utils.getFileSize(uri);
+                        metrics.getSinkFilesEventCount().inc();
+                        metrics.getSinkDroppedEvents();
+                        metrics.getWriteBytes().inc(byteSize);
+                        metrics.getSinkFileSize().inc(fileSize);
+                        String shortenFilePath = Utils.getShortFilePath(uri);
+                        boolean added = metrics.getFilesURI().add(shortenFilePath);
+                        if (metrics.getSinkFileLastPublishedTimeMap().containsKey(shortenFilePath)) {
+                            metrics.getSinkFileLastPublishedTimeMap().replace(shortenFilePath,
+                                    System.currentTimeMillis());
+                            metrics.getSinkFileStatusMap().replace(shortenFilePath, StreamStatus.PROCESSING);
+                        } else {
+                            metrics.getSinkFileLastPublishedTimeMap().put(shortenFilePath, System.currentTimeMillis());
+                            metrics.getSinkFileStatusMap().put(shortenFilePath, StreamStatus.PROCESSING);
+                        }
+                        metrics.getSinkLinesCount().inc();
+                        if (added) {
+                            metrics.getSinkElapsedTimeMap().put(shortenFilePath, Stopwatch.createStarted());
+                            metrics.setSinkLastPublishedTime();
+                            metrics.setSinkElapsedTime(shortenFilePath);
+                            metrics.setSinkFileStatusMetrics();
+                        }
+                    });
+                }
             } catch (ClientConnectorException e) {
+                if (metrics != null) {
+                    metrics.getSinkFileStatusMap().replace(Utils.getShortFilePath(uri), StreamStatus.RETRY);
+                    metrics.getSinkDroppedEvents().inc();
+                }
                 throw new ConnectionUnavailableException("Writing data into the file " + uri + " failed during the " +
-                        "execution of '" + siddhiAppContext.getName() + "' SiddhiApp, due to " +
+                        "execution of '" + siddhiAppName + "' SiddhiApp, due to " +
                         e.getMessage(), e);
             }
         }

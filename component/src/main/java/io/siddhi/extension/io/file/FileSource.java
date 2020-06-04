@@ -34,6 +34,8 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.file.listeners.FileSystemListener;
+import io.siddhi.extension.io.file.metrics.SourceMetrics;
+import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.processors.FileProcessor;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
@@ -50,6 +52,7 @@ import org.quartz.SchedulerException;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.transport.file.connector.server.FileServerConnector;
 import org.wso2.transport.file.connector.server.FileServerConnectorProvider;
@@ -363,6 +366,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private ConnectionCallback connectionCallback;
     private String headerPresent;
     private String readOnlyHeader;
+    private SourceMetrics metrics;
     private String cronExpression;
 
     @Override
@@ -493,7 +497,18 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         createInitialSourceConf();
         updateSourceConf();
         getPattern();
-
+        if (MetricsDataHolder.getInstance().getMetricService() != null &&
+                MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+            try {
+                if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                        Constants.PROMETHEUS_REPORTER_NAME)) {
+                    metrics = new SourceMetrics(siddhiAppContext.getName(), Utils.capitalizeFirstLetter(mode),
+                            sourceEventListener.getStreamDefinition().getId());
+                }
+            } catch (IllegalArgumentException e) {
+                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialized.");
+            }
+        }
         return () -> new FileSourceState();
     }
 
@@ -506,6 +521,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     public void connect(ConnectionCallback connectionCallback, FileSourceState fileSourceState)
             throws ConnectionUnavailableException {
         this.connectionCallback = connectionCallback;
+        if (metrics != null) {
+            metrics.updateMetrics(siddhiAppContext.getExecutorService());
+        }
         updateSourceConf();
         deployServers();
     }
@@ -684,7 +702,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             if (dirUri != null) {
                 Map<String, String> properties = getFileSystemServerProperties();
                 FileSystemListener fileSystemListener = new FileSystemListener(sourceEventListener,
-                        fileSourceConfiguration);
+                        fileSourceConfiguration, metrics);
                 try {
                     fileSystemServerConnector = fileSystemConnectorFactory.createServerConnector(
                             siddhiAppContext.getName(), properties, fileSystemListener);
@@ -719,6 +737,13 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 if (moveAfterFailure != null) {
                     properties.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
                 }
+                if (metrics != null) {
+                    fileSourceConfiguration.setCurrentlyReadingFileURI(fileUri);
+                    metrics.setFilePath(fileUri);
+                    metrics.getSourceFileStatusMap().putIfAbsent((Utils.getShortFilePath(fileUri)),
+                            StreamStatus.CONNECTING);
+                    metrics.getStartedTimeMetric(System.currentTimeMillis());
+                }
                 if (fileSourceConfiguration.isTailingEnabled()) {
                     if (fileSourceConfiguration.getTailedFileURIMap() == null) {
                         fileSourceConfiguration.setTailedFileURI(fileUri);
@@ -729,7 +754,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                         FileServerConnectorProvider fileServerConnectorProvider =
                                 fileSourceServiceProvider.getFileServerConnectorProvider();
                         FileProcessor fileProcessor = new FileProcessor(sourceEventListener,
-                                fileSourceConfiguration);
+                                fileSourceConfiguration, metrics);
                         final ServerConnector fileServerConnector = fileServerConnectorProvider
                                 .createConnector("file-server-connector", properties);
                         fileServerConnector.setMessageProcessor(fileProcessor);
@@ -745,6 +770,10 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                         };
                         fileSourceConfiguration.getExecutorService().execute(runnableServer);
                         this.fileServerConnectorStarted = true;
+                        if (metrics != null) {
+                            metrics.getTailEnabledFilesMap().putIfAbsent(Utils.getShortFilePath(fileUri),
+                                    System.currentTimeMillis());
+                        }
                     }
                 } else {
                     properties.put(Constants.URI, fileUri);
@@ -753,7 +782,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                     properties.put(Constants.HEADER_PRESENT, headerPresent);
                     properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
                     VFSClientConnector vfsClientConnector = new VFSClientConnector();
-                    FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+                    FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration,
+                            metrics);
                     vfsClientConnector.setMessageProcessor(fileProcessor);
                     VFSClientConnectorCallback vfsClientConnectorCallback = new VFSClientConnectorCallback();
                     Runnable runnableClient = () -> {
@@ -768,6 +798,23 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                                 }
                                 vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
                                 vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
+                                if (metrics != null) {
+                                    metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileUri),
+                                            StreamStatus.COMPLETED);
+                                    if (actionAfterProcess.equals(Constants.DELETE)) {
+                                        metrics.getFileDeleteMetrics().setSource(Utils.getShortFilePath(fileUri));
+                                        metrics.getFileDeleteMetrics().setTime(System.currentTimeMillis());
+                                        metrics.getFileDeleteMetrics().getDeleteMetric(1);
+                                    } else if (actionAfterProcess.equals(Constants.MOVE)) {
+                                        metrics.getFileMoveMetrics().setTime(System.currentTimeMillis());
+                                        metrics.getFileMoveMetrics().set_source(Utils.getShortFilePath(fileUri));
+                                        metrics.getFileMoveMetrics().setDestination(Utils.getShortFilePath(
+                                                moveAfterProcess));
+                                        metrics.getFileMoveMetrics().getMoveMetric(1);
+                                    }
+                                    metrics.setReadPercentage(100);
+                                    metrics.getCompletedTimeMetric(System.currentTimeMillis());
+                                }
                             }
                         } catch (ClientConnectorException e) {
                             log.error(String.format("Failure occurred in vfs-client while reading the file '%s' " +
@@ -779,6 +826,10 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                     };
                     fileSourceConfiguration.getExecutorService().execute(runnableClient);
                 }
+            }
+            if (metrics != null) {
+                metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileUri),
+                        StreamStatus.PROCESSING);
             }
         }
     }

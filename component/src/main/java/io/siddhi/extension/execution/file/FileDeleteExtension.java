@@ -28,6 +28,8 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.extension.io.file.metrics.FileDeleteMetrics;
+import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
@@ -35,6 +37,7 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.Selectors;
 import org.apache.log4j.Logger;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,11 +70,24 @@ import java.util.List;
 )
 public class FileDeleteExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileDeleteExtension.class);
+    private FileDeleteMetrics fileDeleteMetrics;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
                                 ConfigReader configReader, boolean outputExpectsExpiredEvents,
                                 SiddhiQueryContext siddhiQueryContext) {
+        if (MetricsDataHolder.getInstance().getMetricService() != null &&
+                MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+            try {
+                if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                        Constants.PROMETHEUS_REPORTER_NAME)) {
+                    String siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
+                    fileDeleteMetrics = new FileDeleteMetrics(siddhiAppName);
+                }
+            } catch (IllegalArgumentException e) {
+                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialized.");
+            }
+        }
         return null;
     }
 
@@ -93,10 +109,20 @@ public class FileDeleteExtension extends StreamFunctionProcessor {
     @Override
     protected Object[] process(Object data) {
         String fileDeletePathUri = (String) data;
+        if (fileDeleteMetrics != null) {
+            fileDeleteMetrics.setSource(fileDeletePathUri);
+            fileDeleteMetrics.setTime(System.currentTimeMillis());
+        }
         try {
             FileObject rootFileObject = Utils.getFileObject(fileDeletePathUri);
             rootFileObject.delete(Selectors.SELECT_ALL);
+            if (fileDeleteMetrics != null) {
+                fileDeleteMetrics.getDeleteMetric(1);
+            }
         } catch (FileSystemException e) {
+            if (fileDeleteMetrics != null) {
+                fileDeleteMetrics.getDeleteMetric(0);
+            }
             throw new SiddhiAppRuntimeException("Failure occurred when deleting the file " + fileDeletePathUri, e);
         }
         return new Object[0];

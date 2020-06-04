@@ -61,6 +61,9 @@ public class FileSourceConfiguration {
     private String uri = null;
     private Scheduler scheduler = null;
 
+    private String currentlyReadingFileURI;
+    // once app is disconnected
+
     public FileSourceConfiguration() {
         tailingRegexStringBuilder = new StringBuilder();
     }
@@ -254,6 +257,14 @@ public class FileSourceConfiguration {
 
     public void setHeaderPresent(String headerPresent) {
         this.headerPresent = headerPresent;
+    }
+
+    public String getCurrentlyReadingFileURI() {
+        return currentlyReadingFileURI;
+    }
+
+    public void setCurrentlyReadingFileURI(String currentlyReadingFileURI) {
+        this.currentlyReadingFileURI = currentlyReadingFileURI;
     }
 
     public String getReadOnlyHeader() {

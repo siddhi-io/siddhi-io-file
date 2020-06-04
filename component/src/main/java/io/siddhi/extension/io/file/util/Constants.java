@@ -111,4 +111,7 @@ public class Constants {
     public static final String LAST_MODIFIED_TIMESTAMP = "lastModifiedTimestamp";
 
     public static final String UTF_8 = "UTF-8";
+
+    /*prometheus reporte values*/
+    public static final String PROMETHEUS_REPORTER_NAME = "prometheus";
 }

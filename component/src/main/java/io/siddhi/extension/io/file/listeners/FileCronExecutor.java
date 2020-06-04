@@ -132,7 +132,7 @@ public class FileCronExecutor implements Job {
         JobDataMap dataMap = jobExecutionContext.getJobDetail().getJobDataMap();
         FileSourceConfiguration fileSourceConfiguration = (FileSourceConfiguration) dataMap.get(
                 Constants.FILE_SOURCE_CONFIGURATION);
-        FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
+        FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, null);
         VFSClientConnector vfsClientConnector = new VFSClientConnector();
         vfsClientConnector.setMessageProcessor(fileProcessor);
         Map<String, String> properties = generateProperties(fileSourceConfiguration, fileURI);
