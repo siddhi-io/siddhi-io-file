@@ -826,10 +826,10 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                     };
                     fileSourceConfiguration.getExecutorService().execute(runnableClient);
                 }
-            }
-            if (metrics != null) {
-                metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileUri),
-                        StreamStatus.PROCESSING);
+                if (metrics != null) {
+                    metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileUri),
+                            StreamStatus.PROCESSING);
+                }
             }
         }
     }

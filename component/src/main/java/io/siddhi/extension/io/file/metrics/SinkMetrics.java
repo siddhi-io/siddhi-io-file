@@ -51,7 +51,13 @@ public class SinkMetrics extends Metrics {
         this.streamName = streamName;
     }
 
-    public Counter getSinkFilesEventCount() {
+    public Counter getTotalWriteMetrics() { //to count the total writes from siddhi app level.
+        return MetricsDataHolder.getInstance().getMetricService()
+                .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.Total.Writes.%s", siddhiAppName, "file"),
+                        Level.INFO);
+    }
+
+    public Counter getSinkFilesEventCount() { //to get hte total writes in sink level.
         return MetricsDataHolder.getInstance().getMetricService()
                 .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Sinks.event.count.%s.%s.%s.%s",
                         siddhiAppName, fileName + ".filename", mapType, streamName, filePath), Level.INFO);
@@ -67,6 +73,12 @@ public class SinkMetrics extends Metrics {
         return MetricsDataHolder.getInstance().getMetricService()
                 .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Sinks.%s.%s",
                         siddhiAppName, "total_written_byte", filePath), Level.INFO);
+    }
+
+    public Counter getErrorCount() {
+        return MetricsDataHolder.getInstance().getMetricService()
+                .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Sinks.%s.%s",
+                        siddhiAppName, "total_error_count", filePath), Level.INFO);
     }
 
     public Counter getSinkDroppedEvents() {

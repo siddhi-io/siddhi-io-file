@@ -226,11 +226,12 @@ public class FileSink extends Sink {
                 }
                 if (send) {
                     siddhiAppContext.getExecutorService().execute(() -> {
-                        long fileSize = Utils.getFileSize(uri);
+                        metrics.getTotalWriteMetrics().inc();
                         metrics.getSinkFilesEventCount().inc();
                         metrics.getSinkDroppedEvents();
+                        metrics.getErrorCount();
                         metrics.getWriteBytes().inc(byteSize);
-                        metrics.getSinkFileSize().inc(fileSize);
+                        metrics.getSinkFileSize().inc(byteSize);
                         String shortenFilePath = Utils.getShortFilePath(uri);
                         boolean added = metrics.getFilesURI().add(shortenFilePath);
                         if (metrics.getSinkFileLastPublishedTimeMap().containsKey(shortenFilePath)) {
@@ -243,6 +244,7 @@ public class FileSink extends Sink {
                         }
                         metrics.getSinkLinesCount().inc();
                         if (added) {
+                            metrics.getSinkFileSize().inc(Utils.getFileSize(uri));
                             metrics.getSinkElapsedTimeMap().put(shortenFilePath, Stopwatch.createStarted());
                             metrics.setSinkLastPublishedTime();
                             metrics.setSinkElapsedTime(shortenFilePath);
@@ -252,8 +254,8 @@ public class FileSink extends Sink {
                 }
             } catch (ClientConnectorException e) {
                 if (metrics != null) {
-                    metrics.getSinkFileStatusMap().replace(Utils.getShortFilePath(uri), StreamStatus.RETRY);
-                    metrics.getSinkDroppedEvents().inc();
+                    metrics.getSinkFileStatusMap().replace(Utils.getShortFilePath(uri), StreamStatus.ERROR);
+                    metrics.getErrorCount().inc();
                 }
                 throw new ConnectionUnavailableException("Writing data into the file " + uri + " failed during the " +
                         "execution of '" + siddhiAppName + "' SiddhiApp, due to " +
