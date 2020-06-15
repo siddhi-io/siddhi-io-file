@@ -18,9 +18,13 @@
 
 package io.siddhi.extension.io.file.processors;
 
+import com.google.common.base.Stopwatch;
 import io.siddhi.core.stream.input.source.SourceEventListener;
+import io.siddhi.extension.io.file.metrics.SourceMetrics;
+import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
+import io.siddhi.extension.util.Utils;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
@@ -31,6 +35,7 @@ import org.wso2.carbon.messaging.TransportSender;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.regex.Matcher;
@@ -50,7 +55,19 @@ public class FileProcessor implements CarbonMessageProcessor {
     private StringBuilder sb;
     private String[] requiredProperties;
 
-    public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration) {
+    private Stopwatch stopwatch;
+    private long lineCount;
+    private long readingLine;
+    private long totalReadByteSize;
+    private double fileSize;
+    private String fileURI;
+    private SourceMetrics metrics;
+    private long startedTime;
+    private long completedTime;
+    private boolean send;
+
+    public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration,
+                         SourceMetrics sourceMetrics) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSourceConfiguration;
         this.requiredProperties = fileSourceConfiguration.getRequiredProperties();
@@ -61,6 +78,41 @@ public class FileProcessor implements CarbonMessageProcessor {
             sb = new StringBuilder();
         }
         pattern = fileSourceConfiguration.getPattern();
+        if (sourceMetrics != null) {
+            this.metrics = sourceMetrics;
+            this.fileURI = fileSourceConfiguration.getCurrentlyReadingFileURI();
+            fileSourceConfiguration.getExecutorService().execute(() -> {
+                stopwatch = Stopwatch.createStarted();
+                startedTime = System.currentTimeMillis();
+                fileSize = Utils.getFileSize(fileURI); //converts into KB
+                metrics.getStartedTimeMetric(System.currentTimeMillis());
+                boolean add = metrics.getFilesURI().add(fileURI);
+                if (add) {
+                    try {
+                        lineCount = Utils.getLinesCount(fileURI);
+                        metrics.getFileSizeMetric(() -> fileSize);
+                        metrics.getReadPercentageMetric();
+                        metrics.getReadLineCountMetric().inc(lineCount);
+                        metrics.getDroppedEventCountMetric();
+                        if (fileSourceConfiguration.isTailingEnabled()) {
+                            metrics.getTailEnabledMetric(1);
+                            metrics.getElapseTimeMetric(() -> stopwatch.elapsed().toMillis());
+                        } else {
+                            metrics.getTailEnabledMetric(0);
+                            metrics.getElapseTimeMetric(() -> {
+                                if (completedTime != 0) {
+                                    return completedTime - startedTime;
+                                }
+                                return 0;
+                            });
+                        }
+                        metrics.getFileStatusMetric();
+                    } catch (IOException e) {
+                        log.error("Error occurred while getting the lines count in '" + fileURI + "'.", e);
+                    }
+                }
+            });
+        }
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
@@ -74,11 +126,13 @@ public class FileProcessor implements CarbonMessageProcessor {
                             (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
                     sourceEventListener.onEvent(new String(content, Constants.UTF_8),
                             getRequiredPropertyValues(carbonMessage));
+                    send = true;
                 }
             } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
                     carbonCallback.done(carbonMessage);
                     sourceEventListener.onEvent(content, getRequiredPropertyValues(carbonMessage));
+                    send = true;
                 }
             } else if (Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
@@ -94,6 +148,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                         if (line.length() > 0) {
                             readBytes = line.length();
                             sourceEventListener.onEvent(line.trim(), getRequiredPropertyValues(carbonMessage));
+                            send = true;
                         }
                     }
                     carbonCallback.done(carbonMessage);
@@ -103,6 +158,10 @@ public class FileProcessor implements CarbonMessageProcessor {
                         fileSourceConfiguration.updateFilePointer(
                                 (Long) carbonMessage.getProperties().get(Constants.CURRENT_POSITION));
                         sourceEventListener.onEvent(msg, getRequiredPropertyValues(carbonMessage));
+                        send = true;
+                        if (metrics != null) {
+                            increaseTailingMetrics();
+                        }
                     }
                 }
             } else if (Constants.REGEX.equalsIgnoreCase(mode)) {
@@ -146,15 +205,18 @@ public class FileProcessor implements CarbonMessageProcessor {
                                 carbonMessage.setProperty
                                         (org.wso2.transport.file.connector.server.util.Constants.EOF, false);
                                 sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                                send = true;
                             }
                             carbonMessage.setProperty
                                     (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
                             sourceEventListener.onEvent(event, getRequiredPropertyValues(carbonMessage));
+                            send = true;
                         } else if (matchFound) {
                             if (prevEvent != null) {
                                 carbonMessage.setProperty
                                         (org.wso2.transport.file.connector.server.util.Constants.EOF, false);
                                 sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                                send = true;
                             }
                             prevEvent = event;
                         } else {
@@ -165,6 +227,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                                     carbonMessage.setProperty
                                             (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
                                     sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                                    send = true;
                                 }
                             }
                         }
@@ -186,6 +249,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                             event = m.group(0);
                             sourceEventListener.onEvent
                                     (sb.substring(sb.indexOf(event)), getRequiredPropertyValues(carbonMessage));
+                            send = true;
                         }
                     }
                     if (carbonCallback != null) {
@@ -209,7 +273,11 @@ public class FileProcessor implements CarbonMessageProcessor {
                             remainedLength = sb.length() - event.length() - remainedLength - 1;
                         }
                         sourceEventListener.onEvent(event, getRequiredPropertyValues(carbonMessage));
+                        send = true;
                         readBytes += content.length;
+                        if (metrics != null) {
+                            increaseTailingMetrics();
+                        }
                     }
                     String tmp;
                     tmp = sb.substring(lastMatchedIndex);
@@ -221,8 +289,18 @@ public class FileProcessor implements CarbonMessageProcessor {
                     }
                 }
             }
+            if (metrics != null && send) {
+                increaseMetrics(content.length);
+                totalReadByteSize += content.length;
+                readingLine++;
+                completedTime = System.currentTimeMillis();
+                send = false;
+            }
             return true;
         } else {
+            if (metrics != null) {
+                metrics.getDroppedEventCountMetric().inc();
+            }
             return false;
         }
     }
@@ -252,4 +330,21 @@ public class FileProcessor implements CarbonMessageProcessor {
         }
         return values;
     }
+
+    private void increaseMetrics(int byteLength) {
+        metrics.getSourceFileEventCountMetric().inc();
+        metrics.getReadByteMetric().inc(byteLength);
+        metrics.getElapseTimeMetric(() -> stopwatch.elapsed().toMillis());
+        metrics.setReadPercentage(totalReadByteSize / fileSize * 100);
+    }
+
+    private void increaseTailingMetrics() {
+        if (readingLine >= lineCount) {
+            metrics.getReadLineCountMetric().inc();
+        }
+        fileSize = Utils.getFileSize(fileSourceConfiguration.getCurrentlyReadingFileURI());
+        metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileURI), StreamStatus.PROCESSING);
+        metrics.getTailEnabledFilesMap().replace(Utils.getShortFilePath(fileURI), System.currentTimeMillis());
+    }
+
 }

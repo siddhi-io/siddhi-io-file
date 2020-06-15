@@ -22,8 +22,8 @@
 <suite name="File-IO-Test-Suite">
     <test name="file-io-tests" enabled="true" preserve-order="true">
         <classes>
-            <class name="io.siddhi.extension.io.file.FileSourceTextFullModeTestCase"/>
             <class name="io.siddhi.extension.io.file.FileSourceRegexModeTestCase"/>
+            <class name="io.siddhi.extension.io.file.FileSourceTextFullModeTestCase"/>
             <class name="io.siddhi.extension.io.file.FileSourceLineModeTestCase"/>
             <class name="io.siddhi.extension.io.file.FileSourceBinaryModeTestCase"/>
             <class name="io.siddhi.extension.io.file.FileSinkTestCase"/>

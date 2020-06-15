@@ -22,8 +22,6 @@ package io.siddhi.extension.io.file.util;
  * Constants used in siddhi-io-file extension.
  */
 public class Constants {
-    private Constants() {
-    }
 
     /* configuration parameters*/
     public static final String URI = "uri";
@@ -51,6 +49,7 @@ public class Constants {
     public static final int WAIT_TILL_DONE = 5000;
     public static final String HEADER_PRESENT = "header.present";
     public static final String READ_ONLY_HEADER = "read.only.header";
+    public static final String CRON_EXPRESSION = "cron.expression";
 
     /* configuration param values*/
     public static final String MOVE = "move";
@@ -94,6 +93,13 @@ public class Constants {
     public static final String ANNOTATION_TYPE_ELEMENT_NAME = "type";
     public static final String MAP_ANNOTATION_BINARY_TYPE = "binary";
     public static final String SOURCE_ANNOTATION_FILE_TYPE_NAME = "file";
+    public static final String SOURCE_EVENT_LISTENER = "SourceEventListener";
+    public static final String FILE_SOURCE_CONFIGURATION = "FileSourceConfiguration";
+    public static final String JOB_GROUP = "JobGroup";
+    public static final String JOB_NAME = "JobName";
+    public static final String TRIGGER_NAME = "TriggerName";
+    public static final String TRIGGER_GROUP = "TriggerGroup";
+
 
     /*source property keys*/
     public static final String TAILED_FILE = "tailedFile";
@@ -107,4 +113,7 @@ public class Constants {
     public static final String LAST_MODIFIED_TIMESTAMP = "lastModifiedTimestamp";
 
     public static final String UTF_8 = "UTF-8";
+
+    /*prometheus reporte values*/
+    public static final String PROMETHEUS_REPORTER_NAME = "prometheus";
 }

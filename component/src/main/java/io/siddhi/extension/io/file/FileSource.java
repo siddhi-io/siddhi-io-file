@@ -34,17 +34,25 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.file.listeners.FileSystemListener;
+import io.siddhi.extension.io.file.metrics.SourceMetrics;
+import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.processors.FileProcessor;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
+import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.annotation.Annotation;
 import io.siddhi.query.api.annotation.Element;
+import org.apache.commons.vfs2.FileObject;
 import org.apache.log4j.Logger;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.transport.file.connector.server.FileServerConnector;
 import org.wso2.transport.file.connector.server.FileServerConnectorProvider;
@@ -64,6 +72,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import static io.siddhi.extension.io.file.listeners.FileCronExecutor.scheduleJob;
+import static org.quartz.CronExpression.isValidExpression;
+
 
 /**
  * Implementation of siddhi-io-file source.
@@ -257,6 +269,15 @@ import java.util.regex.PatternSyntaxException;
                         type = {DataType.STRING},
                         defaultValue = "65536"
                 ),
+                @Parameter(
+                        name = "cron.expression",
+                        description = "This is used to specify a timestamp in cron expression. " +
+                                "The file or files in the given dir.uri or file.uri will be processed when the " +
+                                "given expression satisfied by the system time.",
+                        optional = true,
+                        type = {DataType.STRING},
+                        defaultValue = "None"
+                )
         },
         examples = {
                 @Example(
@@ -342,6 +363,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String beginRegex;
     private String endRegex;
     private List<String> tailedFileURIMap;
+    private String uri;
     private String dirUri;
     private String fileUri;
     private String dirPollingInterval;
@@ -354,6 +376,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String headerPresent;
     private String readOnlyHeader;
     private String bufferSizeInBinaryChunked;
+    private SourceMetrics metrics;
+    private String cronExpression;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -375,10 +399,14 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         if (optionHolder.isOptionExists(Constants.DIR_URI)) {
             dirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
             validateURL(dirUri, "dir.uri");
+            FileObject listeningFileObject = Utils.getFileObject(dirUri);
+            uri = listeningFileObject.getName().getPath();
         }
         if (optionHolder.isOptionExists(Constants.FILE_URI)) {
             fileUri = optionHolder.validateAndGetStaticValue(Constants.FILE_URI);
             validateURL(fileUri, "file.uri");
+            FileObject listeningFileObject = Utils.getFileObject(fileUri);
+            uri = listeningFileObject.getName().getPath();
         }
 
         if (dirUri != null && fileUri != null) {
@@ -469,11 +497,30 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         readOnlyHeader = optionHolder.validateAndGetStaticValue(Constants.READ_ONLY_HEADER, "false");
         bufferSizeInBinaryChunked = optionHolder.validateAndGetStaticValue(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED,
                 "65536");
+        if (optionHolder.isOptionExists(Constants.CRON_EXPRESSION)) {
+            cronExpression = optionHolder.validateAndGetStaticValue(Constants.CRON_EXPRESSION, null);
+            if (!isValidExpression(cronExpression)) {
+                throw new SiddhiAppCreationException("Cron Expression " + cronExpression + " is not valid.");
+            }
+        } else {
+            cronExpression = null;
+        }
         validateParameters();
         createInitialSourceConf();
         updateSourceConf();
         getPattern();
-
+        if (MetricsDataHolder.getInstance().getMetricService() != null &&
+                MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+            try {
+                if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                        Constants.PROMETHEUS_REPORTER_NAME)) {
+                    metrics = new SourceMetrics(siddhiAppContext.getName(), Utils.capitalizeFirstLetter(mode),
+                            sourceEventListener.getStreamDefinition().getId());
+                }
+            } catch (IllegalArgumentException e) {
+                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialized.");
+            }
+        }
         return () -> new FileSourceState();
     }
 
@@ -486,6 +533,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     public void connect(ConnectionCallback connectionCallback, FileSourceState fileSourceState)
             throws ConnectionUnavailableException {
         this.connectionCallback = connectionCallback;
+        if (metrics != null) {
+            metrics.updateMetrics(siddhiAppContext.getExecutorService());
+        }
         updateSourceConf();
         deployServers();
     }
@@ -502,8 +552,15 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             if (executorService != null && !executorService.isShutdown()) {
                 executorService.shutdown();
             }
+            Scheduler scheduler = fileSourceConfiguration.getScheduler();
+            if (scheduler != null) {
+                scheduler.deleteJob(new JobKey(Constants.JOB_NAME, Constants.JOB_GROUP));
+            }
         } catch (ServerConnectorException e) {
             throw new SiddhiAppRuntimeException("Failed to stop the file server when shutting down the siddhi app '" +
+                    siddhiAppContext.getName() + "' due to " + e.getMessage(), e);
+        } catch (SchedulerException e) {
+            throw new SiddhiAppRuntimeException("Failed to delete the cron job of the siddhi app '" +
                     siddhiAppContext.getName() + "' due to " + e.getMessage(), e);
         }
     }
@@ -536,6 +593,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     }
 
     private void createInitialSourceConf() {
+        fileSourceConfiguration.setUri(uri);
         fileSourceConfiguration.setBeginRegex(beginRegex);
         fileSourceConfiguration.setEndRegex(endRegex);
         fileSourceConfiguration.setMode(mode);
@@ -550,6 +608,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setHeaderPresent(headerPresent);
         fileSourceConfiguration.setReadOnlyHeader(readOnlyHeader);
         fileSourceConfiguration.setBufferSize(bufferSizeInBinaryChunked);
+        fileSourceConfiguration.setCronExpression(cronExpression);
     }
 
     private void updateSourceConf() {
@@ -572,6 +631,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         map.put(Constants.ACK_TIME_OUT, "5000");
         map.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY, fileReadWaitTimeout);
         map.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, bufferSizeInBinaryChunked);
+        map.put(Constants.CRON_EXPRESSION, cronExpression);
+
         if (Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
                 Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE.toUpperCase(Locale.ENGLISH));
@@ -605,6 +666,12 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             }
         }
 
+        if (isTailingEnabled && cronExpression != null) {
+            throw new SiddhiAppCreationException("Tailing has been enabled by user or by default. " +
+                    "'cron.expression' cannot be used when tailing is enabled. " +
+                    "Hence stopping the siddhi app '" + siddhiAppContext.getName() + "'.");
+        }
+
         if (isTailingEnabled && moveAfterProcess != null) {
             throw new SiddhiAppCreationException("Tailing has been enabled by user or by default." +
                     "'moveAfterProcess' cannot be used when tailing is enabled. " +
@@ -615,6 +682,17 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             throw new SiddhiAppCreationException("'moveAfterProcess' can only be used when " +
                     "'action.after.process' is 'move'. But it has been used when 'action.after.process' is 'delete'." +
                     "Hence stopping the siddhi app '" + siddhiAppContext.getName() + "'.");
+        }
+
+        if (!(Constants.MOVE.equalsIgnoreCase(actionAfterProcess)) && (cronExpression != null)) {
+            throw new SiddhiAppCreationException("'cronExpression' can only be used when 'action.after.process' " +
+                    "is 'move'. Hence stopping the siddhi app '" + siddhiAppContext.getName() + "'.");
+        }
+
+        if (cronExpression != null && moveAfterProcess == null) {
+            throw new SiddhiAppCreationException("'move.after.process' has not been provided where it is mandatory " +
+                    "when 'cron.expression' is given. Hence stopping the siddhi app " +
+                    siddhiAppContext.getName() + ".");
         }
 
         if (Constants.MOVE.equalsIgnoreCase(actionAfterProcess) && (moveAfterProcess == null)) {
@@ -634,104 +712,141 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         ExecutorService executorService = siddhiAppContext.getExecutorService();
         createInitialSourceConf();
         fileSourceConfiguration.setExecutorService(executorService);
-        if (dirUri != null) {
-            Map<String, String> properties = getFileSystemServerProperties();
-            FileSystemListener fileSystemListener = new FileSystemListener(sourceEventListener,
-                    fileSourceConfiguration);
-            try {
-                fileSystemServerConnector = fileSystemConnectorFactory.createServerConnector(
-                        siddhiAppContext.getName(), properties, fileSystemListener);
-                fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
-                FileSourcePoller.CompletionCallback fileSourceCompletionCallback = (Throwable error) ->
-                {
-                    if (error.getClass().equals(RemoteFileSystemConnectorException.class)) {
-                        connectionCallback.onError(new ConnectionUnavailableException(
-                                "Connection to the file directory is lost.", error));
-                    } else {
-                        throw new SiddhiAppRuntimeException("File Polling mode run failed.", error);
-                    }
-                };
-                FileSourcePoller fileSourcePoller =
-                        new FileSourcePoller(fileSystemServerConnector, siddhiAppContext.getName());
-                fileSourcePoller.setCompletionCallback(fileSourceCompletionCallback);
-                this.scheduledFuture = siddhiAppContext.getScheduledExecutorService().
-                        scheduleAtFixedRate(fileSourcePoller, 0, 1, TimeUnit.SECONDS);
-            } catch (RemoteFileSystemConnectorException e) {
-                throw new ConnectionUnavailableException("Connection to the file directory is lost.", e);
-            }
-        } else if (fileUri != null && !fileServerConnectorStarted) {
-            Map<String, String> properties = new HashMap<>();
-            properties.put(Constants.ACTION, Constants.READ);
-            properties.put(Constants.MAX_LINES_PER_POLL, "10");
-            properties.put(Constants.POLLING_INTERVAL, filePollingInterval);
-            properties.put(Constants.HEADER_PRESENT, headerPresent);
-            properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
-            if (actionAfterFailure != null) {
-                properties.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
-            }
-            if (moveAfterFailure != null) {
-                properties.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
-            }
-            if (fileSourceConfiguration.isTailingEnabled()) {
-                if (fileSourceConfiguration.getTailedFileURIMap() == null) {
-                    fileSourceConfiguration.setTailedFileURI(fileUri);
-                }
-                if (fileSourceConfiguration.getTailedFileURIMap().get(0).toString().equalsIgnoreCase(fileUri)) {
-                    properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
-                    properties.put(Constants.PATH, fileUri);
-                    FileServerConnectorProvider fileServerConnectorProvider =
-                            fileSourceServiceProvider.getFileServerConnectorProvider();
-                    FileProcessor fileProcessor = new FileProcessor(sourceEventListener,
-                            fileSourceConfiguration);
-                    final ServerConnector fileServerConnector = fileServerConnectorProvider
-                            .createConnector("file-server-connector", properties);
-                    fileServerConnector.setMessageProcessor(fileProcessor);
-                    fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
-                    Runnable runnableServer = () -> {
-                        try {
-                            fileServerConnector.start();
-                        } catch (ServerConnectorException e) {
-                            log.error(String.format("For the siddhi app '" + siddhiAppContext.getName() +
-                                    ",' failed to start the server for file '%s'." +
-                                    "Hence starting to process next file.", fileUri));
+        if (fileSourceConfiguration.getCronExpression() != null) {
+            scheduleJob(fileSourceConfiguration, sourceEventListener, siddhiAppContext);
+        } else {
+            if (dirUri != null) {
+                Map<String, String> properties = getFileSystemServerProperties();
+                FileSystemListener fileSystemListener = new FileSystemListener(sourceEventListener,
+                        fileSourceConfiguration, metrics);
+                try {
+                    fileSystemServerConnector = fileSystemConnectorFactory.createServerConnector(
+                            siddhiAppContext.getName(), properties, fileSystemListener);
+                    fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
+                    FileSourcePoller.CompletionCallback fileSourceCompletionCallback = (Throwable error) ->
+                    {
+                        if (error.getClass().equals(RemoteFileSystemConnectorException.class)) {
+                            connectionCallback.onError(new ConnectionUnavailableException(
+                                    "Connection to the file directory is lost.", error));
+                        } else {
+                            throw new SiddhiAppRuntimeException("File Polling mode run failed.", error);
                         }
                     };
-                    fileSourceConfiguration.getExecutorService().execute(runnableServer);
-                    this.fileServerConnectorStarted = true;
+                    FileSourcePoller fileSourcePoller =
+                            new FileSourcePoller(fileSystemServerConnector, siddhiAppContext.getName());
+                    fileSourcePoller.setCompletionCallback(fileSourceCompletionCallback);
+                    this.scheduledFuture = siddhiAppContext.getScheduledExecutorService().
+                            scheduleAtFixedRate(fileSourcePoller, 0, 1, TimeUnit.SECONDS);
+                } catch (RemoteFileSystemConnectorException e) {
+                    throw new ConnectionUnavailableException("Connection to the file directory is lost.", e);
                 }
-            } else {
-                properties.put(Constants.URI, fileUri);
-                properties.put(Constants.ACK_TIME_OUT, "1000");
-                properties.put(Constants.MODE, fileSourceConfiguration.getMode());
+            } else if (fileUri != null && !fileServerConnectorStarted) {
+                Map<String, String> properties = new HashMap<>();
+                properties.put(Constants.ACTION, Constants.READ);
+                properties.put(Constants.MAX_LINES_PER_POLL, "10");
+                properties.put(Constants.POLLING_INTERVAL, filePollingInterval);
                 properties.put(Constants.HEADER_PRESENT, headerPresent);
                 properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
-                properties.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, bufferSizeInBinaryChunked);
-                VFSClientConnector vfsClientConnector = new VFSClientConnector();
-                FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
-                vfsClientConnector.setMessageProcessor(fileProcessor);
-                VFSClientConnectorCallback vfsClientConnectorCallback = new VFSClientConnectorCallback();
-                Runnable runnableClient = () -> {
-                    try {
-                        vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
-                        vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
-                        if (actionAfterProcess != null) {
-                            properties.put(Constants.URI, fileUri);
-                            properties.put(Constants.ACTION, actionAfterProcess);
-                            if (moveAfterProcess != null) {
-                                properties.put(Constants.DESTINATION, moveAfterProcess);
+                if (actionAfterFailure != null) {
+                    properties.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
+                }
+                if (moveAfterFailure != null) {
+                    properties.put(Constants.MOVE_AFTER_FAILURE_KEY, moveAfterFailure);
+                }
+                if (metrics != null) {
+                    fileSourceConfiguration.setCurrentlyReadingFileURI(fileUri);
+                    metrics.setFilePath(fileUri);
+                    metrics.getSourceFileStatusMap().putIfAbsent((Utils.getShortFilePath(fileUri)),
+                            StreamStatus.CONNECTING);
+                    metrics.getStartedTimeMetric(System.currentTimeMillis());
+                }
+                if (fileSourceConfiguration.isTailingEnabled()) {
+                    if (fileSourceConfiguration.getTailedFileURIMap() == null) {
+                        fileSourceConfiguration.setTailedFileURI(fileUri);
+                    }
+                    if (fileSourceConfiguration.getTailedFileURIMap().get(0).toString().equalsIgnoreCase(fileUri)) {
+                        properties.put(Constants.START_POSITION, fileSourceConfiguration.getFilePointer());
+                        properties.put(Constants.PATH, fileUri);
+                        FileServerConnectorProvider fileServerConnectorProvider =
+                                fileSourceServiceProvider.getFileServerConnectorProvider();
+                        FileProcessor fileProcessor = new FileProcessor(sourceEventListener,
+                                fileSourceConfiguration, metrics);
+                        final ServerConnector fileServerConnector = fileServerConnectorProvider
+                                .createConnector("file-server-connector", properties);
+                        fileServerConnector.setMessageProcessor(fileProcessor);
+                        fileSourceConfiguration.setFileServerConnector((FileServerConnector) fileServerConnector);
+                        Runnable runnableServer = () -> {
+                            try {
+                                fileServerConnector.start();
+                            } catch (ServerConnectorException e) {
+                                log.error(String.format("For the siddhi app '" + siddhiAppContext.getName() +
+                                        ",' failed to start the server for file '%s'." +
+                                        "Hence starting to process next file.", fileUri));
                             }
+                        };
+                        fileSourceConfiguration.getExecutorService().execute(runnableServer);
+                        this.fileServerConnectorStarted = true;
+                        if (metrics != null) {
+                            metrics.getTailEnabledFilesMap().putIfAbsent(Utils.getShortFilePath(fileUri),
+                                    System.currentTimeMillis());
+                        }
+                    }
+                } else {
+                    properties.put(Constants.URI, fileUri);
+                    properties.put(Constants.ACK_TIME_OUT, "1000");
+                    properties.put(Constants.MODE, fileSourceConfiguration.getMode());
+                    properties.put(Constants.HEADER_PRESENT, headerPresent);
+                    properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
+                    properties.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, bufferSizeInBinaryChunked);
+                    VFSClientConnector vfsClientConnector = new VFSClientConnector();
+                    FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration,
+                            metrics);
+                    vfsClientConnector.setMessageProcessor(fileProcessor);
+                    VFSClientConnectorCallback vfsClientConnectorCallback = new VFSClientConnectorCallback();
+                    Runnable runnableClient = () -> {
+                        try {
                             vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
                             vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
+                            if (actionAfterProcess != null) {
+                                properties.put(Constants.URI, fileUri);
+                                properties.put(Constants.ACTION, actionAfterProcess);
+                                if (moveAfterProcess != null) {
+                                    properties.put(Constants.DESTINATION, moveAfterProcess);
+                                }
+                                vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
+                                vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
+                                if (metrics != null) {
+                                    metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileUri),
+                                            StreamStatus.COMPLETED);
+                                    if (actionAfterProcess.equals(Constants.DELETE)) {
+                                        metrics.getFileDeleteMetrics().setSource(Utils.getShortFilePath(fileUri));
+                                        metrics.getFileDeleteMetrics().setTime(System.currentTimeMillis());
+                                        metrics.getFileDeleteMetrics().getDeleteMetric(1);
+                                    } else if (actionAfterProcess.equals(Constants.MOVE)) {
+                                        metrics.getFileMoveMetrics().setTime(System.currentTimeMillis());
+                                        metrics.getFileMoveMetrics().set_source(Utils.getShortFilePath(fileUri));
+                                        metrics.getFileMoveMetrics().setDestination(Utils.getShortFilePath(
+                                                moveAfterProcess));
+                                        metrics.getFileMoveMetrics().getMoveMetric(1);
+                                    }
+                                    metrics.setReadPercentage(100);
+                                    metrics.getCompletedTimeMetric(System.currentTimeMillis());
+                                }
+                            }
+                        } catch (ClientConnectorException e) {
+                            log.error(String.format("Failure occurred in vfs-client while reading the file '%s' " +
+                                    "through siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
+                        } catch (InterruptedException e) {
+                            log.error(String.format("Failed to get callback from vfs-client  for file '%s' through " +
+                                    "siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
                         }
-                    } catch (ClientConnectorException e) {
-                        log.error(String.format("Failure occurred in vfs-client while reading the file '%s' through " +
-                                "siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
-                    } catch (InterruptedException e) {
-                        log.error(String.format("Failed to get callback from vfs-client  for file '%s' through " +
-                                "siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
-                    }
-                };
-                fileSourceConfiguration.getExecutorService().execute(runnableClient);
+                    };
+                    fileSourceConfiguration.getExecutorService().execute(runnableClient);
+                }
+            }
+            if (metrics != null) {
+                metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileUri),
+                        StreamStatus.PROCESSING);
             }
         }
     }

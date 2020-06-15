@@ -31,12 +31,15 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.extension.io.file.metrics.FileMoveMetrics;
+import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.log4j.Logger;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -124,6 +127,7 @@ public class FileMoveExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileCopyExtension.class);
     private Pattern pattern = null;
     private int inputExecutorLength;
+    private FileMoveMetrics fileMoveMetrics;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
@@ -134,6 +138,18 @@ public class FileMoveExtension extends StreamFunctionProcessor {
                 attributeExpressionExecutors[2] instanceof ConstantExpressionExecutor) {
             pattern = Pattern.compile(((ConstantExpressionExecutor)
                     attributeExpressionExecutors[2]).getValue().toString());
+        }
+        if (MetricsDataHolder.getInstance().getMetricService() != null &&
+                MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
+            try {
+                if (MetricsDataHolder.getInstance().getMetricManagementService().isReporterRunning(
+                        Constants.PROMETHEUS_REPORTER_NAME)) {
+                    String siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
+                    fileMoveMetrics = new FileMoveMetrics(siddhiAppName);
+                }
+            } catch (IllegalArgumentException e) {
+                log.debug("Prometheus reporter is not running. Hence file metrics will not be initialized.");
+            }
         }
         return null;
     }
@@ -218,6 +234,7 @@ public class FileMoveExtension extends StreamFunctionProcessor {
             String fileName = sourceFileObject.getName().getBaseName();
             String destinationPath;
             FileObject destinationFileObject;
+
             if (sourceFileObject.isFile()) {
                 destinationPath = destinationDirUri + File.separator + sourceFileObject.getName().getBaseName();
                 destinationFileObject = Utils.getFileObject(destinationPath);
@@ -225,11 +242,23 @@ public class FileMoveExtension extends StreamFunctionProcessor {
                 if (!destinationFolderFileObject.exists()) {
                     destinationFolderFileObject.createFolder();
                 }
+                if (fileMoveMetrics != null) {
+                    fileMoveMetrics.set_source(Utils.getShortFilePath(sourceFileObject.getName().getPath()));
+                    fileMoveMetrics.setDestination(Utils.getShortFilePath(destinationDirUri));
+                    fileMoveMetrics.setTime(System.currentTimeMillis());
+                }
+
                 if (pattern.matcher(fileName).lookingAt()) {
                     sourceFileObject.moveTo(destinationFileObject);
                 }
+                if (fileMoveMetrics != null) {
+                    fileMoveMetrics.getMoveMetric(1);
+                }
             }
         } catch (FileSystemException e) {
+            if (fileMoveMetrics != null) {
+                fileMoveMetrics.getMoveMetric(0);
+            }
             throw new SiddhiAppRuntimeException("Exception occurred when doing file operations when moving for file: " +
                     sourceFileObject.getName().getPath(), e);
         }
