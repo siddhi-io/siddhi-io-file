@@ -282,6 +282,7 @@ public class FileSourceConfiguration {
 
     public String getBufferSize() {
         return bufferSizeInBinaryChunked;
+    }
 
     public String getCronExpression() {
         return cronExpression;

@@ -102,7 +102,7 @@ public class Util {
                     fileSourceConfiguration.getFileReadWaitTimeout());
             properties.put(Constants.MODE, mode);
             properties.put(Constants.CRON_EXPRESSION, fileSourceConfiguration.getCronExpression());
-        } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+        } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode) || Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
             properties = new HashMap<>();
             properties.put(Constants.URI, fileURI);
             properties.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE);
@@ -112,6 +112,7 @@ public class Util {
                     fileSourceConfiguration.getFileReadWaitTimeout());
             properties.put(Constants.MODE, mode);
             properties.put(Constants.CRON_EXPRESSION, fileSourceConfiguration.getCronExpression());
+            properties.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, fileSourceConfiguration.getBufferSize());
         } else {
             properties = new HashMap<>();
             properties.put(Constants.ACTION, Constants.READ);
