@@ -105,6 +105,7 @@ import java.util.regex.PatternSyntaxException;
                                         "Possible values for this parameter are,\n" +
                                         "1. TEXT.FULL : to read a text file completely at once.\n" +
                                         "2. BINARY.FULL : to read a binary file completely at once.\n" +
+                                        "2. BINARY.CHUNKED : to read a binary file chunk by chunks.\n" +
                                         "3. LINE : to read a text file line by line.\n" +
                                         "4. REGEX : to read a text file and extract data using a regex.\n",
                         type = {DataType.STRING},
@@ -118,7 +119,8 @@ import java.util.regex.PatternSyntaxException;
                                 "This can either have value true or false. By default it will be true. \n" +
                                 "This attribute allows user to specify whether the file should be tailed or not. \n" +
                                 "If tailing is enabled, the first file of the directory will be tailed.\n" +
-                                "Also tailing should not be enabled in 'binary.full' or 'text.full' modes.\n",
+                                "Also tailing should not be enabled in 'binary.full', 'text.full' or " +
+                                "'binary.chunked' modes.\n",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "true"
@@ -248,6 +250,13 @@ import java.util.regex.PatternSyntaxException;
                         type = {DataType.BOOL},
                         defaultValue = "false"
                 ),
+                @Parameter(
+                        name = "buffer.size",
+                        description = "This parameter used to get the buffer size for mode binary.chunked.",
+                        optional = true,
+                        type = {DataType.STRING},
+                        defaultValue = "65536"
+                ),
         },
         examples = {
                 @Example(
@@ -344,6 +353,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private ConnectionCallback connectionCallback;
     private String headerPresent;
     private String readOnlyHeader;
+    private String bufferSizeInBinaryChunked;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -414,7 +424,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             }
         });
 
-        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
+                Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.FALSE);
         } else {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
@@ -456,6 +467,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileReadWaitTimeout = optionHolder.validateAndGetStaticValue(Constants.FILE_READ_WAIT_TIMEOUT, "1000");
         headerPresent = optionHolder.validateAndGetStaticValue(Constants.HEADER_PRESENT, "false");
         readOnlyHeader = optionHolder.validateAndGetStaticValue(Constants.READ_ONLY_HEADER, "false");
+        bufferSizeInBinaryChunked = optionHolder.validateAndGetStaticValue(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED,
+                "65536");
         validateParameters();
         createInitialSourceConf();
         updateSourceConf();
@@ -536,6 +549,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setFileReadWaitTimeout(fileReadWaitTimeout);
         fileSourceConfiguration.setHeaderPresent(headerPresent);
         fileSourceConfiguration.setReadOnlyHeader(readOnlyHeader);
+        fileSourceConfiguration.setBufferSize(bufferSizeInBinaryChunked);
     }
 
     private void updateSourceConf() {
@@ -546,6 +560,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private Map<String, String> getFileSystemServerProperties() {
         Map<String, String> map = new HashMap<>();
         map.put(Constants.TRANSPORT_FILE_URI, dirUri);
+        map.put(Constants.MODE, mode);
         if (actionAfterProcess != null) {
             map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase(Locale.ENGLISH));
         }
@@ -556,9 +571,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE.toUpperCase(Locale.ENGLISH));
         map.put(Constants.ACK_TIME_OUT, "5000");
         map.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY, fileReadWaitTimeout);
-
+        map.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, bufferSizeInBinaryChunked);
         if (Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
-                Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
+                Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE.toUpperCase(Locale.ENGLISH));
         } else {
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.FALSE.toUpperCase(Locale.ENGLISH));
@@ -573,14 +588,15 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     }
 
     private void validateParameters() {
-        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
+                Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
             if (isTailingEnabled) {
                 throw new SiddhiAppCreationException("In 'file' source of the siddhi app '" +
                         siddhiAppContext.getName() + "', tailing has been enabled by user or by default. " +
                         "But tailing can't be enabled in '" + mode + "' mode.");
             }
 
-            if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+            if (Constants.BINARY_FULL.equalsIgnoreCase(mode) || Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
                 if (beginRegex != null && endRegex != null) {
                     throw new SiddhiAppCreationException("'begin.regex' and 'end.regex' can be only provided if the" +
                             " mode is 'regex'. But in 'file' source of the siddhi app '" +
@@ -686,9 +702,10 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             } else {
                 properties.put(Constants.URI, fileUri);
                 properties.put(Constants.ACK_TIME_OUT, "1000");
-                properties.put(Constants.MODE, mode);
+                properties.put(Constants.MODE, fileSourceConfiguration.getMode());
                 properties.put(Constants.HEADER_PRESENT, headerPresent);
                 properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
+                properties.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, bufferSizeInBinaryChunked);
                 VFSClientConnector vfsClientConnector = new VFSClientConnector();
                 FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
                 vfsClientConnector.setMessageProcessor(fileProcessor);

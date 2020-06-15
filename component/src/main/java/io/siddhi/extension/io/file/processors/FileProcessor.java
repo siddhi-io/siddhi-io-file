@@ -80,6 +80,11 @@ public class FileProcessor implements CarbonMessageProcessor {
                     carbonCallback.done(carbonMessage);
                     sourceEventListener.onEvent(content, getRequiredPropertyValues(carbonMessage));
                 }
+            } else if (Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
+                if (msg.length() > 0) {
+                    carbonCallback.done(carbonMessage);
+                    sourceEventListener.onEvent(content, getRequiredPropertyValues(carbonMessage));
+                }
             } else if (Constants.LINE.equalsIgnoreCase(mode)) {
                 if (!fileSourceConfiguration.isTailingEnabled()) {
                     InputStream is = new ByteArrayInputStream(content);

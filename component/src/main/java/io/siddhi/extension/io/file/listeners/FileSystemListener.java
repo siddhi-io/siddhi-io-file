@@ -104,7 +104,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
                         log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
                         carbonCallback.done(carbonMessage);
                     }
-                } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+                } else if (Constants.BINARY_CHUNKED.equalsIgnoreCase(mode) ||
+                        Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                     vfsClientConnector = new VFSClientConnector();
                     fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration);
                     vfsClientConnector.setMessageProcessor(fileProcessor);
@@ -117,6 +118,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     properties.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY,
                             fileSourceConfiguration.getFileReadWaitTimeout());
                     properties.put(Constants.MODE, mode);
+                    properties.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, fileSourceConfiguration.getBufferSize());
                     VFSClientConnectorCallback carbonCallback = new VFSClientConnectorCallback();
                     BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(
                             ByteBuffer.wrap(fileURI.getBytes(StandardCharsets.UTF_8)), true);
