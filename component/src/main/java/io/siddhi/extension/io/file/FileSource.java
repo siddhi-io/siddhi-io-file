@@ -117,7 +117,7 @@ import static org.quartz.CronExpression.isValidExpression;
                                         "Possible values for this parameter are,\n" +
                                         "1. TEXT.FULL : to read a text file completely at once.\n" +
                                         "2. BINARY.FULL : to read a binary file completely at once.\n" +
-                                        "2. BINARY.CHUNKED : to read a binary file chunk by chunks.\n" +
+                                        "2. BINARY.CHUNKED : to read a binary file chunk by chunk.\n" +
                                         "3. LINE : to read a text file line by line.\n" +
                                         "4. REGEX : to read a text file and extract data using a regex.\n",
                         type = {DataType.STRING},

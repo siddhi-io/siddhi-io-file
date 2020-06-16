@@ -49,9 +49,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import static io.siddhi.extension.io.file.util.Util.constructPath;
 import static io.siddhi.extension.io.file.util.Util.generateProperties;
-import static io.siddhi.extension.io.file.util.Util.getFileName;
 import static io.siddhi.extension.io.file.util.Util.reProcessFileGenerateProperties;
 
 /**
