@@ -90,18 +90,11 @@ public class SourceMetrics extends Metrics {
                         siddhiAppName, "elapse_time", filePath), Level.INFO, gauge);
     }
 
-    public Counter getDroppedEventCountMetric() {
-        return MetricsDataHolder.getInstance().getMetricService()
-                .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.%s.%s",
-                        siddhiAppName, "dropped_events", filePath), Level.INFO);
-    }
-
     public Counter getTotalErrorCount() {
         return MetricsDataHolder.getInstance().getMetricService()
                 .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.%s.%s",
                         siddhiAppName, "error_count", filePath), Level.INFO);
     }
-
 
     public void getFileSizeMetric(Gauge gauge) {
         MetricsDataHolder.getInstance().getMetricService()
