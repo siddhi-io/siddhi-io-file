@@ -96,7 +96,6 @@ public class FileProcessor implements CarbonMessageProcessor {
                         metrics.getFileSizeMetric(() -> fileSize);
                         metrics.getReadPercentageMetric();
                         metrics.getReadLineCountMetric().inc(lineCount);
-                        metrics.getDroppedEventCountMetric();
                         metrics.getValidEventCountMetric();
                         metrics.getTotalErrorCount();
                         if (fileSourceConfiguration.isTailingEnabled()) {
@@ -298,9 +297,6 @@ public class FileProcessor implements CarbonMessageProcessor {
             }
             return true;
         } else {
-            if (metrics != null) {
-                metrics.getDroppedEventCountMetric().inc();
-            }
             return false;
         }
     }
