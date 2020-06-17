@@ -126,13 +126,13 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "mode",
                         description =
-                                "This parameter is used to specify how files in given directory should." +
-                                        "Possible values for this parameter are,\n" +
-                                        "1. TEXT.FULL : to read a text file completely at once.\n" +
-                                        "2. BINARY.FULL : to read a binary file completely at once.\n" +
-                                        "2. BINARY.CHUNKED : to read a binary file chunk by chunk.\n" +
-                                        "3. LINE : to read a text file line by line.\n" +
-                                        "4. REGEX : to read a text file and extract data using a regex.\n",
+                                "This specifies the mode in which the files in given directory must be read." +
+                                        "Possible values for this parameter are as follows:\n" +
+                                        "- TEXT.FULL : to read a text file completely at once.\n" +
+                                        "- BINARY.FULL : to read a binary file completely at once.\n" +
+                                        "- BINARY.CHUNKED : to read a binary file chunk by chunk.\n" +
+                                        "- LINE : to read a text file line by line.\n" +
+                                        "- REGEX : to read a text file and extract data using a regex.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "line"
@@ -141,11 +141,10 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "tailing",
                         description = "" +
-                                "This can either have value true or false. By default it will be true. \n" +
-                                "This attribute allows user to specify whether the file should be tailed or not. \n" +
-                                "If tailing is enabled, the first file of the directory will be tailed.\n" +
-                                "Also tailing should not be enabled in 'binary.full', 'text.full' or " +
-                                "'binary.chunked' modes.\n",
+                                "If this parameter is set to 'true', the file/the first file of the directory " +
+                                "is tailed. \n" +
+                                "Do not set the parameter to 'true' and enable tailing if the mode is 'binary.full'," +
+                                " 'text.full' or 'binary.chunked'.\n",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "true"
