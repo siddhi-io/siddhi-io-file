@@ -58,42 +58,37 @@ import java.util.Map;
         name = "file" ,
         namespace = "sink" ,
         description = "" +
-                "File Sink can be used to publish (write) event data which is processed within siddhi " +
-                "to files. \nSiddhi-io-file sink provides support to write both textual and binary data into files\n",
+                "The File Sink component of the 'siddhi-io-fie' extension publishes (writes) event data that is " +
+                "processed within Siddhi to files. \n" +
+                "Siddhi-io-file sink provides support to write both textual and binary data into files\n",
         parameters = {
                 @Parameter(name = "file.uri",
                         description =
-                                "Used to specify the file for data to be written. ",
+                                "The path to thee file in which the data needs to be published. ",
                         type = {DataType.STRING},
                         dynamic = true
                 ),
 
                 @Parameter(name = "append",
                         description = "" +
-                                "This parameter is used to specify whether the data should be " +
-                                "append to the file or not.\n" +
-                                "If append = 'true', " +
-                                "data will be write at the end of the file without " +
-                                "changing the existing content.\n" +
-                                "If file does not exist, a new fill will be crated and then data will be written.\n" +
-                                "If append append = 'false', \n" +
-                                "If given file exists, existing content will be deleted and then data will be " +
-                                "written back to the file.\n" +
-                                "If given file does not exist, a new file will be created and " +
-                                "then data will be written on it.\n",
+                                "This specifies whether the data should be appended to the file or not.\n" +
+                                "If this parameter is set to 'true', data is written at the end of the file without" +
+                                " changing the existing content.\n " +
+                                "If the parameter is set to 'false', the existing content of the file is deleted and" +
+                                " the content you are publishing is added to replace it.\n" +
+                                "If the file does not exist, a new file is created and then the data is written in" +
+                                " it. In such a scenario, the value specified for this parameter is not applicable\n",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "true"
                 ),
                 @Parameter(
                         name = "add.line.separator",
-                        description = "This parameter is used to specify whether events added to the file should " +
-                                "be separated by a newline.\n" +
-                                "If add.event.separator= 'true'," +
-                                "then a newline will be added after data is added to the file.",
+                        description = "If this parameter is set to 'true', events added to the file are " +
+                                "separated by adding each event in a new line.\n",
                         type = {DataType.BOOL},
                         optional = true,
-                        defaultValue = "true. (However, if csv mapper is used, it is false)"
+                        defaultValue = "true. (However, if the 'csv' mapper is used, it is false)"
                 )
         },
         examples = {
@@ -105,17 +100,18 @@ import java.util.Map;
                                 "define stream BarStream (symbol string, price float, volume long); ",
 
                         description = "" +
-                                "Under above configuration, for each event, " +
-                                "a file will be generated if there's no such a file," +
-                                "and then data will be written to that file as json messages" +
-                                "output will looks like below.\n" +
+                                "In the above configuration, each output event is published in the " +
+                                "'/abc/{{symbol}}.txt' file in JSON format.The output looks as follows:\n" +
                                 "{\n" +
                                 "    \"event\":{\n" +
                                 "        \"symbol\":\"WSO2\",\n" +
                                 "        \"price\":55.6,\n" +
                                 "        \"volume\":100\n" +
                                 "    }\n" +
-                                "}\n")
+                                "}\n" +
+                                "If the file does not exist at the time an output event is generated, the system " +
+                                "creates the file and proceeds to publish the output event in it."
+                )
         }
 )
 public class FileSink extends Sink {

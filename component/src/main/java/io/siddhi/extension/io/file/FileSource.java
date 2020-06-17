@@ -84,16 +84,23 @@ import static org.quartz.CronExpression.isValidExpression;
         name = "file",
         namespace = "source",
         description = "" +
-                "File Source provides the functionality for user to feed data to siddhi from " +
-                "files. Both text and binary files are supported by file source.",
+                "The File Source component of the 'siddhi-io-fie' extension allows you to receive the input data to" +
+                " be processed by Siddhi via files. Both text files and binary files are supported.",
         parameters = {
                 @Parameter(
                         name = "dir.uri",
                         description =
-                                "Used to specify a directory to be processed. \n" +
-                                        "All the files inside this directory will be processed. \n" +
-                                        "Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
-                                        "This uri MUST have the respective protocol specified.",
+                                "The path to the directory to be processed. During execution time, Siddhi by default" +
+                                        " processes all the files within this directory. However, if you have entered" +
+                                        " specific files to be processed via the 'file.name.list' parameter, only " +
+                                        "those files are processed. The URI specified must " +
+                                        "include the file handling protocol to be used for file processing.\n" +
+                                        "e.g., If the file handling protocol to be used is 'ftp', the URI must be " +
+                                        "provided as 'ftp://<DIRECTORY_PATH>>'.\n" +
+                                        "At a given time, you should provide a value only for one out of the " +
+                                        "'dir.uri' and 'file.uri' parameters. You can provide the directory URI if " +
+                                        "you have multiple files that you want to process within a directory. You " +
+                                        "can provide the file URI if you only need to process one file.",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "file:/var/tmp"
@@ -102,9 +109,15 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "file.uri",
                         description =
-                                "Used to specify a file to be processed. \n" +
-                                        " Only one of 'dir.uri' and 'file.uri' should be provided.\n" +
-                                        "This uri MUST have the respective protocol specified.\n",
+                                "The path to the file to be processed. The URI specified must include the file " +
+                                        "handling protocol to be used for file processing.\n " +
+                                        " Only one of 'dir.uri' and 'file.uri' should be provided.\n e.g., If the " +
+                                        "file handling protocol to be used is 'ftp', the URI must be provided as " +
+                                        "'ftp://<FILE_PATH>>'.\n" +
+                                        "At a given time, you should provide a value only for one out of the " +
+                                        "'dir.uri' and 'file.uri' parameters. You can provide the directory URI if " +
+                                        "you have multiple files that you want to process within a directory. You can" +
+                                        " provide the file URI if you only need to process one file.",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "file:/var/temp/tmp.text"
@@ -113,12 +126,12 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "mode",
                         description =
-                                "This parameter is used to specify how files in given directory should." +
-                                        "Possible values for this parameter are,\n" +
-                                        "1. TEXT.FULL : to read a text file completely at once.\n" +
-                                        "2. BINARY.FULL : to read a binary file completely at once.\n" +
-                                        "3. LINE : to read a text file line by line.\n" +
-                                        "4. REGEX : to read a text file and extract data using a regex.\n",
+                                "This specifies the mode in which the files in given directory must be read." +
+                                        "Possible values for this parameter are as follows:\n" +
+                                        "- TEXT.FULL: To read a text file completely at once.\n" +
+                                        "- BINARY.FULL: to read a binary file completely at once.\n" +
+                                        "- LINE: To read a text file line by line.\n" +
+                                        "- REGEX: To read a text file and extract data using a regex.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "line"
@@ -127,10 +140,10 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "tailing",
                         description = "" +
-                                "This can either have value true or false. By default it will be true. \n" +
-                                "This attribute allows user to specify whether the file should be tailed or not. \n" +
-                                "If tailing is enabled, the first file of the directory will be tailed.\n" +
-                                "Also tailing should not be enabled in 'binary.full' or 'text.full' modes.\n",
+                                "If this parameter is set to 'true', the file/the first file of the directory " +
+                                "is tailed. \n" +
+                                "Do not set the parameter to 'true' and enable tailing if the mode is 'binary.full'" +
+                                " or 'text.full'.\n",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "true"
@@ -139,11 +152,10 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "action.after.process",
                         description = "" +
-                                "This parameter is used to specify the action which should be carried out \n" +
-                                "after processing a file in the given directory. \n" +
-                                "It can be either DELETE or MOVE and default value will be 'DELETE'.\n" +
-                                "If the action.after.process is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.process' parameter.\n",
+                                "The action to be carried out after processing the file/directory. Possible values " +
+                                "are 'DELETE' and 'MOVE'. 'DELETE' is default. If you specify 'MOVE', you need to " +
+                                "specify a value for the 'move.after.process' parameter to indicate the location to " +
+                                "which the consumed files should be moved.",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "delete"
@@ -152,11 +164,10 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "action.after.failure",
                         description = "" +
-                                "This parameter is used to specify the action which should be carried out " +
-                                "if a failure occurred during the process. \n" +
-                                "It can be either DELETE or MOVE and default value will be 'DELETE'.\n" +
-                                "If the action.after.failure is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.failure' parameter.\n",
+                                "The action to be taken if a failure occurs while the file/directory is being " +
+                                "processed. Possible values are 'DELETE' and 'MOVE'. 'DELETE' is default. If you " +
+                                "specify 'MOVE', you need to specify a value for the 'move.after.failure' parameter " +
+                                "to indicate the location to which the files that could not be read need to be moved",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "delete"
@@ -165,11 +176,13 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "move.after.process",
                         description = "" +
-                                "If action.after.process is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.process' parameter.\n" +
-                                "This should be the absolute path of the file that going to be created after moving " +
-                                "is done.\n" +
-                                "This uri MUST have the respective protocol specified.\n",
+                                "If you specify 'MOVE' as the value for the 'action.after.process' parameter, use " +
+                                "this parameter to specify the location to which the consumed files need to be moved." +
+                                "This should be the absolute path of the file that is going to be created after the " +
+                                "moving is done.\n" +
+                                "This URI must include the file handling protocol used for file processing.\n" +
+                                "e.g., If the file handling protocol is 'ftp', the URI must be provided as " +
+                                "'ftp://<FILE_PATH>>'.",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "<Empty_String>"
@@ -178,11 +191,14 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "move.after.failure",
                         description = "" +
-                                "If action.after.failure is MOVE, user must specify the location to " +
-                                "move consumed files using 'move.after.failure' parameter.\n" +
-                                "This should be the absolute path of the file that going to be created after moving " +
-                                "is done.\n" +
-                                "This uri MUST have the respective protocol specified.\n",
+                                "If you specify 'MOVE' as the value for the 'action.after.failure' parameter, use " +
+                                "this parameter to specify the location to which the files should be moved after the" +
+                                " failure\n" +
+                                "This should be the absolute path of the file that is going to be created after the " +
+                                "failure.\n" +
+                                "This URI must include the file handling protocol used for file processing.\n" +
+                                "e.g., If the file handling protocol is 'ftp', the URI must be provided as " +
+                                "'ftp://<FILE_PATH>>'.",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "<Empty_String>"
@@ -191,8 +207,7 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "begin.regex",
                         description = "" +
-                                "This will define the regex to be matched at the beginning of the " +
-                                "retrieved content.\n",
+                                "The regex to be matched at the beginning of the retrieved content.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "None"
@@ -201,8 +216,7 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "end.regex",
                         description = "" +
-                                "This will define the regex to be matched at the end of the " +
-                                "retrieved content.\n",
+                                "The regex to be matched at the end of the retrieved content.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "None"
@@ -211,8 +225,7 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "file.polling.interval",
                         description = "" +
-                                "This parameter is used to specify the time period (in milliseconds) " +
-                                "of a polling cycle for a file.\n",
+                                "The time interval (in milliseconds) of a polling cycle for a file.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "1000"
@@ -220,8 +233,7 @@ import static org.quartz.CronExpression.isValidExpression;
 
                 @Parameter(
                         name = "dir.polling.interval",
-                        description = "This parameter is used to specify the time period (in milliseconds) " +
-                                "of a polling cycle for a directory.\n",
+                        description = "The time period (in milliseconds) of a polling cycle for a directory.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "1000"
@@ -229,33 +241,33 @@ import static org.quartz.CronExpression.isValidExpression;
 
                 @Parameter(
                         name = "timeout",
-                        description = "This parameter is used to specify the maximum time period (in milliseconds) " +
-                                " for waiting until a file is processed.\n",
+                        description = "The maximum time duration (in milliseconds) that the system should wait until" +
+                                " a file is processed.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "5000"
                 ),
                 @Parameter(
                         name = "file.read.wait.timeout",
-                        description = "This parameter is used to specify the maximum time period (in milliseconds) " +
-                                " till it waits before retrying to read the full file content.\n",
+                        description = "The maximum time duration (in milliseconds) that the system should wait " +
+                                "before retrying to read the full file content.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "1000"
                 ),
                 @Parameter(
                         name = "header.present",
-                        description = "This parameter used to specify a particular text file (eg: CSV) contains a " +
-                                "header line or not. This can either have value true or false. If it's set to " +
-                                "`true` then it indicates a file contains a header line, and it will not process.\n",
+                        description = "If this parameter is set to 'true', it indicates the file(s) to be processed " +
+                                "includes a header line. In such a scenario, the header line is not processed.\n",
                         optional = true, defaultValue = "false",
                         type = {DataType.BOOL}
                 ),
                 @Parameter(
                         name = "read.only.header",
-                        description = "This parameter used to read only the header or the first line of a particular " +
-                                "text file (eg: CSV). This is only applicable if the mode is LINE. If it's set to " +
-                                "false, the full file content will be read line by line.",
+                        description = "This parameter is applicable only if the value for the 'mode' parameter is" +
+                                " 'LINE'. If this parameter is set to 'true', only the first line (i.e., the header" +
+                                " line) of a text file (e.g., CSV) is read. If it is set to 'false', the full content" +
+                                " of the file is read line by line.",
                         optional = true,
                         type = {DataType.BOOL},
                         defaultValue = "false"
@@ -282,14 +294,14 @@ import static org.quartz.CronExpression.isValidExpression;
                                 "define stream FooStream (symbol string, price float, volume long); \n",
 
                         description = "" +
-                                "Under above configuration, all the files in directory will be picked and read " +
-                                "one by one.\n" +
-                                "In this case, it's assumed that all the files contains json valid json strings with " +
-                                "keys 'symbol','price' and 'volume'.\n" +
-                                "Once a file is read, " +
-                                "its content will be converted to an event using siddhi-map-json " +
-                                "extension and then, that event will be received to the FooStream.\n" +
-                                "Finally, after reading is finished, the file will be deleted.\n"
+                                "In the above configuration, all the files in the given directory are picked and " +
+                                "read one by one.\n" +
+                                "Here, it is assumed that all the files contain valid json strings with " +
+                                "'symbol', 'price', and 'volume' keys.\n" +
+                                "Once a file is read, its content is converted to events via the 'siddhi-map-json' " +
+                                "extension. Those events are then received as input events in the the 'FooStream' " +
+                                "stream.\n" +
+                                "Finally, after the reading is completed, the file is deleted.\n"
                 ),
 
                 @Example(
@@ -302,15 +314,15 @@ import static org.quartz.CronExpression.isValidExpression;
                                 "define stream FooStream (symbol string, price float, volume long);\n ",
 
                         description = "" +
-                                "Under above configuration, " +
-                                "the first file in directory '/abc/xyz'  will be picked and read " +
-                                "line by line.\n" +
-                                "In this case, it is assumed that the file contains lines json strings.\n" +
-                                "For each line, line content will be converted to an event using siddhi-map-json " +
-                                "extension and then, that event will be received to the FooStream.\n" +
-                                "Once file content is completely read, " +
-                                "it will keep checking whether a new entry is added to the file or not.\n" +
-                                "If such entry is added, it will be immediately picked up and processed.\n"
+                                "In the above configuration, the first file in '/abc/xyz' directory is picked and " +
+                                "read line by line.\n" +
+                                "Here, it is assumed that the file contains lines json strings.\n" +
+                                "For each line, the line content is converted to an event via the 'siddhi-map-json' " +
+                                "extension. Those events are then received as input events in the the 'FooStream' " +
+                                "stream.\n" +
+                                "Once the file content is completely read, the system keeps checking for new " +
+                                "entries added to the file. If it detects a new entry, it immediately picks it up " +
+                                "and processes it.\n"
                 ),
                 @Example(
                         syntax = "" +
@@ -323,15 +335,15 @@ import static org.quartz.CronExpression.isValidExpression;
                                 "define stream FooStream (symbol string, price float, volume long); \n",
 
                         description = "" +
-                                "Under above configuration, all the files in directory will be picked and read " +
-                                "one by one.\n" +
-                                "In this case, it's assumed that all the files contains valid json strings with " +
-                                "keys 'symbol' and 'price'.\n" +
-                                "Once a file is read, " +
-                                "its content will be converted to an event using siddhi-map-json with additional eof " +
-                                "attribute and then, that event will be received to the FooStream.\n" +
-                                "Finally, after reading is finished, the file will be deleted.\n"
-                ),
+                                "In the above configuration, all the files in the given directory are picked and " +
+                                "read one by one.\n" +
+                                "Here, it is assumed that each file contains valid json strings with 'symbol', and " +
+                                "'price' keys.\n" +
+                                "Once a file is read, its content is converted to an event via the 'siddhi-map-json'" +
+                                " extension with the additional 'eof' attribute. Then, that event is received as an " +
+                                "input event in the 'FooStream' stream.\n" +
+                                "Once a file is completely read, it is deleted.\n"
+                )
         }
 )
 public class FileSource extends Source<FileSource.FileSourceState> {
