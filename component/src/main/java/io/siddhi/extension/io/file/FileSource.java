@@ -276,7 +276,7 @@ import static org.quartz.CronExpression.isValidExpression;
                 ),
                 @Parameter(
                         name = "buffer.size",
-                        description = "This parameter used to get the buffer size for mode binary.chunked.",
+                        description = "This parameter used to get the buffer size for binary.chunked mode.",
                         optional = true,
                         type = {DataType.STRING},
                         defaultValue = "65536"
