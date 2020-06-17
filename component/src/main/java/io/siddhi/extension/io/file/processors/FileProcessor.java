@@ -20,6 +20,7 @@ package io.siddhi.extension.io.file.processors;
 
 import com.google.common.base.Stopwatch;
 import io.siddhi.core.stream.input.source.SourceEventListener;
+import io.siddhi.core.stream.input.source.SourceMapper;
 import io.siddhi.extension.io.file.metrics.SourceMetrics;
 import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.util.Constants;
@@ -65,6 +66,7 @@ public class FileProcessor implements CarbonMessageProcessor {
     private long startedTime;
     private long completedTime;
     private boolean send;
+    private long previousEventCount;
 
     public FileProcessor(SourceEventListener sourceEventListener, FileSourceConfiguration fileSourceConfiguration,
                          SourceMetrics sourceMetrics) {
@@ -81,10 +83,11 @@ public class FileProcessor implements CarbonMessageProcessor {
         if (sourceMetrics != null) {
             this.metrics = sourceMetrics;
             this.fileURI = fileSourceConfiguration.getCurrentlyReadingFileURI();
+            previousEventCount = ((SourceMapper) sourceEventListener).getEventCount();
             fileSourceConfiguration.getExecutorService().execute(() -> {
                 stopwatch = Stopwatch.createStarted();
                 startedTime = System.currentTimeMillis();
-                fileSize = Utils.getFileSize(fileURI); //converts into KB
+                fileSize = Utils.getFileSize(fileURI);
                 metrics.getStartedTimeMetric(System.currentTimeMillis());
                 boolean add = metrics.getFilesURI().add(fileURI);
                 if (add) {
@@ -93,7 +96,8 @@ public class FileProcessor implements CarbonMessageProcessor {
                         metrics.getFileSizeMetric(() -> fileSize);
                         metrics.getReadPercentageMetric();
                         metrics.getReadLineCountMetric().inc(lineCount);
-                        metrics.getDroppedEventCountMetric();
+                        metrics.getValidEventCountMetric();
+                        metrics.getTotalErrorCount();
                         if (fileSourceConfiguration.isTailingEnabled()) {
                             metrics.getTailEnabledMetric(1);
                             metrics.getElapseTimeMetric(() -> stopwatch.elapsed().toMillis());
@@ -298,9 +302,6 @@ public class FileProcessor implements CarbonMessageProcessor {
             }
             return true;
         } else {
-            if (metrics != null) {
-                metrics.getDroppedEventCountMetric().inc();
-            }
             return false;
         }
     }
@@ -332,10 +333,14 @@ public class FileProcessor implements CarbonMessageProcessor {
     }
 
     private void increaseMetrics(int byteLength) {
-        metrics.getSourceFileEventCountMetric().inc();
+        metrics.getTotalFileReadCount().inc();
+        metrics.getTotalReadsMetrics().inc();
         metrics.getReadByteMetric().inc(byteLength);
         metrics.getElapseTimeMetric(() -> stopwatch.elapsed().toMillis());
         metrics.setReadPercentage(totalReadByteSize / fileSize * 100);
+        long eventCount = ((SourceMapper) sourceEventListener).getEventCount() - previousEventCount;
+        metrics.getValidEventCountMetric().inc(eventCount);
+        previousEventCount = ((SourceMapper) sourceEventListener).getEventCount();
     }
 
     private void increaseTailingMetrics() {

@@ -101,6 +101,10 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             carbonCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileURI);
                         } catch (InterruptedException e) {
                             log.error(String.format("Failed to wait until file '%s' is processed.", fileURI), e);
+                            if (metrics != null) {
+                                metrics.getSourceFileStatusMap().replace(shortenFilePath, StreamStatus.ERROR);
+                                metrics.getTotalErrorCount().inc();
+                            }
                             return false;
                         }
                         if (!actionAfterProcess.equalsIgnoreCase(Constants.KEEP)) {
@@ -111,6 +115,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                         carbonCallback.done(carbonMessage);
                         if (metrics != null) {
                             metrics.getSourceFileStatusMap().replace(shortenFilePath, StreamStatus.ERROR);
+                            metrics.getTotalErrorCount().inc();
                         }
                     }
                 } else if (Constants.BINARY_CHUNKED.equalsIgnoreCase(mode) ||
@@ -129,6 +134,10 @@ public class FileSystemListener implements RemoteFileSystemListener {
                         } catch (InterruptedException e) {
                             log.error(String.format("Failed to get callback from vfs-client  for file '%s'.", fileURI),
                                     e);
+                            if (metrics != null) {
+                                metrics.getSourceFileStatusMap().replace(shortenFilePath, StreamStatus.ERROR);
+                                metrics.getTotalErrorCount().inc();
+                            }
                             return false;
                         }
                         if (!actionAfterProcess.equalsIgnoreCase(Constants.KEEP)) {
@@ -138,6 +147,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                         log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
                         if (metrics != null) {
                             metrics.getSourceFileStatusMap().replace(shortenFilePath, StreamStatus.ERROR);
+                            metrics.getTotalErrorCount().inc();
                         }
                     }
                 } else if (Constants.LINE.equalsIgnoreCase(mode) || Constants.REGEX.equalsIgnoreCase(mode)) {
@@ -182,6 +192,10 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             } catch (InterruptedException e) {
                                 log.error(String.format("Failed to get callback from vfs-client  for file '%s'.",
                                         fileURI), e);
+                                if (metrics != null) {
+                                    metrics.getSourceFileStatusMap().replace(shortenFilePath, StreamStatus.ERROR);
+                                    metrics.getTotalErrorCount().inc();
+                                }
                                 return false;
                             }
                             if (!actionAfterProcess.equalsIgnoreCase(Constants.KEEP)) {
@@ -191,6 +205,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             log.error(String.format("Failed to provide file '%s' for consuming.", fileURI), e);
                             if (metrics != null) {
                                 metrics.getSourceFileStatusMap().replace(shortenFilePath, StreamStatus.ERROR);
+                                metrics.getTotalErrorCount().inc();
                             }
                         }
                     }
@@ -236,6 +251,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                 carbonCallback.done(carbonMessage);
                 if (metrics != null) {
                     metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileURI), StreamStatus.ERROR);
+                    metrics.getTotalErrorCount().inc();
                 }
             }
         }

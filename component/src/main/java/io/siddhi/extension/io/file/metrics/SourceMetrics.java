@@ -54,9 +54,15 @@ public class SourceMetrics extends Metrics {
         this.fileMoveMetrics = new FileMoveMetrics(siddhiAppName);
     }
 
-    public Counter getSourceFileEventCountMetric() {
+    public Counter getTotalReadsMetrics() { //to count the total reads from siddhi app level.
         return MetricsDataHolder.getInstance().getMetricService()
-                .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.event.count.%s.%s.%s.%s",
+                .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.Total.Reads.%s", siddhiAppName, "file"),
+                        Level.INFO);
+    }
+
+    public Counter getTotalFileReadCount() { //to count the total reads from source level.
+        return MetricsDataHolder.getInstance().getMetricService()
+                .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.Total.Reads.%s.%s.%s.%s",
                         siddhiAppName, fileName + ".filename", readingMode, streamName, filePath), Level.INFO);
     }
 
@@ -64,6 +70,12 @@ public class SourceMetrics extends Metrics {
         return MetricsDataHolder.getInstance().getMetricService()
                 .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.%s.%s",
                         siddhiAppName, "total_read_byte", filePath), Level.INFO);
+    }
+
+    public Counter getValidEventCountMetric() {
+        return MetricsDataHolder.getInstance().getMetricService().counter(
+                String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.%s.%s",
+                        siddhiAppName, "total_valid_events_count", filePath), Level.INFO);
     }
 
     public Counter getReadLineCountMetric() {
@@ -78,12 +90,11 @@ public class SourceMetrics extends Metrics {
                         siddhiAppName, "elapse_time", filePath), Level.INFO, gauge);
     }
 
-    public Counter getDroppedEventCountMetric() {
+    public Counter getTotalErrorCount() {
         return MetricsDataHolder.getInstance().getMetricService()
                 .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.%s.%s",
-                        siddhiAppName, "dropped_events", filePath), Level.INFO);
+                        siddhiAppName, "error_count", filePath), Level.INFO);
     }
-
 
     public void getFileSizeMetric(Gauge gauge) {
         MetricsDataHolder.getInstance().getMetricService()
