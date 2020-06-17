@@ -148,11 +148,11 @@
         <wso2.transport.file.version>6.0.65</wso2.transport.file.version>
         <org.apache.commons-compress.version>1.19</org.apache.commons-compress.version>
         <testng.version>6.8</testng.version>
-        <siddhi.map.json.version>5.0.2</siddhi.map.json.version>
-        <siddhi.map.xml.version>5.0.2</siddhi.map.xml.version>
-        <siddhi.map.text.version>2.0.1</siddhi.map.text.version>
-        <siddhi.map.csv.version>2.0.3</siddhi.map.csv.version>
-        <siddhi.map.binary.version>2.0.4</siddhi.map.binary.version>
+        <siddhi.map.json.version>5.0.6</siddhi.map.json.version>
+        <siddhi.map.xml.version>5.0.4</siddhi.map.xml.version>
+        <siddhi.map.text.version>2.0.4</siddhi.map.text.version>
+        <siddhi.map.csv.version>2.0.5</siddhi.map.csv.version>
+        <siddhi.map.binary.version>2.0.5</siddhi.map.binary.version>
         <siddhi.execution.list>1.0.0</siddhi.execution.list>
         <jacoco.version>0.7.9</jacoco.version>
         <commons.io.version>2.6</commons.io.version>
