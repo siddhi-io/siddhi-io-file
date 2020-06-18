@@ -44,6 +44,7 @@ public class FileSourceConfiguration {
     private long timeout = 5000;
     private String headerPresent = "false";
     private String readOnlyHeader = "false";
+    private String bufferSizeInBinaryChunked = "65536";
 
     private FileServerConnector fileServerConnector;
     private RemoteFileSystemServerConnector fileSystemServerConnector;
@@ -273,6 +274,14 @@ public class FileSourceConfiguration {
 
     public void setReadOnlyHeader(String readOnlyHeader) {
         this.readOnlyHeader = readOnlyHeader;
+    }
+
+    public void setBufferSize(String bufferSizeInBinaryChunked) {
+        this.bufferSizeInBinaryChunked = bufferSizeInBinaryChunked;
+    }
+
+    public String getBufferSize() {
+        return bufferSizeInBinaryChunked;
     }
 
     public String getCronExpression() {

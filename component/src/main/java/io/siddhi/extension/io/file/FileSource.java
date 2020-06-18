@@ -128,10 +128,11 @@ import static org.quartz.CronExpression.isValidExpression;
                         description =
                                 "This specifies the mode in which the files in given directory must be read." +
                                         "Possible values for this parameter are as follows:\n" +
-                                        "- TEXT.FULL: To read a text file completely at once.\n" +
-                                        "- BINARY.FULL: to read a binary file completely at once.\n" +
-                                        "- LINE: To read a text file line by line.\n" +
-                                        "- REGEX: To read a text file and extract data using a regex.\n",
+                                        "- TEXT.FULL : to read a text file completely at once.\n" +
+                                        "- BINARY.FULL : to read a binary file completely at once.\n" +
+                                        "- BINARY.CHUNKED : to read a binary file chunk by chunk.\n" +
+                                        "- LINE : to read a text file line by line.\n" +
+                                        "- REGEX : to read a text file and extract data using a regex.\n",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "line"
@@ -142,8 +143,8 @@ import static org.quartz.CronExpression.isValidExpression;
                         description = "" +
                                 "If this parameter is set to 'true', the file/the first file of the directory " +
                                 "is tailed. \n" +
-                                "Do not set the parameter to 'true' and enable tailing if the mode is 'binary.full'" +
-                                " or 'text.full'.\n",
+                                "Do not set the parameter to 'true' and enable tailing if the mode is 'binary.full'," +
+                                " 'text.full' or 'binary.chunked'.\n",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "true"
@@ -273,6 +274,13 @@ import static org.quartz.CronExpression.isValidExpression;
                         defaultValue = "false"
                 ),
                 @Parameter(
+                        name = "buffer.size",
+                        description = "This parameter used to get the buffer size for binary.chunked mode.",
+                        optional = true,
+                        type = {DataType.STRING},
+                        defaultValue = "65536"
+                ),
+                @Parameter(
                         name = "cron.expression",
                         description = "This is used to specify a timestamp in cron expression. " +
                                 "The file or files in the given dir.uri or file.uri will be processed when the " +
@@ -378,6 +386,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private ConnectionCallback connectionCallback;
     private String headerPresent;
     private String readOnlyHeader;
+    private String bufferSizeInBinaryChunked;
     private SourceMetrics metrics;
     private String cronExpression;
 
@@ -454,7 +463,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             }
         });
 
-        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
+                Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.FALSE);
         } else {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
@@ -496,7 +506,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileReadWaitTimeout = optionHolder.validateAndGetStaticValue(Constants.FILE_READ_WAIT_TIMEOUT, "1000");
         headerPresent = optionHolder.validateAndGetStaticValue(Constants.HEADER_PRESENT, "false");
         readOnlyHeader = optionHolder.validateAndGetStaticValue(Constants.READ_ONLY_HEADER, "false");
-
+        bufferSizeInBinaryChunked = optionHolder.validateAndGetStaticValue(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED,
+                "65536");
         if (optionHolder.isOptionExists(Constants.CRON_EXPRESSION)) {
             cronExpression = optionHolder.validateAndGetStaticValue(Constants.CRON_EXPRESSION, null);
             if (!isValidExpression(cronExpression)) {
@@ -607,6 +618,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setFileReadWaitTimeout(fileReadWaitTimeout);
         fileSourceConfiguration.setHeaderPresent(headerPresent);
         fileSourceConfiguration.setReadOnlyHeader(readOnlyHeader);
+        fileSourceConfiguration.setBufferSize(bufferSizeInBinaryChunked);
         fileSourceConfiguration.setCronExpression(cronExpression);
     }
 
@@ -618,6 +630,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private Map<String, String> getFileSystemServerProperties() {
         Map<String, String> map = new HashMap<>();
         map.put(Constants.TRANSPORT_FILE_URI, dirUri);
+        map.put(Constants.MODE, mode);
         if (actionAfterProcess != null) {
             map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase(Locale.ENGLISH));
         }
@@ -628,10 +641,11 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         map.put(Constants.CREATE_MOVE_DIR, Constants.TRUE.toUpperCase(Locale.ENGLISH));
         map.put(Constants.ACK_TIME_OUT, "5000");
         map.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY, fileReadWaitTimeout);
+        map.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, bufferSizeInBinaryChunked);
         map.put(Constants.CRON_EXPRESSION, cronExpression);
 
         if (Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
-                Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
+                Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE.toUpperCase(Locale.ENGLISH));
         } else {
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.FALSE.toUpperCase(Locale.ENGLISH));
@@ -646,14 +660,15 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     }
 
     private void validateParameters() {
-        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+        if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
+                Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
             if (isTailingEnabled) {
                 throw new SiddhiAppCreationException("In 'file' source of the siddhi app '" +
                         siddhiAppContext.getName() + "', tailing has been enabled by user or by default. " +
                         "But tailing can't be enabled in '" + mode + "' mode.");
             }
 
-            if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+            if (Constants.BINARY_FULL.equalsIgnoreCase(mode) || Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
                 if (beginRegex != null && endRegex != null) {
                     throw new SiddhiAppCreationException("'begin.regex' and 'end.regex' can be only provided if the" +
                             " mode is 'regex'. But in 'file' source of the siddhi app '" +
@@ -790,9 +805,10 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 } else {
                     properties.put(Constants.URI, fileUri);
                     properties.put(Constants.ACK_TIME_OUT, "1000");
-                    properties.put(Constants.MODE, mode);
+                    properties.put(Constants.MODE, fileSourceConfiguration.getMode());
                     properties.put(Constants.HEADER_PRESENT, headerPresent);
                     properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
+                    properties.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, bufferSizeInBinaryChunked);
                     VFSClientConnector vfsClientConnector = new VFSClientConnector();
                     FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration,
                             metrics);

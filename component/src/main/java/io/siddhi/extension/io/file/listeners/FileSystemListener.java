@@ -49,9 +49,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import static io.siddhi.extension.io.file.util.Util.constructPath;
 import static io.siddhi.extension.io.file.util.Util.generateProperties;
-import static io.siddhi.extension.io.file.util.Util.getFileName;
 import static io.siddhi.extension.io.file.util.Util.reProcessFileGenerateProperties;
 
 /**
@@ -120,7 +118,8 @@ public class FileSystemListener implements RemoteFileSystemListener {
                             metrics.getTotalErrorCount().inc();
                         }
                     }
-                } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
+                } else if (Constants.BINARY_CHUNKED.equalsIgnoreCase(mode) ||
+                        Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                     vfsClientConnector = new VFSClientConnector();
                     fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration, metrics);
                     vfsClientConnector.setMessageProcessor(fileProcessor);

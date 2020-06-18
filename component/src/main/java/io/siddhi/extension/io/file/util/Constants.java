@@ -57,12 +57,14 @@ public class Constants {
     public static final String KEEP = "keep";
     public static final String TEXT_FULL = "text.full";
     public static final String BINARY_FULL = "binary.full";
+    public static final String BINARY_CHUNKED = "binary.chunked";
     public static final String REGEX = "regex";
     public static final String LINE = "line";
     public static final String TRUE = "true";
     public static final String FALSE = "false";
     public static final String NONE = "none";
     public static final int BUFFER_SIZE = 4096;
+    public static final String BUFFER_SIZE_IN_BINARY_CHUNKED = "buffer.size";
 
     /*property keys*/
     public static final String ACTION = "action";
