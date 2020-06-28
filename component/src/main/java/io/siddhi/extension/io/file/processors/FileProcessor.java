@@ -39,6 +39,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,13 +49,13 @@ import java.util.regex.Pattern;
 public class FileProcessor implements CarbonMessageProcessor {
     private static final Logger log = Logger.getLogger(FileProcessor.class);
 
-    private SourceEventListener sourceEventListener;
-    private FileSourceConfiguration fileSourceConfiguration;
-    private String mode;
-    private Pattern pattern;
+    private final SourceEventListener sourceEventListener;
+    private final FileSourceConfiguration fileSourceConfiguration;
+    private final String mode;
+    private final Pattern pattern;
     private int readBytes;
-    private StringBuilder sb;
-    private String[] requiredProperties;
+    private final StringBuilder sb;
+    private final String[] requiredProperties;
 
     private Stopwatch stopwatch;
     private long lineCount;
@@ -84,51 +85,49 @@ public class FileProcessor implements CarbonMessageProcessor {
             this.metrics = sourceMetrics;
             this.fileURI = fileSourceConfiguration.getCurrentlyReadingFileURI();
             previousEventCount = ((SourceMapper) sourceEventListener).getEventCount();
-            fileSourceConfiguration.getExecutorService().execute(() -> {
-                stopwatch = Stopwatch.createStarted();
-                startedTime = System.currentTimeMillis();
-                fileSize = Utils.getFileSize(fileURI);
-                metrics.getStartedTimeMetric(System.currentTimeMillis());
-                boolean add = metrics.getFilesURI().add(fileURI);
-                if (add) {
-                    try {
-                        lineCount = Utils.getLinesCount(fileURI);
-                        metrics.getFileSizeMetric(() -> fileSize);
-                        metrics.getReadPercentageMetric();
-                        metrics.getReadLineCountMetric().inc(lineCount);
-                        metrics.getValidEventCountMetric();
-                        metrics.getTotalErrorCount();
-                        if (fileSourceConfiguration.isTailingEnabled()) {
-                            metrics.getTailEnabledMetric(1);
-                            metrics.getElapseTimeMetric(() -> stopwatch.elapsed().toMillis());
-                        } else {
-                            metrics.getTailEnabledMetric(0);
-                            metrics.getElapseTimeMetric(() -> {
-                                if (completedTime != 0) {
-                                    return completedTime - startedTime;
-                                }
-                                return 0;
-                            });
-                        }
-                        metrics.getFileStatusMetric();
-                    } catch (IOException e) {
-                        log.error("Error occurred while getting the lines count in '" + fileURI + "'.", e);
+            stopwatch = Stopwatch.createStarted();
+            startedTime = System.currentTimeMillis();
+            fileSize = Utils.getFileSize(fileURI);
+            metrics.getStartedTimeMetric(System.currentTimeMillis());
+            boolean add = metrics.getFilesURI().add(fileURI);
+            if (add) {
+                try {
+                    lineCount = Utils.getLinesCount(fileURI);
+                    metrics.getFileSizeMetric(() -> fileSize);
+                    metrics.getReadPercentageMetric(fileURI);
+                    metrics.getReadLineCountMetric().inc(lineCount);
+                    metrics.getValidEventCountMetric();
+                    metrics.getTotalErrorCount();
+                    if (fileSourceConfiguration.isTailingEnabled()) {
+                        metrics.getTailEnabledMetric(1);
+                        metrics.getElapseTimeMetric(() -> stopwatch.elapsed().toMillis());
+                    } else {
+                        metrics.getTailEnabledMetric(0);
+                        metrics.getElapseTimeMetric(() -> {
+                            if (completedTime != 0) {
+                                return completedTime - startedTime;
+                            }
+                            return 0L;
+                        });
                     }
+                    metrics.getFileStatusMetric();
+                } catch (IOException e) {
+                    log.error("Error occurred while getting the lines count in '" + fileURI + "'.", e);
                 }
-            });
+            }
         }
     }
 
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         if (carbonMessage instanceof BinaryCarbonMessage) {
             byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
-            String msg = new String(content, Constants.UTF_8);
+            String msg = new String(content, StandardCharsets.UTF_8);
             if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
                     carbonCallback.done(carbonMessage);
                     carbonMessage.setProperty
                             (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
-                    sourceEventListener.onEvent(new String(content, Constants.UTF_8),
+                    sourceEventListener.onEvent(new String(content, StandardCharsets.UTF_8),
                             getRequiredPropertyValues(carbonMessage));
                     send = true;
                 }
@@ -153,7 +152,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                     carbonCallback.done(carbonMessage);
                 } else {
                     if (msg.length() > 0) {
-                        readBytes = msg.getBytes(Constants.UTF_8).length;
+                        readBytes = msg.getBytes(StandardCharsets.UTF_8).length;
                         fileSourceConfiguration.updateFilePointer(
                                 (Long) carbonMessage.getProperties().get(Constants.CURRENT_POSITION));
                         sourceEventListener.onEvent(msg, getRequiredPropertyValues(carbonMessage));
@@ -257,7 +256,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                 } else {
                     fileSourceConfiguration.updateFilePointer(readBytes);
 
-                    sb.append(new String(content, Constants.UTF_8));
+                    sb.append(new String(content, StandardCharsets.UTF_8));
                     Matcher matcher = pattern.matcher(sb.toString().trim());
                     while (matcher.find()) {
                         String event = matcher.group(0);
@@ -332,7 +331,7 @@ public class FileProcessor implements CarbonMessageProcessor {
         metrics.getTotalReadsMetrics().inc();
         metrics.getReadByteMetric().inc(byteLength);
         metrics.getElapseTimeMetric(() -> stopwatch.elapsed().toMillis());
-        metrics.setReadPercentage(totalReadByteSize / fileSize * 100);
+        metrics.setReadPercentage(totalReadByteSize / fileSize * 100, fileURI);
         long eventCount = ((SourceMapper) sourceEventListener).getEventCount() - previousEventCount;
         metrics.getValidEventCountMetric().inc(eventCount);
         previousEventCount = ((SourceMapper) sourceEventListener).getEventCount();
