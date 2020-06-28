@@ -17,7 +17,7 @@ package io.siddhi.extension.io.file.metrics;
  * under the License.
  */
 import org.wso2.carbon.metrics.core.Level;
-import org.wso2.carbon.si.metrics.core.internal.MetricsManagement;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 
 /**
  * Class which is holds the metrics to monitor Delete file operations.
@@ -32,7 +32,7 @@ public class FileDeleteMetrics extends Metrics {
     }
 
     public void getDeleteMetric(int status) {
-        MetricsManagement.getInstance().getMetricService()
+        MetricsDataHolder.getInstance().getMetricService()
                 .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Operations.Delete.%s.%s",
                         siddhiAppName, time + ".time", source + ".source"), Level.INFO, () -> status);
     }
