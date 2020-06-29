@@ -29,6 +29,8 @@
             <class name="io.siddhi.extension.io.file.FileSinkTestCase"/>
             <class name="io.siddhi.extension.io.file.FileFunctionsTestCase"/>
             <class name="io.siddhi.extension.io.file.FileHandlingTestCase"/>
+            <class name="io.siddhi.extension.io.file.FileSinkMetricsTest"/>
+            <class name="io.siddhi.extension.io.file.FileSourceMetricsTest"/>
         </classes>
     </test>
 </suite>
