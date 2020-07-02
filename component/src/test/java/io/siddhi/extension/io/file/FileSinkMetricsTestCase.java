@@ -57,7 +57,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Test cases for siddhi-io-file sink to test sink level metrics.
  */
-public class FileSinkMetricsTest {
+public class FileSinkMetricsTestCase {
 
     private static final Logger log = Logger.getLogger(FileSinkTestCase.class);
     private final AtomicInteger count = new AtomicInteger();
