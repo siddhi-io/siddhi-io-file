@@ -18,6 +18,7 @@
 package io.siddhi.extension.io.file.util;
 
 
+import org.apache.commons.io.FilenameUtils;
 import org.wso2.carbon.config.ConfigurationException;
 import org.wso2.carbon.config.provider.ConfigProvider;
 import org.wso2.carbon.config.provider.ConfigProviderImpl;
@@ -52,7 +53,8 @@ public class TestUtils {
         carbonHome = Paths.get(carbonHome.toString(), "src", "test");
         System.setProperty("carbon.home", carbonHome.toString());
         String filePath = carbonHome.toAbsolutePath() + File.separator + "resources" + File.separator + file;
-        Path configurationFilePath = Paths.get(URI.create("file:" + filePath));
+        filePath = FilenameUtils.separatorsToSystem(filePath).replace("\\", "/");
+        Path configurationFilePath = Paths.get(URI.create("file:///" + filePath).normalize());
         ConfigFileReader configFileReader = new YAMLBasedConfigFileReader(configurationFilePath);
         return new ConfigProviderImpl(configFileReader, secureVault);
     }
