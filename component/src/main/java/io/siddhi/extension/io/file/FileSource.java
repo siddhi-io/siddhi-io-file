@@ -295,7 +295,7 @@ import static org.quartz.CronExpression.isValidExpression;
                                 "Note: This parameter is applicable only if the connector is reading from a directory",
                         optional = true,
                         type = {DataType.STRING},
-                        defaultValue = "None"
+                        defaultValue = "<Empty_String>"
                 )
         },
         examples = {
