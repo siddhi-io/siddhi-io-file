@@ -50,6 +50,8 @@ public class Constants {
     public static final String HEADER_PRESENT = "header.present";
     public static final String READ_ONLY_HEADER = "read.only.header";
     public static final String CRON_EXPRESSION = "cron.expression";
+    public static final String FILE_NAME_PATTERN = "file.name.pattern";
+    public static final String FILE_NAME_PATTERN_PROPERTY_NAME = "fileNamePattern";
 
     /* configuration param values*/
     public static final String MOVE = "move";

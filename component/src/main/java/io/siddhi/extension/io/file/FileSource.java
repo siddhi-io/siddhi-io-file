@@ -288,6 +288,14 @@ import static org.quartz.CronExpression.isValidExpression;
                         optional = true,
                         type = {DataType.STRING},
                         defaultValue = "None"
+                ),
+                @Parameter(
+                        name = Constants.FILE_NAME_PATTERN,
+                        description = "Regex pattern for the filenames that should be read from the directory. " +
+                                "Note: This parameter is applicable only if the connector is reading from a directory",
+                        optional = true,
+                        type = {DataType.STRING},
+                        defaultValue = "None"
                 )
         },
         examples = {
@@ -389,6 +397,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String bufferSizeInBinaryChunked;
     private SourceMetrics metrics;
     private String cronExpression;
+    private String fileNamePattern;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -508,6 +517,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         readOnlyHeader = optionHolder.validateAndGetStaticValue(Constants.READ_ONLY_HEADER, "false");
         bufferSizeInBinaryChunked = optionHolder.validateAndGetStaticValue(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED,
                 "65536");
+        fileNamePattern = optionHolder.validateAndGetStaticValue(Constants.FILE_NAME_PATTERN, null);
+
         if (optionHolder.isOptionExists(Constants.CRON_EXPRESSION)) {
             cronExpression = optionHolder.validateAndGetStaticValue(Constants.CRON_EXPRESSION, null);
             if (!isValidExpression(cronExpression)) {
@@ -643,6 +654,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         map.put(Constants.FILE_READ_WAIT_TIMEOUT_KEY, fileReadWaitTimeout);
         map.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, bufferSizeInBinaryChunked);
         map.put(Constants.CRON_EXPRESSION, cronExpression);
+        map.put(Constants.FILE_NAME_PATTERN_PROPERTY_NAME, fileNamePattern);
 
         if (Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
                 Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
