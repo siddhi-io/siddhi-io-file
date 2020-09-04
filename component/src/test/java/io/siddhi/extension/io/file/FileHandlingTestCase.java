@@ -235,7 +235,8 @@ public class FileHandlingTestCase {
         File currentFile = new File(newRoot + "/destination.txt");
         File newFile = new File(newRoot + "/changedDestination.txt");
         String app = "" +
-                "@App:name('TestFileEventListener') @source(type='fileeventlistener', " +
+                "@App:name('TestFileEventListener') " +
+                "@source(type='fileeventlistener', " +
                 "dir.uri='" + newRoot + "')\n" +
                 "define stream FileListenerStream (filepath string, filename string, status string); \n" +
                 "@sink(type='log')" +

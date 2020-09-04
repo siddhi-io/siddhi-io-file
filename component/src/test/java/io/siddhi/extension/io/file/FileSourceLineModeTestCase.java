@@ -1352,4 +1352,41 @@ public class FileSourceLineModeTestCase {
         AssertJUnit.assertEquals("Number of events", 7, count.get());
         siddhiAppRuntime.shutdown();
     }
+
+    @Test
+    public void regexFileNameTest() throws InterruptedException {
+        log.info("Siddhi IO File test for file name patterns with regex");
+        AtomicInteger eventCount = new AtomicInteger();
+        String streams = "@App:name('FileTest')\n" +
+                "\n" +
+                "@source(type='file',\n" +
+                "\tmode='line',\n" +
+                "\taction.after.process='NONE',\n" +
+                "\ttailing='true',\n" +
+                "\tdir.uri='file:/" + newRoot + "/name_pattern',\n" +
+                "\tfile.name.pattern='^test-[\\d]+', \n" +
+                "\t@map(type='json'))\n" +
+                "define stream FooStream(symbol string, price float, volume long);\n" +
+                "\n" +
+                "@sink(type='log')\n" +
+                "define stream BarStream(symbol string, price float, volume long);\n";
+
+        String query = "" +
+                "from FooStream\n" +
+                "select * \n" +
+                "insert into BarStream;\n";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                eventCount.incrementAndGet();
+            }
+        });
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 2, eventCount.get(), 6000);
+        AssertJUnit.assertEquals("Number of events", 2, eventCount.get());
+        siddhiAppRuntime.shutdown();
+    }
 }
