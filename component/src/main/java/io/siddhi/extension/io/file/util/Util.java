@@ -53,9 +53,7 @@ public class Util {
                 File fileObject = new File(fileObjectPath);
                 if (fileObject.isDirectory()) {
                     //If a fileObject is a folder then the events for the files in the folder should thrown.
-                    if (file.getAbsolutePath().startsWith(fileObjectPath)) {
-                        listenerEventsURLValidated = true;
-                    }
+                    listenerEventsURLValidated = true;
                 }
             }
         }
