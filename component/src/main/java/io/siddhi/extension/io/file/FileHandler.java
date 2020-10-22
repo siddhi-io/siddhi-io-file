@@ -44,6 +44,8 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -176,6 +178,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
                                                String[] requiredProperties, ConfigReader configReader,
                                                SiddhiAppContext siddhiAppContext) throws SiddhiAppValidationException {
         this.sourceEventListener = sourceEventListener;
+        String tmpURL;
         if (optionHolder.isOptionExists(Constants.DIR_URI)) {
             listeningDirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
         }
@@ -192,6 +195,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
             if (listeningFileObject.isFile()) {
                 throw new SiddhiAppCreationException("URI must belongs to a folder");
             }
+            tmpURL = listeningDirUri;
             listeningDirUri = listeningFileObject.getName().getPath();
         } catch (FileSystemException e) {
             throw new SiddhiAppValidationException("Directory " + listeningFileObject.getPublicURIString()
@@ -203,17 +207,30 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         fileNameList = fileNameList.replaceAll("\\s", "");
         fileObjectList = Arrays.asList(fileNameList.split(","));
         for (int i = 0; i < fileObjectList.size(); i++) {
-            String fileObjectPath = listeningDirUri + "/" + fileObjectList.get(i);
+            String fileObjectPath = tmpURL + File.separator + fileObjectList.get(i);
             listeningFileObject = Utils.getFileObject(fileObjectPath);
+            String filePath = null;
             try {
+                filePath = listeningFileObject.getURL().toURI().toURL().getPath();
+                if (!filePath.contains(File.separator)) {
+                    //this flow will only executed on windows environment
+                    filePath = filePath.replace("/", File.separator).substring(1);
+                }
                 if (!listeningFileObject.exists()) {
                     throw new SiddhiAppCreationException("File/Folder " +
                             listeningFileObject.getPublicURIString() + " is not found.");
                 }
             } catch (FileSystemException e) {
                 log.error("File/Folder " + listeningFileObject.getPublicURIString() + " is not found.", e);
+            } catch (MalformedURLException e) {
+                throw new SiddhiAppCreationException("Path  " + fileObjectPath + " is malformed." + e.getMessage(), e);
+            } catch (URISyntaxException e) {
+                throw new SiddhiAppCreationException("Path " + fileObjectPath + " syntax is not correct." +
+                        e.getMessage(), e);
             }
-            fileObjectList.set(i, fileObjectPath);
+            if (filePath != null) {
+                fileObjectList.set(i, filePath);
+            }
         }
         // Validation for MonitoringInterval
         String monitoringValue = optionHolder.validateAndGetStaticValue(Constants.MONITORING_INTERVAL, "100");
