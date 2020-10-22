@@ -228,7 +228,9 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
                 throw new SiddhiAppCreationException("Path " + fileObjectPath + " syntax is not correct." +
                         e.getMessage(), e);
             }
-            fileObjectList.set(i, filePath);
+            if (filePath != null) {
+                fileObjectList.set(i, filePath);
+            }
         }
         // Validation for MonitoringInterval
         String monitoringValue = optionHolder.validateAndGetStaticValue(Constants.MONITORING_INTERVAL, "100");
