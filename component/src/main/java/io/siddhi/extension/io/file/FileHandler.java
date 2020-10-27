@@ -64,7 +64,7 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
         description = "" +
                 "The 'fileeventlistener' component of the 'siddhi-io-fie' extension allows you to get the details of" +
                 " files that have been created, modified or deleted during execution time.Supports listening to local " +
-                "file paths." ,
+                "folder/file paths." ,
         parameters = {
                 @Parameter(
                         name = "dir.uri",
