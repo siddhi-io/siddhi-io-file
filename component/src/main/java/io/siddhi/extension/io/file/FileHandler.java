@@ -63,7 +63,8 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
         namespace = "source" ,
         description = "" +
                 "The 'fileeventlistener' component of the 'siddhi-io-fie' extension allows you to get the details of" +
-                " files that have been created, modified or deleted during execution time." ,
+                " files that have been created, modified or deleted during execution time.Supports listening to local " +
+                "folder/file paths." ,
         parameters = {
                 @Parameter(
                         name = "dir.uri",
@@ -72,9 +73,7 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                                         " processes all the files within this directory. However, if you have entered" +
                                         " specific files to be processed via the 'file.name.list' parameter, only " +
                                         "those files are processed. The URI specified must " +
-                                        "include the file handling protocol to be used for file processing.\n " +
-                                        "e.g., If the file handling protocol to be used is 'ftp', the URI must be " +
-                                        "provided as 'ftp://<DIRECTORY_PATH>>'.\n",
+                                        "include the file handling protocol to be used for file processing.\n",
                         optional = false,
                         type = {DataType.STRING}
                 ),
