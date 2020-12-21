@@ -32,15 +32,13 @@ import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.vfs2.FileName;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.FileType;
-import org.apache.commons.vfs2.VFS;
 import org.apache.commons.vfs2.provider.local.LocalFileName;
 import org.apache.log4j.Logger;
 
@@ -80,6 +78,14 @@ import java.util.regex.Pattern;
                         type = DataType.BOOL,
                         optional = true,
                         defaultValue = "false"
+                ),
+                @Parameter(
+                        name = "file.system.options",
+                        description = "The file options in key:value pairs separated by commas. " +
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
+                        type = DataType.STRING,
+                        optional = true,
+                        defaultValue = "<Empty_String>"
                 )
         },
         parameterOverloads = {
@@ -91,6 +97,9 @@ import java.util.regex.Pattern;
                 ),
                 @ParameterOverload(
                         parameterNames = {"uri", "include.by.regexp", "exclude.subdirectories"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "include.by.regexp", "exclude.subdirectories", "file.system.options"}
                 )
         },
         returnAttributes = {
@@ -120,16 +129,21 @@ public class FileSearchExtension extends StreamFunctionProcessor {
     private Pattern pattern = null;
     private int inputExecutorLength;
     private boolean excludeSubdirectories = false;
+    private String fileSystemOptions = null;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
                                 ConfigReader configReader, boolean outputExpectsExpiredEvents,
                                 SiddhiQueryContext siddhiQueryContext) {
         inputExecutorLength = attributeExpressionExecutors.length;
-        if (attributeExpressionExecutors.length >= 2 &&
+        if (inputExecutorLength >= 2 &&
                 attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
             pattern = Pattern.compile(((ConstantExpressionExecutor)
                     attributeExpressionExecutors[1]).getValue().toString());
+        }
+        if (inputExecutorLength == 4 &&
+                attributeExpressionExecutors[3] instanceof ConstantExpressionExecutor) {
+            fileSystemOptions = ((ConstantExpressionExecutor) attributeExpressionExecutors[3]).getValue().toString();
         }
         return null;
     }
@@ -181,11 +195,8 @@ public class FileSearchExtension extends StreamFunctionProcessor {
         if (inputExecutorLength == 3) {
             excludeSubdirectories = (Boolean) data[2];
         }
-        FileSystemOptions opts = new FileSystemOptions();
-        FileSystemManager fsManager;
         try {
-            fsManager = VFS.getManager();
-            FileObject fileObj = fsManager.resolveFile(sourceFileUri, opts);
+            FileObject fileObj = Utils.getFileObject(sourceFileUri, fileSystemOptions);
             if (fileObj.exists()) {
                 FileObject[] children = fileObj.getChildren();
                 for (FileObject child : children) {

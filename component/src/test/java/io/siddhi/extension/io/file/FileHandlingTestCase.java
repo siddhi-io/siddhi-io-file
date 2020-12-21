@@ -56,6 +56,13 @@ public class FileHandlingTestCase {
         String rootPath = Objects.requireNonNull(classLoader.getResource("files")).getFile();
         String dirUri = rootPath + "/new";
         newRoot = new File(dirUri);
+        try {
+            if (newRoot.exists()) {
+                FileUtils.forceDelete(newRoot);
+            }
+        } catch (IOException e) {
+            throw new TestException("Failed to delete files from the " + newRoot, e);
+        }
     }
 
     @BeforeMethod

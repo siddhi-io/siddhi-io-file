@@ -20,10 +20,12 @@ package io.siddhi.extension.execution.file;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.executor.ConstantExpressionExecutor;
 import io.siddhi.core.executor.ExpressionExecutor;
 import io.siddhi.core.executor.function.FunctionExecutor;
 import io.siddhi.core.util.config.ConfigReader;
@@ -49,6 +51,22 @@ import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
                         description = "File path to check for existence.",
                         type = DataType.STRING,
                         dynamic = true
+                ),
+                @Parameter(
+                        name = "file.system.options",
+                        description = "The file options in key:value pairs separated by commas. " +
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
+                        type = DataType.STRING,
+                        optional = true,
+                        defaultValue = "<Empty_String>"
+                )
+        },
+        parameterOverloads = {
+                @ParameterOverload(
+                        parameterNames = {"uri"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "file.system.options"}
                 )
         },
         returnAttributes = {
@@ -73,22 +91,32 @@ import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
 public class FileExistsExtension extends FunctionExecutor {
     private static final Logger log = Logger.getLogger(FileExistsExtension.class);
     private Attribute.Type returnType = BOOL;
+    private String fileSystemOptions = null;
+    private int inputExecutorLength;
     @Override
     protected StateFactory init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
                                 SiddhiQueryContext siddhiQueryContext) {
+        inputExecutorLength = attributeExpressionExecutors.length;
+        if (inputExecutorLength == 2 &&
+                attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
+            fileSystemOptions = ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue().toString();
+        }
         return null;
     }
 
     @Override
     protected Object execute(Object[] data, State state) {
-        return null;
+        return checkIsExist((String) data[0]);
     }
 
     @Override
     protected Object execute(Object data, State state) {
-        String fileExistPathUri = (String) data;
+        return checkIsExist((String) data);
+    }
+
+    private Object checkIsExist(String fileExistPathUri) {
         try {
-            return Utils.getFileObject((String) data).exists();
+            return Utils.getFileObject(fileExistPathUri, fileSystemOptions).exists();
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when checking the existence of  " +
                     fileExistPathUri, e);

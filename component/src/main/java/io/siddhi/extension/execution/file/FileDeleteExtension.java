@@ -20,9 +20,11 @@ package io.siddhi.extension.execution.file;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.executor.ConstantExpressionExecutor;
 import io.siddhi.core.executor.ExpressionExecutor;
 import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
@@ -55,6 +57,22 @@ import java.util.List;
                         description = "Absolute path of the file or the directory to be deleted.",
                         type = DataType.STRING,
                         dynamic = true
+                ),
+                @Parameter(
+                        name = "file.system.options",
+                        description = "The file options in key:value pairs separated by commas. " +
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
+                        type = DataType.STRING,
+                        optional = true,
+                        defaultValue = "<Empty_String>"
+                )
+        },
+        parameterOverloads = {
+                @ParameterOverload(
+                        parameterNames = {"uri"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "file.system.options"}
                 )
         },
         examples = {
@@ -71,11 +89,18 @@ import java.util.List;
 public class FileDeleteExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileDeleteExtension.class);
     private FileDeleteMetrics fileDeleteMetrics;
+    private int inputExecutorLength;
+    private String fileSystemOptions = null;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
                                 ConfigReader configReader, boolean outputExpectsExpiredEvents,
                                 SiddhiQueryContext siddhiQueryContext) {
+        inputExecutorLength = attributeExpressionExecutors.length;
+        if (inputExecutorLength == 2 &&
+                attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
+            fileSystemOptions = ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue().toString();
+        }
         if (MetricsDataHolder.getInstance().getMetricService() != null &&
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
             try {
@@ -103,18 +128,21 @@ public class FileDeleteExtension extends StreamFunctionProcessor {
 
     @Override
     protected Object[] process(Object[] data) {
-        return new Object[0];
+        return deleteFileOrFolder((String) data[0]);
     }
 
     @Override
     protected Object[] process(Object data) {
-        String fileDeletePathUri = (String) data;
+        return deleteFileOrFolder((String) data);
+    }
+
+    private Object[] deleteFileOrFolder(String fileDeletePathUri) {
         if (fileDeleteMetrics != null) {
             fileDeleteMetrics.setSource(fileDeletePathUri);
             fileDeleteMetrics.setTime(System.currentTimeMillis());
         }
         try {
-            FileObject rootFileObject = Utils.getFileObject(fileDeletePathUri);
+            FileObject rootFileObject = Utils.getFileObject(fileDeletePathUri, fileSystemOptions);
             rootFileObject.delete(Selectors.SELECT_ALL);
             if (fileDeleteMetrics != null) {
                 fileDeleteMetrics.getDeleteMetric(1);

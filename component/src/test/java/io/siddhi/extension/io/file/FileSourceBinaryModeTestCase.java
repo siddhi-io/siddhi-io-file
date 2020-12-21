@@ -75,12 +75,26 @@ public class FileSourceBinaryModeTestCase {
         companies2.add("microsoft");
         companies2.add("google");
         companies2.add("wso2");
+        movedFiles = new File(moveAfterProcessDir);
+        try {
+            if (newRoot.exists()) {
+                FileUtils.forceDelete(newRoot);
+            }
+            if (movedFiles.exists()) {
+                FileUtils.forceDelete(movedFiles);
+            }
+        } catch (IOException e) {
+            throw new TestException(e.getMessage(), e);
+        }
     }
 
     @BeforeMethod
     public void doBeforeMethod() {
         count.set(0);
         try {
+            if (newRoot.exists()) {
+                FileUtils.forceDelete(newRoot);
+            }
             FileUtils.copyDirectory(sourceRoot, newRoot);
             movedFiles = new File(moveAfterProcessDir);
             FileUtils.forceMkdir(movedFiles);
@@ -570,6 +584,7 @@ public class FileSourceBinaryModeTestCase {
 
         siddhiAppRuntime.start();
         SiddhiTestHelper.waitForEvents(waitTime, 8, count, timeout);
+        Thread.sleep(2000);
         File file = new File(moveAfterProcessDir);
         AssertJUnit.assertEquals(8, file.list().length);
         //assert event count

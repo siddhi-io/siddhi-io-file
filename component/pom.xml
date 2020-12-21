@@ -73,8 +73,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons.wso2</groupId>
+            <groupId>org.wso2.org.apache.commons</groupId>
             <artifactId>commons-vfs2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

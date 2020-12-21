@@ -24,6 +24,7 @@ import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.executor.ConstantExpressionExecutor;
 import io.siddhi.core.executor.ExpressionExecutor;
 import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
@@ -78,6 +79,14 @@ import static io.siddhi.extension.io.file.util.Constants.BUFFER_SIZE;
                         type = DataType.BOOL,
                         optional = true,
                         defaultValue = "false"
+                ),
+                @Parameter(
+                        name = "file.system.options",
+                        description = "The file options in key:value pairs separated by commas. " +
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
+                        type = DataType.STRING,
+                        optional = true,
+                        defaultValue = "<Empty_String>"
                 )
         },
         parameterOverloads = {
@@ -86,6 +95,9 @@ import static io.siddhi.extension.io.file.util.Constants.BUFFER_SIZE;
                 ),
                 @ParameterOverload(
                         parameterNames = {"uri", "destination.dir.uri", "exclude.root.dir"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "destination.dir.uri", "exclude.root.dir", "file.system.options"}
                 )
         },
         examples = {
@@ -107,12 +119,17 @@ import static io.siddhi.extension.io.file.util.Constants.BUFFER_SIZE;
 public class FileUnarchiveExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileUnarchiveExtension.class);
     private int inputExecutorLength;
+    private String fileSystemOptions = null;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
                                 ConfigReader configReader, boolean outputExpectsExpiredEvents,
                                 SiddhiQueryContext siddhiQueryContext) {
         inputExecutorLength = attributeExpressionExecutors.length;
+        if (inputExecutorLength == 4 &&
+                attributeExpressionExecutors[3] instanceof ConstantExpressionExecutor) {
+            fileSystemOptions = ((ConstantExpressionExecutor) attributeExpressionExecutors[3]).getValue().toString();
+        }
         return null;
     }
 
@@ -134,7 +151,7 @@ public class FileUnarchiveExtension extends StreamFunctionProcessor {
         if (inputExecutorLength == 3) {
             excludeRootFolder = (Boolean) data[2];
         }
-        FileObject sourceFileObject = Utils.getFileObject(filePathUri);
+        FileObject sourceFileObject = Utils.getFileObject(filePathUri, fileSystemOptions);
         String sourceFileExtension = sourceFileObject.getName().getExtension();
         if (!excludeRootFolder) {
             if (destinationDirUri.endsWith(File.separator)) {
@@ -145,7 +162,7 @@ public class FileUnarchiveExtension extends StreamFunctionProcessor {
                     destinationDirUri.concat(File.separator +
                             fileName.substring(0, fileName.lastIndexOf(sourceFileExtension) - 1));
         }
-        FileObject destinationDirFile = Utils.getFileObject(destinationDirUri);
+        FileObject destinationDirFile = Utils.getFileObject(destinationDirUri, fileSystemOptions);
         // create output directory if it doesn't exist
         try {
             if (!destinationDirFile.exists() || !destinationDirFile.isFolder()) {

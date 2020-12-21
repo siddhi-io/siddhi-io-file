@@ -62,6 +62,14 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
                         type = DataType.STRING,
                         optional = true,
                         defaultValue = "MM/dd/yyyy HH:mm:ss"
+                ),
+                @Parameter(
+                        name = "file.system.options",
+                        description = "The file options in key:value pairs separated by commas. " +
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
+                        type = DataType.STRING,
+                        optional = true,
+                        defaultValue = "<Empty_String>"
                 )
         },
         parameterOverloads = {
@@ -70,6 +78,9 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
                 ),
                 @ParameterOverload(
                         parameterNames = {"uri", "datetime.format"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "datetime.format", "file.system.options"}
                 )
         },
         returnAttributes = {
@@ -96,17 +107,29 @@ public class FileLastModifiedTimeExtension extends FunctionExecutor {
     private Attribute.Type returnType = STRING;
     private SimpleDateFormat simpleDateFormat = null;
     private int inputExecutorLength;
+    private String fileSystemOptions = null;
+
     @Override
     protected StateFactory init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
                                 SiddhiQueryContext siddhiQueryContext) {
         inputExecutorLength = attributeExpressionExecutors.length;
-        if (attributeExpressionExecutors.length >= 2) {
-            if (attributeExpressionExecutors[2] instanceof ConstantExpressionExecutor) {
-                simpleDateFormat = new SimpleDateFormat(((ConstantExpressionExecutor)
-                        attributeExpressionExecutors[1]).getValue().toString());
-            }
-        } else {
+        if (inputExecutorLength == 1) {
             simpleDateFormat = new SimpleDateFormat(LAST_MODIFIED_DATETIME_FORMAT);
+        }
+        if (inputExecutorLength >= 2) {
+            if (attributeExpressionExecutors[2] instanceof ConstantExpressionExecutor) {
+                String dataFormatString =
+                        ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue().toString();
+                if (!dataFormatString.trim().isEmpty()) {
+                    simpleDateFormat = new SimpleDateFormat(dataFormatString);
+                } else {
+                    simpleDateFormat = new SimpleDateFormat(LAST_MODIFIED_DATETIME_FORMAT);
+                }
+            }
+        }
+        if (inputExecutorLength == 3 &&
+                attributeExpressionExecutors[2] instanceof ConstantExpressionExecutor) {
+            fileSystemOptions = ((ConstantExpressionExecutor) attributeExpressionExecutors[2]).getValue().toString();
         }
         return null;
     }
@@ -129,7 +152,7 @@ public class FileLastModifiedTimeExtension extends FunctionExecutor {
             }
         }
         try {
-            FileObject fileObj = Utils.getFileObject(sourceFileUri);
+            FileObject fileObj = Utils.getFileObject(sourceFileUri, fileSystemOptions);
             return simpleDateFormat.format(fileObj.getContent().getLastModifiedTime());
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when getting the last modified datetime of " +
@@ -141,7 +164,7 @@ public class FileLastModifiedTimeExtension extends FunctionExecutor {
     protected Object execute(Object data, State state) {
         String sourceFileUri = (String) data;
         try {
-            FileObject fileObj = Utils.getFileObject(sourceFileUri);
+            FileObject fileObj = Utils.getFileObject(sourceFileUri, fileSystemOptions);
             SimpleDateFormat sdf;
             sdf = new SimpleDateFormat(LAST_MODIFIED_DATETIME_FORMAT);
             return sdf.format(fileObj.getContent().getLastModifiedTime());
