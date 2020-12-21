@@ -101,6 +101,14 @@ import static io.siddhi.extension.util.Constant.ZIP_FILE_EXTENSION;
                         defaultValue = "false",
                         optional = true
                 ),
+                @Parameter(
+                        name = "file.system.options",
+                        description = "The file options in key:value pairs separated by commas. " +
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
+                        type = DataType.STRING,
+                        optional = true,
+                        defaultValue = "<Empty_String>"
+                )
         },
         parameterOverloads = {
                 @ParameterOverload(
@@ -115,6 +123,10 @@ import static io.siddhi.extension.util.Constant.ZIP_FILE_EXTENSION;
                 @ParameterOverload(
                         parameterNames = {"uri", "destination.dir.uri", "archive.type", "include.by.regexp",
                                 "exclude.subdirectories"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "destination.dir.uri", "archive.type", "include.by.regexp",
+                                "exclude.subdirectories", "file.system.options"}
                 )
         },
         examples = {
@@ -150,16 +162,21 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
     private int inputExecutorLength;
     private String siddhiAppName;
     private FileArchiveMetrics fileArchiveMetrics;
+    private String fileSystemOptions = null;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
                                 ConfigReader configReader, boolean outputExpectsExpiredEvents,
                                 SiddhiQueryContext siddhiQueryContext) {
         inputExecutorLength = attributeExpressionExecutors.length;
-        if (attributeExpressionExecutors.length >= 4 &&
+        if (inputExecutorLength >= 4 &&
                 attributeExpressionExecutors[3] instanceof ConstantExpressionExecutor) {
             pattern = Pattern.compile(
                     ((ConstantExpressionExecutor) attributeExpressionExecutors[3]).getValue().toString());
+        }
+        if (inputExecutorLength == 6 &&
+                attributeExpressionExecutors[5] instanceof ConstantExpressionExecutor) {
+            fileSystemOptions = ((ConstantExpressionExecutor) attributeExpressionExecutors[5]).getValue().toString();
         }
         siddhiAppName = siddhiQueryContext.getSiddhiAppContext().getName();
         if (MetricsDataHolder.getInstance().getMetricService() != null &&
@@ -208,7 +225,7 @@ public class FileArchiveExtension extends StreamFunctionProcessor {
         if (pattern == null) {
             pattern = Pattern.compile(regex);
         }
-        FileObject destinationDirUriObject = Utils.getFileObject(destinationDirUri);
+        FileObject destinationDirUriObject = Utils.getFileObject(destinationDirUri, fileSystemOptions);
         try {
             if (!destinationDirUriObject.exists() || !destinationDirUriObject.isFolder()) {
                 destinationDirUriObject.createFolder();

@@ -20,9 +20,11 @@ package io.siddhi.extension.execution.file;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.executor.ConstantExpressionExecutor;
 import io.siddhi.core.executor.ExpressionExecutor;
 import io.siddhi.core.query.processor.ProcessingMode;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
@@ -55,8 +57,29 @@ import java.util.List;
                 @Parameter(
                         name = "is.directory",
                         description = "This flag is used when creating file path is a directory",
+                        type = DataType.BOOL,
+                        dynamic = true,
+                        optional = true,
+                        defaultValue = "false"
+                ),
+                @Parameter(
+                        name = "file.system.options",
+                        description = "The file options in key:value pairs separated by commas. " +
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
                         type = DataType.STRING,
-                        dynamic = true
+                        optional = true,
+                        defaultValue = "<Empty_String>"
+                )
+        },
+        parameterOverloads = {
+                @ParameterOverload(
+                        parameterNames = {"uri"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "is.directory"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "is.directory", "file.system.options"}
                 )
         },
         examples = {
@@ -72,11 +95,18 @@ import java.util.List;
 )
 public class FileCreateExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileCreateExtension.class);
+    private int inputExecutorLength;
+    private String fileSystemOptions = null;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
                                 ConfigReader configReader, boolean outputExpectsExpiredEvents,
                                 SiddhiQueryContext siddhiQueryContext) {
+        inputExecutorLength = attributeExpressionExecutors.length;
+        if (inputExecutorLength == 3 &&
+                attributeExpressionExecutors[2] instanceof ConstantExpressionExecutor) {
+            fileSystemOptions = ((ConstantExpressionExecutor) attributeExpressionExecutors[2]).getValue().toString();
+        }
         return null;
     }
 
@@ -93,8 +123,13 @@ public class FileCreateExtension extends StreamFunctionProcessor {
     @Override
     protected Object[] process(Object[] data) {
         String fileSourcePath = (String) data[0];
-        boolean isDirectory = (Boolean) data[1];
-        FileObject rootFileObject = Utils.getFileObject(fileSourcePath);
+        boolean isDirectory;
+        if (inputExecutorLength >= 2) {
+            isDirectory = (Boolean) data[1];
+        } else {
+            isDirectory = false;
+        }
+        FileObject rootFileObject = Utils.getFileObject(fileSourcePath, fileSystemOptions);
         try {
             if (isDirectory) {
                 rootFileObject.createFolder();

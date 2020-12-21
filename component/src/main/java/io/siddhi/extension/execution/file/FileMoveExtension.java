@@ -81,6 +81,14 @@ import java.util.regex.Pattern;
                         type = DataType.BOOL,
                         optional = true,
                         defaultValue = "false"
+                ),
+                @Parameter(
+                        name = "file.system.options",
+                        description = "The file options in key:value pairs separated by commas. " +
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
+                        type = DataType.STRING,
+                        optional = true,
+                        defaultValue = "<Empty_String>"
                 )
         },
         parameterOverloads = {
@@ -92,6 +100,10 @@ import java.util.regex.Pattern;
                 ),
                 @ParameterOverload(
                         parameterNames = {"uri", "destination.dir.uri", "include.by.regexp", "exclude.root.dir"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "destination.dir.uri", "include.by.regexp", "exclude.root.dir",
+                                "file.system.options"}
                 )
         },
         returnAttributes = {
@@ -128,6 +140,7 @@ public class FileMoveExtension extends StreamFunctionProcessor {
     private Pattern pattern = null;
     private int inputExecutorLength;
     private FileMoveMetrics fileMoveMetrics;
+    private String fileSystemOptions = null;
 
     @Override
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
@@ -138,6 +151,10 @@ public class FileMoveExtension extends StreamFunctionProcessor {
                 attributeExpressionExecutors[2] instanceof ConstantExpressionExecutor) {
             pattern = Pattern.compile(((ConstantExpressionExecutor)
                     attributeExpressionExecutors[2]).getValue().toString());
+        }
+        if (attributeExpressionExecutors.length == 5 &&
+                attributeExpressionExecutors[4] instanceof ConstantExpressionExecutor) {
+            fileSystemOptions = ((ConstantExpressionExecutor) attributeExpressionExecutors[4]).getValue().toString();
         }
         if (MetricsDataHolder.getInstance().getMetricService() != null &&
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
@@ -177,7 +194,7 @@ public class FileMoveExtension extends StreamFunctionProcessor {
             pattern = Pattern.compile(regex);
         }
         try {
-            FileObject rootFileObject = Utils.getFileObject(uri);
+            FileObject rootFileObject = Utils.getFileObject(uri, fileSystemOptions);
             if (rootFileObject.getType().hasContent() &&
                     pattern.matcher(rootFileObject.getName().getBaseName()).lookingAt()) {
                 moveFileToDestination(rootFileObject, destinationDirUri, pattern);
@@ -190,7 +207,7 @@ public class FileMoveExtension extends StreamFunctionProcessor {
                             destinationDirUri.concat(File.separator + rootFileObject.getName().getBaseName());
                 }
                 List<FileObject> fileObjectList = new ArrayList<>();
-                Utils.generateFileList(Utils.getFileObject(uri), fileObjectList, false);
+                Utils.generateFileList(Utils.getFileObject(uri, fileSystemOptions), fileObjectList, false);
                 for (FileObject sourceFileObject : fileObjectList) {
                     if (sourceFileObject.getType().hasContent() &&
                             pattern.matcher(sourceFileObject.getName().getBaseName()).lookingAt()) {
@@ -237,8 +254,8 @@ public class FileMoveExtension extends StreamFunctionProcessor {
 
             if (sourceFileObject.isFile()) {
                 destinationPath = destinationDirUri + File.separator + sourceFileObject.getName().getBaseName();
-                destinationFileObject = Utils.getFileObject(destinationPath);
-                FileObject destinationFolderFileObject = Utils.getFileObject(destinationDirUri);
+                destinationFileObject = Utils.getFileObject(destinationPath, fileSystemOptions);
+                FileObject destinationFolderFileObject = Utils.getFileObject(destinationDirUri, fileSystemOptions);
                 if (!destinationFolderFileObject.exists()) {
                     destinationFolderFileObject.createFolder();
                 }

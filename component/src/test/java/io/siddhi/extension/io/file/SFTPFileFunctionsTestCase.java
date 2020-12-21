@@ -39,8 +39,8 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-public class FTPFileFunctionsTestCase {
-    private static final Logger log = Logger.getLogger(FTPFileFunctionsTestCase.class);
+public class SFTPFileFunctionsTestCase {
+    private static final Logger log = Logger.getLogger(SFTPFileFunctionsTestCase.class);
     private AtomicInteger count = new AtomicInteger();
     private FileObject sourceLocalRoot, tempFTPSource, ftpDestination;
     String fileOptions;
@@ -49,12 +49,12 @@ public class FTPFileFunctionsTestCase {
     public void init() {
         ClassLoader classLoader = FileSourceLineModeTestCase.class.getClassLoader();
         String rootPath = classLoader.getResource("files").getFile();
-        fileOptions = "PASSIVE_MODE:true";
+        fileOptions = "USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true";
         sourceLocalRoot = Utils.getFileObject((rootPath + "/repo/function/"), null);
         tempFTPSource = Utils.getFileObject(
-                "ftp://bob:password@localhost:21/source/", fileOptions);
+                "sftp://demo:demo@localhost:22/sftp/source", fileOptions);
         ftpDestination = Utils.getFileObject(
-                "ftp://bob:password@localhost:21/destination/", fileOptions);
+                "sftp://demo:demo@localhost:22/sftp/destination", fileOptions);
     }
 
     @BeforeMethod
@@ -72,14 +72,15 @@ public class FTPFileFunctionsTestCase {
     }
 
     @Test
-    public void ftpFileCopyFunction() throws InterruptedException {
+    public void sftpFileCopyFunction() throws InterruptedException {
         log.info("test Siddhi Io File Function for copy() for file");
         String app = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream CopyFileStream(sample string);\n" +
                 "from CopyFileStream#file:copy" +
-                "('ftp://bob:password@localhost:21/source/move/moveFolder/test.txt', " +
-                "'ftp://bob:password@localhost:21/destination/', '', " + false + ", 'PASSIVE_MODE:true')\n" +
+                    "('sftp://demo:demo@localhost:22/sftp/source/move/moveFolder/test.txt', " +
+                    "'sftp://demo:demo@localhost:22/sftp/destination/', '', " + false + ", " +
+                    "'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true')\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -104,9 +105,9 @@ public class FTPFileFunctionsTestCase {
         Thread.sleep(100);
         siddhiAppRuntime.shutdown();
         AssertJUnit.assertTrue(isFileExist(
-                "ftp://bob:password@localhost:21/source/move/moveFolder/test.txt", false, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/source/move/moveFolder/test.txt", false, fileOptions));
         AssertJUnit.assertTrue(isFileExist(
-                "ftp://bob:password@localhost:21/destination/test.txt", false, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/destination/test.txt", false, fileOptions));
     }
 
     @Test
@@ -116,8 +117,9 @@ public class FTPFileFunctionsTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "define stream CopyFileStream(sample string);\n" +
                 "from CopyFileStream#file:copy" +
-                "('ftp://bob:password@localhost:21/source/archive', " +
-                "'ftp://bob:password@localhost:21/destination', '', " + false + ", 'PASSIVE_MODE:true')\n" +
+                "('sftp://demo:demo@localhost:22/sftp/source/archive', " +
+                "'sftp://demo:demo@localhost:22/sftp/destination/', '', " + false +
+                ", 'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true')\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -143,9 +145,9 @@ public class FTPFileFunctionsTestCase {
         Thread.sleep(100);
         siddhiAppRuntime.shutdown();
         AssertJUnit.assertTrue(isFileExist(
-                "ftp://bob:password@localhost:21/source/archive/", true, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/source/archive/", true, fileOptions));
         AssertJUnit.assertTrue(isFileExist(
-                "ftp://bob:password@localhost:21/destination/archive/", true, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/destination//archive/", true, fileOptions));
     }
 
     @Test
@@ -155,8 +157,9 @@ public class FTPFileFunctionsTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "define stream CopyFileStream(sample string);\n" +
                 "from CopyFileStream#file:copy" +
-                "('ftp://bob:password@localhost:21/source/archive', " +
-                "'ftp://bob:password@localhost:21/destination', '', " + true + ", 'PASSIVE_MODE:true')\n" +
+                "('sftp://demo:demo@localhost:22/sftp/source/archive', " +
+                "'sftp://demo:demo@localhost:22/sftp/destination/', '', " + true +
+                ", 'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true')\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -182,13 +185,13 @@ public class FTPFileFunctionsTestCase {
         Thread.sleep(100);
         siddhiAppRuntime.shutdown();
         AssertJUnit.assertTrue(isFileExist(
-                "ftp://bob:password@localhost:21/destination/subFolder/", true,
+                "sftp://demo:demo@localhost:22/sftp/destination//subFolder/", true,
                 fileOptions));
         AssertJUnit.assertTrue(isFileExist(
-                "ftp://bob:password@localhost:21/destination/test.txt", false,
+                "sftp://demo:demo@localhost:22/sftp/destination//test.txt", false,
                 fileOptions));
         AssertJUnit.assertTrue(isFileExist(
-                "ftp://bob:password@localhost:21/source/archive/", true, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/source/archive/", true, fileOptions));
     }
 
     @Test
@@ -198,8 +201,9 @@ public class FTPFileFunctionsTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "define stream CopyFileStream(sample string);\n" +
                 "from CopyFileStream#file:copy" +
-                "('ftp://bob:password@localhost:21/source/archive', " +
-                "'ftp://bob:password@localhost:21/destination', '.*test2.txt$', " + false + ", 'PASSIVE_MODE:true')\n" +
+                "('sftp://demo:demo@localhost:22/sftp/source/archive', " +
+                "'sftp://demo:demo@localhost:22/sftp/destination/', '.*test2.txt$', " + false +
+                ", 'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true')\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -225,11 +229,11 @@ public class FTPFileFunctionsTestCase {
         Thread.sleep(100);
         siddhiAppRuntime.shutdown();
         AssertJUnit.assertTrue(isFileExist(
-                "ftp://bob:password@localhost:21/destination/archive/test2.txt", false, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/destination//archive/test2.txt", false, fileOptions));
         AssertJUnit.assertFalse(isFileExist(
-                "ftp://bob:password@localhost:21/destination/archive/test.txt", false, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/destination//archive/test.txt", false, fileOptions));
         AssertJUnit.assertTrue(isFileExist(
-                "ftp://bob:password@localhost:21/source/archive/test.txt", false, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/source/archive/test.txt", false, fileOptions));
     }
 
     @Test
@@ -240,8 +244,8 @@ public class FTPFileFunctionsTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "define stream CreateFileStream(sample string);\n" +
                 "from CreateFileStream#" +
-                "file:create('ftp://bob:password@localhost:21/destination/created.txt', " +
-                "" + false + ", 'PASSIVE_MODE:true')\n" +
+                "file:create('sftp://demo:demo@localhost:22/sftp/destination//created.txt', " +
+                "" + false + ", 'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true')\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -268,12 +272,13 @@ public class FTPFileFunctionsTestCase {
         siddhiAppRuntime.shutdown();
         count.set(0);
         AssertJUnit.assertTrue(isFileExist(
-                "ftp://bob:password@localhost:21/destination/created.txt", false, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/destination//created.txt", false, fileOptions));
         app = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream DeleteFileStream(sample string);\n" +
                 "from DeleteFileStream#file:delete(" +
-                "'ftp://bob:password@localhost:21/destination/created.txt', 'PASSIVE_MODE:true')\n" +
+                "'sftp://demo:demo@localhost:22/sftp/destination/created.txt', " +
+                "'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true')\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         siddhiManager = new SiddhiManager();
@@ -299,7 +304,7 @@ public class FTPFileFunctionsTestCase {
         Thread.sleep(100);
         siddhiAppRuntime.shutdown();
         AssertJUnit.assertFalse(isFileExist(
-                "ftp://bob:password@localhost:21/created.txt", false, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/destination/created.txt", false, fileOptions));
     }
 
     @Test
@@ -310,8 +315,8 @@ public class FTPFileFunctionsTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "define stream CreateFileStream(sample string);\n" +
                 "from CreateFileStream#" +
-                "file:create('ftp://bob:password@localhost:21/test1/function/destination/created', " + true +
-                ", 'PASSIVE_MODE:true')\n" +
+                "file:create('sftp://demo:demo@localhost:22/sftp/destination/created', " + true +
+                ", 'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true')\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -338,14 +343,14 @@ public class FTPFileFunctionsTestCase {
         siddhiAppRuntime.shutdown();
         count.set(0);
         AssertJUnit.assertTrue(isFileExist(
-                "ftp://bob:password@localhost:21/test1/function/destination/created", true, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/destination/created", true, fileOptions));
 
         app = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream DeleteFileStream(sample string);\n" +
                 "from " +
-                "DeleteFileStream#file:delete('ftp://bob:password@localhost:21/test1/function/destination/created'," +
-                " 'PASSIVE_MODE:true')\n" +
+                "DeleteFileStream#file:delete('sftp://demo:demo@localhost:22/sftp/destination/created'," +
+                " 'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true')\n" +
                 "select *\n" +
                 "insert into ResultStream;";
         siddhiManager = new SiddhiManager();
@@ -371,7 +376,7 @@ public class FTPFileFunctionsTestCase {
         Thread.sleep(100);
         siddhiAppRuntime.shutdown();
         AssertJUnit.assertFalse(isFileExist(
-                "ftp://bob:password@localhost:21/test1/function/destination/created", true, fileOptions));
+                "sftp://demo:demo@localhost:22/sftp/destination/created", true, fileOptions));
     }
 
     @Test
@@ -382,8 +387,8 @@ public class FTPFileFunctionsTestCase {
                 "define stream CheckIsFileStream(sample string);\n" +
                 "from CheckIsFileStream\n" +
                 "select " +
-                "file:isFile('ftp://bob:password@localhost:21/source/archive/subFolder/test3.txt', " +
-                "'PASSIVE_MODE:true') as fileExist\n" +
+                "file:isFile('sftp://demo:demo@localhost:22/sftp/source/archive/subFolder/test3.txt', " +
+                "'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true') as fileExist\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
@@ -417,8 +422,8 @@ public class FTPFileFunctionsTestCase {
                 "define stream CheckIsFileStream(sample string);\n" +
                 "from CheckIsFileStream\n" +
                 "select " +
-                "file:isDirectory('ftp://bob:password@localhost:21/source/archive/', " +
-                "'PASSIVE_MODE:true') as directoryExist\n" +
+                "file:isDirectory('sftp://demo:demo@localhost:22/sftp/source/archive/', " +
+                "'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true') as directoryExist\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
@@ -451,8 +456,8 @@ public class FTPFileFunctionsTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "define stream IsExistFileStream(sample string);\n" +
                 "from IsExistFileStream\n" +
-                "select file:isExist('ftp://bob:password@localhost:21/source/archive/subFolder/test3.txt', " +
-                "'PASSIVE_MODE:true') as exists\n" +
+                "select file:isExist('sftp://demo:demo@localhost:22/sftp/source/archive/subFolder/test3.txt', " +
+                "'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true') as exists\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
@@ -485,8 +490,8 @@ public class FTPFileFunctionsTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "define stream IsExistFileStream(sample string);\n" +
                 "from IsExistFileStream\n" +
-                "select file:isExist('ftp://bob:password@localhost:21/source/archive/', " +
-                "'PASSIVE_MODE:true') as exists\n" +
+                "select file:isExist('sftp://demo:demo@localhost:22/sftp/source/archive/', " +
+                "'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true') as exists\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
@@ -519,8 +524,8 @@ public class FTPFileFunctionsTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "define stream FileSizeStream(sample string);\n" +
                 "from FileSizeStream\n" +
-                "select file:size('ftp://bob:password@localhost:21/source/move/test.txt', " +
-                "'PASSIVE_MODE:true') as fileSize\n" +
+                "select file:size('sftp://demo:demo@localhost:22/sftp/source/move/test.txt', " +
+                "'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true') as fileSize\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
@@ -553,8 +558,8 @@ public class FTPFileFunctionsTestCase {
                 "@App:name('TestSiddhiApp')" +
                 "define stream FileSizeStream(sample string);\n" +
                 "from FileSizeStream\n" +
-                "select file:size('ftp://bob:password@localhost:21/source/move/', " +
-                "'PASSIVE_MODE:true') as fileSize\n" +
+                "select file:size('sftp://demo:demo@localhost:22/sftp/source/move/', " +
+                "'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true') as fileSize\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
@@ -588,8 +593,8 @@ public class FTPFileFunctionsTestCase {
                 "define stream FileLastModifiedStream(sample string);\n" +
                 "from FileLastModifiedStream\n" +
                 "select file:lastModifiedTime(" +
-                "'ftp://bob:password@localhost:21/source/archive/test.txt', " +
-                "'', 'PASSIVE_MODE:true') as lastModifiedTime\n" +
+                "'sftp://demo:demo@localhost:22/sftp/source/archive/test.txt', " +
+                "'', 'USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true') as lastModifiedTime\n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);

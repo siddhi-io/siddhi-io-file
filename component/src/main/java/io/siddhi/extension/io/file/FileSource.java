@@ -296,6 +296,14 @@ import static org.quartz.CronExpression.isValidExpression;
                         optional = true,
                         type = {DataType.STRING},
                         defaultValue = "<Empty_String>"
+                ),
+                @Parameter(
+                        name = "file.system.options",
+                        description = "The file options in key:value pairs separated by commas. " +
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
+                        type = DataType.STRING,
+                        optional = true,
+                        defaultValue = "<Empty_String>"
                 )
         },
         examples = {
@@ -398,6 +406,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private SourceMetrics metrics;
     private String cronExpression;
     private String fileNamePattern;
+    private String fileSystemOptions;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -416,16 +425,17 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         this.fileSourceConfiguration = new FileSourceConfiguration();
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         this.fileSystemConnectorFactory = fileSourceServiceProvider.getFileSystemConnectorFactory();
+        this.fileSystemOptions = optionHolder.validateAndGetStaticValue(Constants.FILE_SYSTEM_OPTIONS, null);
         if (optionHolder.isOptionExists(Constants.DIR_URI)) {
             dirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
             validateURL(dirUri, "dir.uri");
-            FileObject listeningFileObject = Utils.getFileObject(dirUri);
+            FileObject listeningFileObject = Utils.getFileObject(dirUri, fileSystemOptions);
             uri = listeningFileObject.getName().getPath();
         }
         if (optionHolder.isOptionExists(Constants.FILE_URI)) {
             fileUri = optionHolder.validateAndGetStaticValue(Constants.FILE_URI);
             validateURL(fileUri, "file.uri");
-            FileObject listeningFileObject = Utils.getFileObject(fileUri);
+            FileObject listeningFileObject = Utils.getFileObject(fileUri, fileSystemOptions);
             uri = listeningFileObject.getName().getPath();
         }
 
@@ -822,49 +832,57 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                     properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
                     properties.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, bufferSizeInBinaryChunked);
                     VFSClientConnector vfsClientConnector = new VFSClientConnector();
-                    FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration,
-                            metrics);
-                    vfsClientConnector.setMessageProcessor(fileProcessor);
-                    VFSClientConnectorCallback vfsClientConnectorCallback = new VFSClientConnectorCallback();
-                    Runnable runnableClient = () -> {
-                        try {
-                            vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
-                            vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
-                            if (actionAfterProcess != null) {
-                                properties.put(Constants.URI, fileUri);
-                                properties.put(Constants.ACTION, actionAfterProcess);
-                                if (moveAfterProcess != null) {
-                                    properties.put(Constants.DESTINATION, moveAfterProcess);
-                                }
+                    Map<String, Object> schemeFileOptions = Utils.getFileSystemOptionObjectMap(fileUri,
+                            fileSystemOptions);
+                    try {
+                        vfsClientConnector.init(null, null, schemeFileOptions);
+                        FileProcessor fileProcessor = new FileProcessor(sourceEventListener, fileSourceConfiguration,
+                                metrics);
+                        vfsClientConnector.setMessageProcessor(fileProcessor);
+                        VFSClientConnectorCallback vfsClientConnectorCallback = new VFSClientConnectorCallback();
+                        Runnable runnableClient = () -> {
+                            try {
                                 vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
                                 vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
-                                if (metrics != null) {
-                                    metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileUri),
-                                            StreamStatus.COMPLETED);
-                                    if (actionAfterProcess.equals(Constants.DELETE)) {
-                                        metrics.getFileDeleteMetrics().setSource(Utils.getShortFilePath(fileUri));
-                                        metrics.getFileDeleteMetrics().setTime(System.currentTimeMillis());
-                                        metrics.getFileDeleteMetrics().getDeleteMetric(1);
-                                    } else if (actionAfterProcess.equals(Constants.MOVE)) {
-                                        metrics.getFileMoveMetrics().setTime(System.currentTimeMillis());
-                                        metrics.getFileMoveMetrics().set_source(Utils.getShortFilePath(fileUri));
-                                        metrics.getFileMoveMetrics().setDestination(Utils.getShortFilePath(
-                                                moveAfterProcess));
-                                        metrics.getFileMoveMetrics().getMoveMetric(1);
+                                if (actionAfterProcess != null) {
+                                    properties.put(Constants.URI, fileUri);
+                                    properties.put(Constants.ACTION, actionAfterProcess);
+                                    if (moveAfterProcess != null) {
+                                        properties.put(Constants.DESTINATION, moveAfterProcess);
                                     }
-                                    metrics.setReadPercentage(100);
-                                    metrics.getCompletedTimeMetric(System.currentTimeMillis());
+                                    vfsClientConnector.send(null, vfsClientConnectorCallback, properties);
+                                    vfsClientConnectorCallback.waitTillDone(timeout, fileUri);
+                                    if (metrics != null) {
+                                        metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileUri),
+                                                StreamStatus.COMPLETED);
+                                        if (actionAfterProcess.equals(Constants.DELETE)) {
+                                            metrics.getFileDeleteMetrics().setSource(Utils.getShortFilePath(fileUri));
+                                            metrics.getFileDeleteMetrics().setTime(System.currentTimeMillis());
+                                            metrics.getFileDeleteMetrics().getDeleteMetric(1);
+                                        } else if (actionAfterProcess.equals(Constants.MOVE)) {
+                                            metrics.getFileMoveMetrics().setTime(System.currentTimeMillis());
+                                            metrics.getFileMoveMetrics().set_source(Utils.getShortFilePath(fileUri));
+                                            metrics.getFileMoveMetrics().setDestination(Utils.getShortFilePath(
+                                                    moveAfterProcess));
+                                            metrics.getFileMoveMetrics().getMoveMetric(1);
+                                        }
+                                        metrics.setReadPercentage(100);
+                                        metrics.getCompletedTimeMetric(System.currentTimeMillis());
+                                    }
                                 }
+                            } catch (ClientConnectorException e) {
+                                log.error(String.format("Failure occurred in vfs-client while reading the file '%s' " +
+                                        "through siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
+                            } catch (InterruptedException e) {
+                                log.error(String.format("Failed to get callback from vfs-client  for file '%s' " +
+                                        "through siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
                             }
-                        } catch (ClientConnectorException e) {
-                            log.error(String.format("Failure occurred in vfs-client while reading the file '%s' " +
-                                    "through siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
-                        } catch (InterruptedException e) {
-                            log.error(String.format("Failed to get callback from vfs-client  for file '%s' through " +
-                                    "siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
-                        }
-                    };
-                    fileSourceConfiguration.getExecutorService().execute(runnableClient);
+                        };
+                        fileSourceConfiguration.getExecutorService().execute(runnableClient);
+                    } catch (ClientConnectorException e) {
+                        log.error(String.format("Failure occurred when initializing vfs-client for the file '%s' " +
+                                "through siddhi app '%s'.", fileUri, siddhiAppContext.getName()), e);
+                    }
                 }
                 if (metrics != null) {
                     metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileUri),
@@ -898,6 +916,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
 
     private void validateURL(String uri, String parameterName) {
         try {
+            if (uri.startsWith("sftp")) {
+                uri = uri.replaceFirst("s", "");
+            }
             new URL(uri);
             String splitRegex = File.separatorChar == '\\' ? "\\\\" : File.separator;
             fileSourceConfiguration.setProtocolForMoveAfterProcess(uri.split(splitRegex)[0]);

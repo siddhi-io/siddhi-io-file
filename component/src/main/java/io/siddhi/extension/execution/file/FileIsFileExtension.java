@@ -20,10 +20,12 @@ package io.siddhi.extension.execution.file;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.executor.ConstantExpressionExecutor;
 import io.siddhi.core.executor.ExpressionExecutor;
 import io.siddhi.core.executor.function.FunctionExecutor;
 import io.siddhi.core.util.config.ConfigReader;
@@ -49,6 +51,22 @@ import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
                         description = "The path to be checked for a file.",
                         type = DataType.STRING,
                         dynamic = true
+                ),
+                @Parameter(
+                        name = "file.system.options",
+                        description = "The file options in key:value pairs separated by commas. " +
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
+                        type = DataType.STRING,
+                        optional = true,
+                        defaultValue = "<Empty_String>"
+                )
+        },
+        parameterOverloads = {
+                @ParameterOverload(
+                        parameterNames = {"file.path"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"file.path", "file.system.options"}
                 )
         },
         returnAttributes = {
@@ -69,22 +87,32 @@ import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
 public class FileIsFileExtension extends FunctionExecutor {
     private static final Logger log = Logger.getLogger(FileIsFileExtension.class);
     private Attribute.Type returnType = BOOL;
+    private String fileSystemOptions = null;
+    private int inputExecutorLength;
     @Override
     protected StateFactory init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
                                 SiddhiQueryContext siddhiQueryContext) {
+        inputExecutorLength = attributeExpressionExecutors.length;
+        if (inputExecutorLength == 2 &&
+                attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
+            fileSystemOptions = ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue().toString();
+        }
         return null;
     }
 
     @Override
     protected Object execute(Object[] data, State state) {
-        return null;
+        return checkIsFile((String) data[0]);
     }
 
     @Override
     protected Object execute(Object data, State state) {
-        String filePathUri = (String) data;
+        return checkIsFile((String) data);
+    }
+
+    private Object checkIsFile(String filePathUri) {
         try {
-            return Utils.getFileObject(filePathUri).isFile();
+            return Utils.getFileObject(filePathUri, fileSystemOptions).isFile();
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when checking type of file in path: " +
                     filePathUri, e);

@@ -26,10 +26,8 @@ import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.VFS;
 import org.apache.commons.vfs2.provider.UriParser;
-import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
-import org.wso2.transport.file.connector.server.exception.FileServerConnectorException;
-import org.wso2.transport.file.connector.server.util.Constants;
-import org.wso2.transport.file.connector.server.util.FileTransportUtils;
+import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
+import org.wso2.transport.remotefilesystem.server.util.FileTransportUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -46,10 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 
-import static io.siddhi.extension.util.Constant.FTP_SCHEME_FILE_OPTION;
-import static io.siddhi.extension.util.Constant.SFTP_SCHEME_FILE_OPTION;
 import static io.siddhi.extension.util.Constant.VFS_SCHEME_KEY;
 
 /**
@@ -62,28 +57,56 @@ public class Utils {
      * @param filePathUri file or directory path
      * @return FileObject retried by the given uri
      */
-    public static FileObject getFileObject(String filePathUri) {
-        Map<String, String> sourceOptions = Utils.parseSchemeFileOptions(filePathUri, new Properties());
+    public static FileObject getFileObject(String filePathUri, String fileSystemOptions) {
+        Map<String, String> fileSystemOptionMap = getFileSystemOptionMap(filePathUri, fileSystemOptions);
         FileSystemOptions sourceFso;
         FileSystemManager fsManager;
         try {
             fsManager = VFS.getManager();
-            sourceFso = FileTransportUtils.attachFileSystemOptions(sourceOptions, fsManager);
-        } catch (FileServerConnectorException e) {
-            throw new SiddhiAppRuntimeException("Exception occurred when parsing scheme file options for path: " +
-                    sourceOptions, e);
-        } catch (FileSystemException e) {
-            throw new SiddhiAppRuntimeException("Exception occurred when getting VFS manager", e);
-        }
-        if (sourceOptions != null && FTP_SCHEME_FILE_OPTION.equals(sourceOptions.get(VFS_SCHEME_KEY))) {
-            FtpFileSystemConfigBuilder.getInstance().setPassiveMode(sourceFso, true);
-        }
-        try {
+            sourceFso = FileTransportUtils.attachFileSystemOptions(fileSystemOptionMap);
             return fsManager.resolveFile(filePathUri, sourceFso);
         } catch (FileSystemException e) {
-            throw new SiddhiAppRuntimeException("Exception occurred when resolving path for: " +
-                    filePathUri, e);
+            throw new SiddhiAppRuntimeException("Exception occurred when getting VFS manager", e);
+        } catch (RemoteFileSystemConnectorException e) {
+            throw new SiddhiAppRuntimeException("Exception occurred when parsing scheme file options for path: " +
+                    fileSystemOptionMap, e);
         }
+    }
+
+    public static Map<String, String> getFileSystemOptionMap(String filePathUri, String fileSystemOptions) {
+        Map<String, String> fileSystemOptionMap = new HashMap();
+        String scheme = UriParser.extractScheme(filePathUri);
+        if (scheme != null) {
+            fileSystemOptionMap.put(VFS_SCHEME_KEY, scheme);
+        }
+        if (fileSystemOptions != null) {
+            String[] configs = fileSystemOptions.split(",");
+            for (String config : configs) {
+                String[] configKeyValue = config.split(":");
+                fileSystemOptionMap.put(configKeyValue[0], configKeyValue[1]);
+            }
+        }
+        fileSystemOptionMap.put(org.wso2.transport.remotefilesystem.Constants.URI, filePathUri);
+        return fileSystemOptionMap;
+    }
+
+    public static Map<String, Object> getFileSystemOptionObjectMap(String filePathUri, String fileSystemOptions) {
+        Map<String, Object> fileSystemOptionMap = new HashMap();
+        if (filePathUri != null) {
+            String scheme = UriParser.extractScheme(filePathUri);
+            if (scheme != null) {
+                fileSystemOptionMap.put(VFS_SCHEME_KEY, scheme);
+            }
+        }
+        if (fileSystemOptions != null) {
+            String[] configs = fileSystemOptions.split(",");
+            for (String config : configs) {
+                String[] configKeyValue = config.split(":");
+                fileSystemOptionMap.put(configKeyValue[0], configKeyValue[1]);
+            }
+        }
+        fileSystemOptionMap.put(org.wso2.transport.remotefilesystem.Constants.URI, filePathUri);
+        return fileSystemOptionMap;
     }
 
     /**
@@ -109,30 +132,6 @@ public class Utils {
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when checking file type for " +
                     node.getName().getPath(), e);
-        }
-    }
-
-    private static Map<String, String> parseSchemeFileOptions(String fileURI, Properties properties) {
-        String scheme = UriParser.extractScheme(fileURI);
-        if (scheme == null) {
-            return null;
-        } else {
-            HashMap<String, String> schemeFileOptions = new HashMap();
-            schemeFileOptions.put(VFS_SCHEME_KEY, scheme);
-            addOptions(scheme, schemeFileOptions, properties);
-            return schemeFileOptions;
-        }
-    }
-
-    private static void addOptions(String scheme, Map<String, String> schemeFileOptions, Properties properties) {
-        if (scheme.equals(SFTP_SCHEME_FILE_OPTION)) {
-            Constants.SftpFileOption[] sftpFileOptions = Constants.SftpFileOption.values();
-            for (Constants.SftpFileOption option : sftpFileOptions) {
-                String strValue = (String) properties.get(SFTP_SCHEME_FILE_OPTION + option.toString());
-                if (strValue != null && !strValue.isEmpty()) {
-                    schemeFileOptions.put(option.toString(), strValue);
-                }
-            }
         }
     }
 

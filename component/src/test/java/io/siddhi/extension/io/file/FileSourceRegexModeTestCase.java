@@ -804,7 +804,6 @@ public class FileSourceRegexModeTestCase {
         });
 
         siddhiAppRuntime.start();
-
         SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
 
         File file = new File(dirUri + "/regex/xml");

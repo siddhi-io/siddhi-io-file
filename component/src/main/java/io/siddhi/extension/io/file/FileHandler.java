@@ -95,6 +95,14 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
                         optional = true,
                         type = {DataType.STRING},
                         defaultValue = "<Empty_String>"
+                ),
+                @Parameter(
+                        name = "file.system.options",
+                        description = "The file options in key:value pairs separated by commas. " +
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
+                        type = DataType.STRING,
+                        optional = true,
+                        defaultValue = "<Empty_String>"
                 )
         },
         examples = {
@@ -166,6 +174,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
     private Map<String, Long> fileObjectMap = new ConcurrentHashMap<>();
     private static final String CURRENT_MAP_KEY = "current.map.key";
     private List<String> fileObjectList;
+    private String fileSystemOptions;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -181,11 +190,12 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         if (optionHolder.isOptionExists(Constants.DIR_URI)) {
             listeningDirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
         }
+        this.fileSystemOptions = optionHolder.validateAndGetStaticValue(Constants.FILE_SYSTEM_OPTIONS, null);
         //Validation for URI
         if (listeningDirUri == null || listeningDirUri.isEmpty()) {
             throw new SiddhiAppCreationException("URI must be provided.");
         }
-        FileObject listeningFileObject = Utils.getFileObject(listeningDirUri);
+        FileObject listeningFileObject = Utils.getFileObject(listeningDirUri, fileSystemOptions);
         try {
             if (!listeningFileObject.exists()) {
                 throw new SiddhiAppCreationException("Directory " + listeningFileObject.getPublicURIString()
@@ -207,7 +217,7 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
         fileObjectList = Arrays.asList(fileNameList.split(","));
         for (int i = 0; i < fileObjectList.size(); i++) {
             String fileObjectPath = tmpURL + File.separator + fileObjectList.get(i);
-            listeningFileObject = Utils.getFileObject(fileObjectPath);
+            listeningFileObject = Utils.getFileObject(fileObjectPath, fileSystemOptions);
             String filePath = null;
             try {
                 filePath = listeningFileObject.getURL().toURI().toURL().getPath();

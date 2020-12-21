@@ -52,6 +52,7 @@ public class Constants {
     public static final String CRON_EXPRESSION = "cron.expression";
     public static final String FILE_NAME_PATTERN = "file.name.pattern";
     public static final String FILE_NAME_PATTERN_PROPERTY_NAME = "fileNamePattern";
+    public static final String FILE_SYSTEM_OPTIONS = "file.system.options";
 
     /* configuration param values*/
     public static final String MOVE = "move";

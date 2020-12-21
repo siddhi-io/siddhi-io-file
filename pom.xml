@@ -102,9 +102,14 @@
                 <version>${siddhi.map.csv.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.commons.wso2</groupId>
+                <groupId>org.wso2.org.apache.commons</groupId>
                 <artifactId>commons-vfs2</artifactId>
-                <version>2.0-wso2v15</version>
+                <version>${commons-vfs2.wso2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>${com.jcraft.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>
@@ -145,7 +150,7 @@
     <properties>
         <siddhi.version>5.1.13</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
-        <wso2.transport.file.version>6.0.66</wso2.transport.file.version>
+        <wso2.transport.file.version>6.0.67</wso2.transport.file.version>
         <org.apache.commons-compress.version>1.19</org.apache.commons-compress.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>5.0.6</siddhi.map.json.version>
@@ -160,6 +165,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <carbon.analytics.version>3.0.36</carbon.analytics.version>
+        <commons-vfs2.wso2.version>2.2-wso2v1</commons-vfs2.wso2.version>
+        <com.jcraft.version>0.1.45</com.jcraft.version>
     </properties>
 
     <build>

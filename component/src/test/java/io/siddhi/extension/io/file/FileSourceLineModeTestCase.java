@@ -67,8 +67,10 @@ public class FileSourceLineModeTestCase {
     public void doBeforeMethod() {
         count.set(0);
         try {
+            FileUtils.deleteDirectory(newRoot);
             FileUtils.copyDirectory(sourceRoot, newRoot);
             movedFiles = new File(moveAfterProcessDir);
+            FileUtils.deleteDirectory(movedFiles);
         } catch (IOException e) {
             throw new TestException("Failed to copy files from " +
                     sourceRoot.getAbsolutePath() +
@@ -216,7 +218,7 @@ public class FileSourceLineModeTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "dir.uri='file:/" + dirUri + "/line/xml', " +
+                "file.uri='file:/" + dirUri + "/line/xml/xml_line.txt', " +
                 "tailing='true', " +
                 "@map(type='xml'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
@@ -308,102 +310,6 @@ public class FileSourceLineModeTestCase {
     }
 
     @Test(dependsOnMethods = "siddhiIoFileTest3")
-    public void siddhiIoFileTest4() throws InterruptedException {
-        log.info("test SiddhiIoFile [mode=line] Test 4");
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file', mode='line'," +
-                "dir.uri='file:/" + dirUri + "/line/xml', " +
-                "@map(type='xml'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-                int n = count.incrementAndGet();
-                for (Event event : events) {
-                    switch (n) {
-                        case 1:
-                            AssertJUnit.assertEquals(10000L, event.getData(2));
-                            break;
-                        case 2:
-                            AssertJUnit.assertEquals(10001L, event.getData(2));
-                            break;
-                        case 3:
-                            AssertJUnit.assertEquals(10002L, event.getData(2));
-                            break;
-                        case 4:
-                            AssertJUnit.assertEquals(10003L, event.getData(2));
-                            break;
-                        case 5:
-                            AssertJUnit.assertEquals(10004L, event.getData(2));
-                            break;
-                        case 6:
-                            AssertJUnit.assertEquals(1000L, event.getData(2));
-                            break;
-                        case 7:
-                            AssertJUnit.assertEquals(2000L, event.getData(2));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
-                }
-            }
-        });
-        Thread t1 = new Thread(new Runnable() {
-            public void run() {
-                siddhiAppRuntime.start();
-            }
-        });
-        t1.start();
-        SiddhiTestHelper.waitForEvents(waitTime, 5, count, timeout);
-        Thread t2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                File file = new File(dirUri + "/line/xml/xml_line.txt");
-                try {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("<events>")
-                            .append("<event>")
-                            .append("<symbol>").append("GOOGLE").append("</symbol>")
-                            .append("<price>").append("100").append("</price>")
-                            .append("<volume>").append("1000").append("</volume>")
-                            .append("</event>")
-                            .append("</events>\n");
-                    sb.append("<events>")
-                            .append("<event>")
-                            .append("<symbol>").append("YAHOO").append("</symbol>")
-                            .append("<price>").append("200").append("</price>")
-                            .append("<volume>").append("2000").append("</volume>")
-                            .append("</event>")
-                            .append("</events>");
-                    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
-                    bufferedWriter.write(sb.toString());
-                    bufferedWriter.newLine();
-                    bufferedWriter.flush();
-                    bufferedWriter.close();
-                } catch (IOException e) {
-                    log.error(e.getMessage());
-                }
-            }
-        });
-        t2.start();
-        SiddhiTestHelper.waitForEvents(waitTime, 7, count, timeout);
-        //assert event count
-        AssertJUnit.assertEquals("Number of events", 7, count.get());
-        siddhiAppRuntime.shutdown();
-    }
-
-    @Test(dependsOnMethods = "siddhiIoFileTest4")
     public void siddhiIoFileTest5() throws InterruptedException {
         log.info("test SiddhiIoFile [mode=line] Test 5");
         String streams = "" +
