@@ -124,14 +124,15 @@ public class FileSizeExtension extends FunctionExecutor {
     public static long calculateFileSizeRecusrively(FileObject fileObj) {
         long size = 0;
         try {
-            FileObject[] files = fileObj.getChildren();
-            for (FileObject file : files) {
-                if (file.isFolder()) {
+            if (fileObj.isFolder()) {
+                FileObject[] files = fileObj.getChildren();
+                for (FileObject file : files) {
                     size += calculateFileSizeRecusrively(file);
-                } else {
-                    size += file.getContent().getSize();
                 }
+            } else {
+                size += fileObj.getContent().getSize();
             }
+
             return size;
         } catch (FileSystemException e) {
             throw new SiddhiAppRuntimeException("Exception occurred when getting the children of  " +
