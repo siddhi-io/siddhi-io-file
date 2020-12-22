@@ -182,7 +182,8 @@ public class FileSink extends Sink {
 
     public void connect() throws ConnectionUnavailableException {
         vfsClientConnector = new VFSClientConnector();
-        Map<String, Object> schemeFileOptions = Utils.getFileSystemOptionObjectMap(null, fileSystemOptions);
+        Map<String, Object> schemeFileOptions = Utils.getFileSystemOptionObjectMap(uriOption.getValue(),
+                fileSystemOptions);
         try {
             vfsClientConnector.init(null, null, schemeFileOptions);
         } catch (ClientConnectorException e) {
