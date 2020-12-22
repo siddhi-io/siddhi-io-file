@@ -82,7 +82,8 @@ import java.util.regex.Pattern;
                 @Parameter(
                         name = "file.system.options",
                         description = "The file options in key:value pairs separated by commas. " +
-                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true",
+                                "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true," +
+                                "IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon",
                         type = DataType.STRING,
                         optional = true,
                         defaultValue = "<Empty_String>"
