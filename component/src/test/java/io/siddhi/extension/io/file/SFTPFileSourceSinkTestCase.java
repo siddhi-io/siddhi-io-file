@@ -39,10 +39,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class FTPFileSourceSinkTestCase {
-    private static final Logger log = Logger.getLogger(FTPFileSourceSinkTestCase.class);
+public class SFTPFileSourceSinkTestCase {
+    private static final Logger log = Logger.getLogger(SFTPFileSourceSinkTestCase.class);
     private AtomicInteger count = new AtomicInteger();
-    private FileObject sourceLocalRoot, tempFTPSource, ftpDestination;
+    private FileObject tempFTPSource;
     String fileOptions;
     private int waitTime = 10000;
     private int timeout = 30000;
@@ -51,10 +51,9 @@ public class FTPFileSourceSinkTestCase {
     public void init() {
         ClassLoader classLoader = FileSourceLineModeTestCase.class.getClassLoader();
         String rootPath = classLoader.getResource("files").getFile();
-        fileOptions = "PASSIVE_MODE:true";
-        sourceLocalRoot = Utils.getFileObject((rootPath + "/repo/function/"), null);
+        fileOptions = "USER_DIR_IS_ROOT:true,AVOID_PERMISSION_CHECK:true";
         tempFTPSource = Utils.getFileObject(
-                "ftp://bob:password@localhost:21/source/", fileOptions);
+                "sftp://demo:demo@localhost:22/sftp/source/", fileOptions);
     }
 
     @BeforeMethod
@@ -75,88 +74,9 @@ public class FTPFileSourceSinkTestCase {
         String streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='json'), append='true', " +
-                "file.uri='ftp://bob:password@localhost:21/source/published.json') " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
-
-        siddhiAppRuntime.start();
-
-        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
-        stockStream.send(new Object[]{"IBM", 57.678f, 200L});
-
-        Thread.sleep(100);
-
-        ArrayList<String> symbolNames = new ArrayList<>();
-        symbolNames.add("WSO2.json");
-        symbolNames.add("IBM.json");
-        symbolNames.add("GOOGLE.json");
-        symbolNames.add("REDHAT.json");
-
-        Thread.sleep(1000);
-        siddhiAppRuntime.shutdown();
-
-        streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file', mode='line'," +
-                "file.uri='ftp://bob:password@localhost:21/source/published.json', " +
-                "action.after.process='keep', " +
-                "tailing='false', " +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        siddhiManager = new SiddhiManager();
-        siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-                int n = count.getAndIncrement() % 5;
-                for (Event event : events) {
-                    switch (n) {
-                        case 0:
-                            AssertJUnit.assertEquals(100L, event.getData(2));
-                            break;
-                        case 1:
-                            AssertJUnit.assertEquals(200L, event.getData(2));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
-                }
-            }
-        });
-        siddhiAppRuntime.start();
-        SiddhiTestHelper.waitForEvents(waitTime, 2, count, timeout);
-        //assert event count
-        AssertJUnit.assertEquals("Number of events", 2, count.get());
-        siddhiAppRuntime.shutdown();
-    }
-
-    @Test
-    public void fileSinkSourceTest2() throws InterruptedException {
-        log.info("test SiddhiIoFile Sink 1");
-
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "define stream FooStream (symbol string, price float, volume long); " +
                 "@sink(type='file', @map(type='json'), append='false', " +
-                "file.uri='ftp://bob:password@localhost:21/source/published.json') " +
+                "file.system.options='USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true'," +
+                "file.uri='sftp://demo:demo@localhost:22/sftp/source/published.json') " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
         String query = "" +
@@ -187,9 +107,10 @@ public class FTPFileSourceSinkTestCase {
         streams = "" +
                 "@App:name('TestSiddhiApp')" +
                 "@source(type='file', mode='line'," +
-                "file.uri='ftp://bob:password@localhost:21/source/published.json', " +
+                "file.uri='sftp://demo:demo@localhost:22/sftp/source/published.json', " +
                 "action.after.process='keep', " +
                 "tailing='false', " +
+                "file.system.options='USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true'," +
                 "@map(type='json'))" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "define stream BarStream (symbol string, price float, volume long); ";
@@ -224,4 +145,5 @@ public class FTPFileSourceSinkTestCase {
         AssertJUnit.assertEquals("Number of events", 1, count.get());
         siddhiAppRuntime.shutdown();
     }
+
 }
