@@ -61,13 +61,16 @@ public class FileSystemListener implements RemoteFileSystemListener {
     private FileSourceConfiguration fileSourceConfiguration;
     private FileSourceServiceProvider fileSourceServiceProvider;
     private SourceMetrics metrics;
+    private Map<String, Object> schemeFileOptions;
 
     public FileSystemListener(SourceEventListener sourceEventListener,
-                              FileSourceConfiguration fileSourceConfiguration, SourceMetrics sourceMetrics) {
+                              FileSourceConfiguration fileSourceConfiguration, SourceMetrics sourceMetrics,
+                              Map<String, Object> schemeFileOptions) {
         this.sourceEventListener = sourceEventListener;
         this.fileSourceConfiguration = fileSourceConfiguration;
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         this.metrics = sourceMetrics;
+        this.schemeFileOptions = schemeFileOptions;
     }
 
     @Override
@@ -77,8 +80,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
             String actionAfterProcess = fileSourceConfiguration.getActionAfterProcess();
             RemoteFileSystemEvent remoteFileSystemEvent = (RemoteFileSystemEvent) remoteFileSystemBaseEvent;
             for (int i = 0; i < remoteFileSystemEvent.getAddedFiles().size(); i++) {
-                File a = new File(remoteFileSystemEvent.getAddedFiles().get(i).getPath());
-                String fileURI = a.toURI().toString();
+                String fileURI = remoteFileSystemEvent.getAddedFiles().get(i).getPath();
                 VFSClientConnector vfsClientConnector;
                 FileProcessor fileProcessor;
                 fileSourceConfiguration.setCurrentlyReadingFileURI(fileURI);
@@ -96,6 +98,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(
                             ByteBuffer.wrap(fileURI.getBytes(StandardCharsets.UTF_8)), true);
                     try {
+                        vfsClientConnector.init(null, null, schemeFileOptions);
                         vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                         try {
                             carbonCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileURI);
@@ -128,6 +131,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(
                             ByteBuffer.wrap(fileURI.getBytes(StandardCharsets.UTF_8)), true);
                     try {
+                        vfsClientConnector.init(null, null, schemeFileOptions);
                         vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                         try {
                             carbonCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileURI);
@@ -186,6 +190,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
                         BinaryCarbonMessage carbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(
                                 fileURI.getBytes(StandardCharsets.UTF_8)), true);
                         try {
+                            vfsClientConnector.init(null, null, schemeFileOptions);
                             vfsClientConnector.send(carbonMessage, carbonCallback, properties);
                             try {
                                 carbonCallback.waitTillDone(fileSourceConfiguration.getTimeout(), fileURI);
