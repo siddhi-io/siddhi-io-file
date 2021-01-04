@@ -224,4 +224,69 @@ public class FTPFileSourceSinkTestCase {
         AssertJUnit.assertEquals("Number of events", 1, count.get());
         siddhiAppRuntime.shutdown();
     }
+
+    @Test
+    public void fileDynamicSinkDirectorySourceTest() throws InterruptedException {
+        log.info("test SiddhiIoFile Sink for dynamic paths and reading from a directory");
+
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream FooStream (symbol string, price float, fileName string); " +
+                "@sink(type='file', @map(type='json'), append='true', " +
+                "file.uri='ftp://bob:password@localhost:21/source/{{fileName}}.json') " +
+                "define stream BarStream (symbol string, price float, fileName string); ";
+
+        String query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"WSO2", 55.6f, "file1"});
+        stockStream.send(new Object[]{"WSO4", 55.7f, "file1"});
+        stockStream.send(new Object[]{"IBM", 57.678f, "file2"});
+        stockStream.send(new Object[]{"IBM2", 57.123f, "file2"});
+
+        Thread.sleep(100);
+
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='line'," +
+                "dir.uri='ftp://bob:password@localhost:21/source/', " +
+                "file.system.options='PASSIVE_MODE:true', " +
+                "action.after.process='keep', " +
+                "tailing='false', " +
+                "@map(type='json'))" +
+                "define stream FooStream (symbol string, price float, fileName string); " +
+                "define stream BarStream (symbol string, price float, fileName string); ";
+
+        query = "" +
+                "from FooStream " +
+                "select * " +
+                "insert into BarStream; ";
+
+        siddhiManager = new SiddhiManager();
+        siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                count.getAndIncrement();
+            }
+        });
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(waitTime, 4, count, timeout);
+        //assert event count
+        AssertJUnit.assertEquals("Number of events", 4, count.get());
+        siddhiAppRuntime.shutdown();
+    }
 }

@@ -650,7 +650,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     }
 
     private Map<String, String> getFileSystemServerProperties() {
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> map = Utils.getFileSystemOptionMap(dirUri, fileSystemOptions);
         map.put(Constants.TRANSPORT_FILE_URI, dirUri);
         map.put(Constants.MODE, mode);
         if (actionAfterProcess != null) {
@@ -666,7 +666,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         map.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, bufferSizeInBinaryChunked);
         map.put(Constants.CRON_EXPRESSION, cronExpression);
         map.put(Constants.FILE_NAME_PATTERN_PROPERTY_NAME, fileNamePattern);
-
         if (Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
                 Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
             map.put(Constants.READ_FILE_FROM_BEGINNING, Constants.TRUE.toUpperCase(Locale.ENGLISH));
@@ -751,8 +750,10 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         } else {
             if (dirUri != null) {
                 Map<String, String> properties = getFileSystemServerProperties();
+                Map<String, Object> schemeFileOptions = Utils.getFileSystemOptionObjectMap(dirUri,
+                        fileSystemOptions);
                 FileSystemListener fileSystemListener = new FileSystemListener(sourceEventListener,
-                        fileSourceConfiguration, metrics);
+                        fileSourceConfiguration, metrics, schemeFileOptions);
                 try {
                     fileSystemServerConnector = fileSystemConnectorFactory.createServerConnector(
                             siddhiAppContext.getName(), properties, fileSystemListener);
