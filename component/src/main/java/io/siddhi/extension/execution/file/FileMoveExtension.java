@@ -175,7 +175,9 @@ public class FileMoveExtension extends StreamFunctionProcessor {
 
     @Override
     public List<Attribute> getReturnAttributes() {
-        return new ArrayList<>();
+        List<Attribute> attributes = new ArrayList<>();
+        attributes.add(new Attribute("isSuccess", Attribute.Type.BOOL));
+        return attributes;
     }
 
     @Override
@@ -230,7 +232,7 @@ public class FileMoveExtension extends StreamFunctionProcessor {
             throw new SiddhiAppRuntimeException("Exception occurred when getting the file type " +
                     uri, e);
         }
-        return new Object[0];
+        return new Object[]{true};
     }
 
     @Override
