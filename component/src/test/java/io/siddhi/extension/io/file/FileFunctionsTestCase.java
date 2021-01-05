@@ -97,6 +97,7 @@ public class FileFunctionsTestCase {
                 for (Event event : events) {
                     if (n == 0) {
                         AssertJUnit.assertEquals("WSO2", event.getData(0));
+                        AssertJUnit.assertEquals(true, event.getData(1));
                     } else {
                         AssertJUnit.fail("More events received than expected.");
                     }
@@ -120,7 +121,7 @@ public class FileFunctionsTestCase {
                 "define stream CopyFileStream(sample string);\n" +
                 "from CopyFileStream#file:copy" +
                 "('" + sourceRoot + "/archive', '" + sourceRoot + "/destination', '', " + false + ")\n" +
-                "select *\n" +
+                "select sample, isSuccess \n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
@@ -134,6 +135,7 @@ public class FileFunctionsTestCase {
                 for (Event event : events) {
                     if (n == 0) {
                         AssertJUnit.assertEquals("WSO2", event.getData(0));
+                        AssertJUnit.assertEquals(true, event.getData(1));
                     } else {
                         AssertJUnit.fail("More events received than expected.");
                     }
@@ -171,6 +173,7 @@ public class FileFunctionsTestCase {
                 for (Event event : events) {
                     if (n == 0) {
                         AssertJUnit.assertEquals("WSO2", event.getData(0));
+                        AssertJUnit.assertEquals(true, event.getData(1));
                     } else {
                         AssertJUnit.fail("More events received than expected.");
                     }
@@ -208,6 +211,7 @@ public class FileFunctionsTestCase {
                 for (Event event : events) {
                     if (n == 0) {
                         AssertJUnit.assertEquals("WSO2", event.getData(0));
+                        AssertJUnit.assertEquals(true, event.getData(1));
                     } else {
                         AssertJUnit.fail("More events received than expected.");
                     }
@@ -674,7 +678,7 @@ public class FileFunctionsTestCase {
                 "define stream MoveFileStream(sample string);\n" +
                 "from MoveFileStream" +
                 "#file:move('" + tempSource + "/archive/', '" + sourceRoot + "/destination', '')\n" +
-                "select * \n" +
+                "select sample, isSuccess \n" +
                 "insert into ResultStream;";
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
@@ -688,6 +692,7 @@ public class FileFunctionsTestCase {
                 for (Event event : events) {
                     if (n == 0) {
                         AssertJUnit.assertEquals("WSO2", event.getData(0));
+                        AssertJUnit.assertEquals(true, event.getData(1));
                     } else {
                         AssertJUnit.fail("More events received than expected.");
                     }
@@ -726,6 +731,7 @@ public class FileFunctionsTestCase {
                 for (Event event : events) {
                     if (n == 0) {
                         AssertJUnit.assertEquals("WSO2", event.getData(0));
+                        AssertJUnit.assertEquals(true, event.getData(1));
                     } else {
                         AssertJUnit.fail("More events received than expected.");
                     }
@@ -832,6 +838,7 @@ public class FileFunctionsTestCase {
                 for (Event event : events) {
                     if (n == 0) {
                         AssertJUnit.assertEquals("WSO2", event.getData(0));
+                        AssertJUnit.assertEquals(true, event.getData(1));
                     } else {
                         AssertJUnit.fail("More events received than expected.");
                     }
