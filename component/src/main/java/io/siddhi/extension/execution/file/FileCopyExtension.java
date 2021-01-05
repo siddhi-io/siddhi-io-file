@@ -226,15 +226,17 @@ public class FileCopyExtension extends StreamFunctionProcessor {
                 }
             }
         } catch (FileSystemException e) {
-            throw new SiddhiAppRuntimeException("Exception occurred when getting the file type " +
-                    uri, e);
+            log.error("Exception occurred when getting the file type " + uri, e);
+            return new Object[]{false};
         } finally {
             if (rootFileObject != null) {
                 try {
                     rootFileObject.close();
                 } catch (FileSystemException e) {
-                    throw new SiddhiAppRuntimeException("Exception occurred when closing file object for " +
+                    log.error("Exception occurred when closing file object for " +
                             rootFileObject.getName().getPath(), e);
+                    return new Object[]{false};
+
                 }
             }
         }
