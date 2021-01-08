@@ -1229,6 +1229,58 @@ public class FileSourceLineModeTestCase {
     }
 
     @Test
+    public void siddhiIOFileKeepWithStatePersistence() throws InterruptedException {
+        log.info("test SiddhiIOFile: Keep file with state persistence enabled");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')\n" +
+                "@source(type='file', mode='line', dir.uri='file:" + newRoot + "/line/header', " +
+                "read.only.header='true', action.after.process='keep', tailing='false', \n" +
+                "@map(type='csv', delimiter='|'))\n" +
+                "define stream FileReaderStream (code string, serialNo string, amount string);\n" +
+                "@sink(type='log')\n" +
+                "define stream FileResultStream (code string, serialNo string, amount string);\n";
+
+        String query = "" +
+                "from FileReaderStream\n" +
+                "select *\n" +
+                "insert into FileResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        SiddhiAppRuntime siddhiAppRuntime2 = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("FileResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                count.incrementAndGet();
+            }
+        });
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 1, count.get(), 3000);
+        byte[] snapshot = siddhiAppRuntime.snapshot();
+        siddhiAppRuntime.shutdown();
+
+        Thread.sleep(1000);
+
+        try {
+            siddhiAppRuntime2.restore(snapshot);
+        } catch (CannotRestoreSiddhiAppStateException e) {
+            log.error("Failed to restore siddhi app state. Reason: " + e.getMessage(), e);
+            AssertJUnit.fail("Failed to restore siddhi app state");
+        }
+        siddhiAppRuntime2.start();
+        Thread.sleep(1000);
+        siddhiAppRuntime2.addCallback("FileResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                AssertJUnit.fail("When state persistence is enabled, the file should not be processed again.");
+            }
+        });
+        Thread.sleep(1000);
+        siddhiAppRuntime2.shutdown();
+    }
+
+    @Test
     public void siddhiIOFileTestCronSupportForFile() throws InterruptedException {
         log.info("Siddhi IO File test for Cron support via file.uri");
         String streams = "" +
