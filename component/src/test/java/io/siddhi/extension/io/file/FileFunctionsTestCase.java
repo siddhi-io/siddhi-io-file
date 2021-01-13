@@ -708,6 +708,45 @@ public class FileFunctionsTestCase {
     }
 
     @Test
+    public void folderMoveNegativeTestcase() throws InterruptedException, IOException {
+        FileUtils.copyDirectory(sourceRoot, tempSource);
+        log.info("file:move() function should return false when the source folder is not found. " +
+                "This test case validates that");
+        AssertJUnit.assertFalse(isFileExist(sourceRoot + "/destination", false));
+        count.set(0);
+        String app = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream MoveFileStream(sample string);\n" +
+                "from MoveFileStream" +
+                "#file:move('" + tempSource + "/archivee/', '" + sourceRoot + "/destination', '')\n" +
+                "select sample, isSuccess \n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("MoveFileStream");
+        siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.getAndIncrement();
+                for (Event event : events) {
+                    if (n == 0) {
+                        AssertJUnit.assertEquals("WSO2", event.getData(0));
+                        AssertJUnit.assertEquals(false, event.getData(1));
+                    } else {
+                        AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        stockStream.send(new Object[]{"WSO2"});
+        Thread.sleep(100);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
     public void folderMoveWithRegexFunction() throws InterruptedException, IOException {
         FileUtils.copyDirectory(sourceRoot, tempSource);
         log.info("test Siddhi Io File Function for copy() only files adheres to a regex");

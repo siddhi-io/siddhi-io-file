@@ -24,7 +24,6 @@ import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
-import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.executor.ConstantExpressionExecutor;
 import io.siddhi.core.executor.ExpressionExecutor;
 import io.siddhi.core.query.processor.ProcessingMode;
@@ -199,6 +198,9 @@ public class FileMoveExtension extends StreamFunctionProcessor {
         }
         try {
             FileObject rootFileObject = Utils.getFileObject(uri, fileSystemOptions);
+            if (!rootFileObject.exists()) {
+                return new Object[]{false};
+            }
             if (rootFileObject.getType().hasContent() &&
                     pattern.matcher(rootFileObject.getName().getBaseName()).lookingAt()) {
                 moveFileToDestination(rootFileObject, destinationDirUri, pattern);
@@ -250,7 +252,8 @@ public class FileMoveExtension extends StreamFunctionProcessor {
 
     }
 
-    private void moveFileToDestination(FileObject sourceFileObject, String destinationDirUri, Pattern pattern) {
+    private void moveFileToDestination(FileObject sourceFileObject, String destinationDirUri, Pattern pattern)
+            throws FileSystemException {
         try {
             String fileName = sourceFileObject.getName().getBaseName();
             String destinationPath;
@@ -280,8 +283,7 @@ public class FileMoveExtension extends StreamFunctionProcessor {
             if (fileMoveMetrics != null) {
                 fileMoveMetrics.getMoveMetric(0);
             }
-            throw new SiddhiAppRuntimeException("Exception occurred when doing file operations when moving for file: " +
-                    sourceFileObject.getName().getPath(), e);
+            throw e;
         }
     }
 }
