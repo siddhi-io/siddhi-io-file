@@ -786,6 +786,86 @@ public class FileFunctionsTestCase {
         AssertJUnit.assertFalse(isFileExist(tempSource + "/archive/subFolder/test3.txt", false));
     }
 
+    @Test
+    public void folderMoveWithDynamicParams() throws InterruptedException, IOException {
+        FileUtils.copyDirectory(sourceRoot, tempSource);
+        log.info("test Siddhi Io File move() allows dynamic params");
+        AssertJUnit.assertFalse(isFileExist(sourceRoot + "/destination", false));
+        String app = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream CopyFileStream(regex string);\n" +
+                "from CopyFileStream#file:move" +
+                "('" + tempSource + "/archive', '" + sourceRoot + "/destination', regex)\n" +
+                "select *\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("CopyFileStream");
+        siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.getAndIncrement();
+                for (Event event : events) {
+                    if (n == 0) {
+                        AssertJUnit.assertEquals(".*test3.txt$", event.getData(0));
+                        AssertJUnit.assertEquals(true, event.getData(1));
+                    } else {
+                        AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        stockStream.send(new Object[]{".*test3.txt$"});
+        Thread.sleep(100);
+        siddhiAppRuntime.shutdown();
+        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/archive/subFolder/test3.txt", false));
+        AssertJUnit.assertFalse(isFileExist(sourceRoot + "/destination/archive/test.txt", false));
+        AssertJUnit.assertFalse(isFileExist(tempSource + "/archive/subFolder/test3.txt", false));
+    }
+
+    @Test
+    public void folderMoveExcludingParentFolder() throws InterruptedException, IOException {
+        FileUtils.copyDirectory(sourceRoot, tempSource);
+        log.info("test Siddhi Io File move() with a dynamic value for exclude.root.dir parameter");
+        AssertJUnit.assertFalse(isFileExist(sourceRoot + "/destination", false));
+        String app = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream CopyFileStream(regex string, excludeParent bool);\n" +
+                "from CopyFileStream#file:move" +
+                "('" + tempSource + "/archive', '" + sourceRoot + "/destination', regex, excludeParent)\n" +
+                "select *\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("CopyFileStream");
+        siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.getAndIncrement();
+                for (Event event : events) {
+                    if (n == 0) {
+                        AssertJUnit.assertEquals(".*test3.txt$", event.getData(0));
+                        AssertJUnit.assertEquals(true, event.getData(1));
+                        AssertJUnit.assertEquals(true, event.getData(2));
+                    } else {
+                        AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        stockStream.send(new Object[]{".*test3.txt$", true});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/subFolder/test3.txt", false));
+        AssertJUnit.assertFalse(isFileExist(sourceRoot + "/destination/test.txt", false));
+        AssertJUnit.assertFalse(isFileExist(tempSource + "/archive/subFolder/test3.txt", false));
+    }
 
     @Test
     public void fileIsFileFunction() throws InterruptedException {

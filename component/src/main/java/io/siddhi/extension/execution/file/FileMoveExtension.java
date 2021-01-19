@@ -72,14 +72,16 @@ import java.util.regex.Pattern;
                                 "Note: Add an empty string to match all files",
                         type = DataType.STRING,
                         optional = true,
-                        defaultValue = "<Empty_String>"
+                        defaultValue = "<Empty_String>",
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "exclude.root.dir",
                         description = "Exclude parent folder when moving the content.",
                         type = DataType.BOOL,
                         optional = true,
-                        defaultValue = "false"
+                        defaultValue = "false",
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "file.system.options",
@@ -192,6 +194,9 @@ public class FileMoveExtension extends StreamFunctionProcessor {
         boolean excludeParentFolder = false;
         if (inputExecutorLength == 3) {
             regex = (String) data[2];
+        } else if (inputExecutorLength == 4) {
+            regex = (String) data[2];
+            excludeParentFolder = (Boolean) data[3];
         }
         if (pattern == null) {
             pattern = Pattern.compile(regex);
@@ -205,9 +210,6 @@ public class FileMoveExtension extends StreamFunctionProcessor {
                     pattern.matcher(rootFileObject.getName().getBaseName()).lookingAt()) {
                 moveFileToDestination(rootFileObject, destinationDirUri, pattern);
             } else if (rootFileObject.getType().hasChildren()) {
-                if (inputExecutorLength == 4) {
-                    excludeParentFolder = (Boolean) data[3];
-                }
                 if (!excludeParentFolder) {
                     destinationDirUri =
                             destinationDirUri.concat(File.separator + rootFileObject.getName().getBaseName());
@@ -218,13 +220,8 @@ public class FileMoveExtension extends StreamFunctionProcessor {
                     if (sourceFileObject.getType().hasContent() &&
                             pattern.matcher(sourceFileObject.getName().getBaseName()).lookingAt()) {
                         String sourcePartialUri = sourceFileObject.getName().getPath();
-                        if (excludeParentFolder) {
-                            sourcePartialUri = sourcePartialUri.replace(uri +
-                                    rootFileObject.getName().getBaseName(), "");
-                        } else {
-                            sourcePartialUri = sourcePartialUri.replace(uri, "").
-                                    replace(sourceFileObject.getName().getBaseName(), "");
-                        }
+                        sourcePartialUri = sourcePartialUri.replace(uri, "").
+                                replace(sourceFileObject.getName().getBaseName(), "");
                         moveFileToDestination(sourceFileObject, destinationDirUri + sourcePartialUri,
                                 pattern);
                     }
