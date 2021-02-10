@@ -54,13 +54,13 @@ import java.util.regex.Pattern;
         description = "This function performs copying file from one directory to another.\n",
         parameters = {
                 @Parameter(
-                        name = "uri",
+                        name = "path",
                         description = "Absolute file or directory path.",
                         type = DataType.STRING,
                         dynamic = true
                 ),
                 @Parameter(
-                        name = "destination.dir.uri",
+                        name = "destination.dir.path",
                         description = "Absolute file path to the destination directory.\n" +
                                 "Note: Parent folder structure will be created if it does not exist.",
                         type = DataType.STRING,
@@ -96,16 +96,16 @@ import java.util.regex.Pattern;
         },
         parameterOverloads = {
                 @ParameterOverload(
-                        parameterNames = {"uri", "destination.dir.uri"}
+                        parameterNames = {"path", "destination.dir.path"}
                 ),
                 @ParameterOverload(
-                        parameterNames = {"uri", "destination.dir.uri", "include.by.regexp"}
+                        parameterNames = {"path", "destination.dir.path", "include.by.regexp"}
                 ),
                 @ParameterOverload(
-                        parameterNames = {"uri", "destination.dir.uri", "include.by.regexp", "exclude.root.dir"}
+                        parameterNames = {"path", "destination.dir.path", "include.by.regexp", "exclude.root.dir"}
                 ),
                 @ParameterOverload(
-                        parameterNames = {"uri", "destination.dir.uri", "include.by.regexp", "exclude.root.dir",
+                        parameterNames = {"path", "destination.dir.path", "include.by.regexp", "exclude.root.dir",
                                 "file.system.options"}
                 )
         },
