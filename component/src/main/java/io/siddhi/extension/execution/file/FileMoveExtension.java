@@ -220,7 +220,7 @@ public class FileMoveExtension extends StreamFunctionProcessor {
                     if (sourceFileObject.getType().hasContent() &&
                             pattern.matcher(sourceFileObject.getName().getBaseName()).lookingAt()) {
                         String sourcePartialUri = sourceFileObject.getName().getPath();
-                        sourcePartialUri = sourcePartialUri.replace(uri, "").
+                        sourcePartialUri = sourcePartialUri.replace(rootFileObject.getName().getPath(), "").
                                 replace(sourceFileObject.getName().getBaseName(), "");
                         moveFileToDestination(sourceFileObject, destinationDirUri + sourcePartialUri,
                                 pattern);
