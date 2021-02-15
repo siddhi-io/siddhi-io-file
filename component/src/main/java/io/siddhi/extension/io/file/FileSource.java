@@ -491,10 +491,14 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.TRUE);
         }
         isTailingEnabled = Boolean.parseBoolean(tailing);
-
+        readOnlyHeader = optionHolder.validateAndGetStaticValue(Constants.READ_ONLY_HEADER, "false");
         if (isTailingEnabled) {
             actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS,
                     Constants.NONE);
+            if (Boolean.parseBoolean(readOnlyHeader)) {
+                throw new SiddhiAppCreationException("Either 'tailing' or 'read.only.header' should be true. But both of them" +
+                        "set to 'true'.");
+            }
         } else {
             actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS,
                     Constants.KEEP);
@@ -526,7 +530,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
         fileReadWaitTimeout = optionHolder.validateAndGetStaticValue(Constants.FILE_READ_WAIT_TIMEOUT, "1000");
         headerPresent = optionHolder.validateAndGetStaticValue(Constants.HEADER_PRESENT, "false");
-        readOnlyHeader = optionHolder.validateAndGetStaticValue(Constants.READ_ONLY_HEADER, "false");
         bufferSizeInBinaryChunked = optionHolder.validateAndGetStaticValue(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED,
                 "65536");
         fileNamePattern = optionHolder.validateAndGetStaticValue(Constants.FILE_NAME_PATTERN, null);
