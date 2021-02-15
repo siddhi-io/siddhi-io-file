@@ -74,6 +74,7 @@ import java.util.regex.Pattern;
                                 "Note: Add an empty string to match all files",
                         type = DataType.STRING,
                         optional = true,
+                        dynamic = true,
                         defaultValue = "<Empty_String>"
                 ),
                 @Parameter(
@@ -193,7 +194,7 @@ public class FileCopyExtension extends StreamFunctionProcessor {
         String destinationDirUri = (String) data[1];
         String regex = "";
         boolean excludeRootFolder = false;
-        if (inputExecutorLength == 3) {
+        if (inputExecutorLength >= 3) {
             regex = (String) data[2];
         }
         if (pattern == null) {
