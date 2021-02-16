@@ -496,8 +496,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS,
                     Constants.NONE);
             if (Boolean.parseBoolean(readOnlyHeader)) {
-                throw new SiddhiAppCreationException("Either 'tailing' or 'read.only.header' should be true. But both of them" +
-                        "set to 'true'.");
+                throw new SiddhiAppCreationException("Either 'tailing' or 'read.only.header' should be true. " +
+                        "But both of them set to 'true'.");
             }
         } else {
             actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS,
