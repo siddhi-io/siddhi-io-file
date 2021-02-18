@@ -228,6 +228,45 @@ public class FileFunctionsTestCase {
     }
 
     @Test
+    public void folderCopyWithDynamicRegexFunction() throws InterruptedException {
+        log.info("test Siddhi Io File Function for copy() only files adheres to a regex, where the regex is dynamic");
+        AssertJUnit.assertFalse(isFileExist(sourceRoot + "/destination", false));
+        String app = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream CopyFileStream(regex string);\n" +
+                "from CopyFileStream#file:copy" +
+                "('" + sourceRoot + "/archive', '" + sourceRoot + "/destination', regex)\n" +
+                "select regex, isSuccess\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("CopyFileStream");
+        siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.getAndIncrement();
+                for (Event event : events) {
+                    if (n == 0) {
+                        AssertJUnit.assertEquals(".*test3.txt$", event.getData(0));
+                        AssertJUnit.assertEquals(true, event.getData(1));
+                    } else {
+                        AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        stockStream.send(new Object[]{".*test3.txt$"});
+        Thread.sleep(100);
+        siddhiAppRuntime.shutdown();
+        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/destination/archive/subFolder/test3.txt", false));
+        AssertJUnit.assertFalse(isFileExist(sourceRoot + "/destination/archive/test.txt", false));
+        AssertJUnit.assertTrue(isFileExist(sourceRoot + "/archive/test.txt", false));
+    }
+
+    @Test
     public void fileCreateAndDeleteFunction() throws InterruptedException {
         log.info("test Siddhi Io File Function for create() and delete()");
         AssertJUnit.assertFalse(isFileExist(sourceRoot + "/destination/created.txt", false));
