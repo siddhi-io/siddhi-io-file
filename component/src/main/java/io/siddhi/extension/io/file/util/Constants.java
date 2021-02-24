@@ -117,6 +117,8 @@ public class Constants {
 
     public static final String UTF_8 = "UTF-8";
 
+    public static final String PROCESSED_FILE_LIST = "processedFileList";
+
     /*prometheus reporte values*/
     public static final String PROMETHEUS_REPORTER_NAME = "prometheus";
 }

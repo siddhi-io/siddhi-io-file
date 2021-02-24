@@ -24,7 +24,6 @@ import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
-import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.executor.ConstantExpressionExecutor;
 import io.siddhi.core.executor.ExpressionExecutor;
 import io.siddhi.core.query.processor.ProcessingMode;
@@ -55,13 +54,13 @@ import java.util.regex.Pattern;
         description = "This function performs copying file from one directory to another.\n",
         parameters = {
                 @Parameter(
-                        name = "uri",
+                        name = "path",
                         description = "Absolute file or directory path.",
                         type = DataType.STRING,
                         dynamic = true
                 ),
                 @Parameter(
-                        name = "destination.dir.uri",
+                        name = "destination.dir.path",
                         description = "Absolute file path to the destination directory.\n" +
                                 "Note: Parent folder structure will be created if it does not exist.",
                         type = DataType.STRING,
@@ -73,14 +72,16 @@ import java.util.regex.Pattern;
                                 "Note: Add an empty string to match all files",
                         type = DataType.STRING,
                         optional = true,
-                        defaultValue = "<Empty_String>"
+                        defaultValue = "<Empty_String>",
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "exclude.root.dir",
                         description = "Exclude parent folder when moving the content.",
                         type = DataType.BOOL,
                         optional = true,
-                        defaultValue = "false"
+                        defaultValue = "false",
+                        dynamic = true
                 ),
                 @Parameter(
                         name = "file.system.options",
@@ -95,16 +96,16 @@ import java.util.regex.Pattern;
         },
         parameterOverloads = {
                 @ParameterOverload(
-                        parameterNames = {"uri", "destination.dir.uri"}
+                        parameterNames = {"path", "destination.dir.path"}
                 ),
                 @ParameterOverload(
-                        parameterNames = {"uri", "destination.dir.uri", "include.by.regexp"}
+                        parameterNames = {"path", "destination.dir.path", "include.by.regexp"}
                 ),
                 @ParameterOverload(
-                        parameterNames = {"uri", "destination.dir.uri", "include.by.regexp", "exclude.root.dir"}
+                        parameterNames = {"path", "destination.dir.path", "include.by.regexp", "exclude.root.dir"}
                 ),
                 @ParameterOverload(
-                        parameterNames = {"uri", "destination.dir.uri", "include.by.regexp", "exclude.root.dir",
+                        parameterNames = {"path", "destination.dir.path", "include.by.regexp", "exclude.root.dir",
                                 "file.system.options"}
                 )
         },
@@ -193,19 +194,22 @@ public class FileMoveExtension extends StreamFunctionProcessor {
         boolean excludeParentFolder = false;
         if (inputExecutorLength == 3) {
             regex = (String) data[2];
+        } else if (inputExecutorLength == 4) {
+            regex = (String) data[2];
+            excludeParentFolder = (Boolean) data[3];
         }
         if (pattern == null) {
             pattern = Pattern.compile(regex);
         }
         try {
             FileObject rootFileObject = Utils.getFileObject(uri, fileSystemOptions);
+            if (!rootFileObject.exists()) {
+                return new Object[]{false};
+            }
             if (rootFileObject.getType().hasContent() &&
                     pattern.matcher(rootFileObject.getName().getBaseName()).lookingAt()) {
                 moveFileToDestination(rootFileObject, destinationDirUri, pattern);
             } else if (rootFileObject.getType().hasChildren()) {
-                if (inputExecutorLength == 4) {
-                    excludeParentFolder = (Boolean) data[3];
-                }
                 if (!excludeParentFolder) {
                     destinationDirUri =
                             destinationDirUri.concat(File.separator + rootFileObject.getName().getBaseName());
@@ -216,21 +220,16 @@ public class FileMoveExtension extends StreamFunctionProcessor {
                     if (sourceFileObject.getType().hasContent() &&
                             pattern.matcher(sourceFileObject.getName().getBaseName()).lookingAt()) {
                         String sourcePartialUri = sourceFileObject.getName().getPath();
-                        if (excludeParentFolder) {
-                            sourcePartialUri = sourcePartialUri.replace(uri +
-                                    rootFileObject.getName().getBaseName(), "");
-                        } else {
-                            sourcePartialUri = sourcePartialUri.replace(uri, "").
-                                    replace(sourceFileObject.getName().getBaseName(), "");
-                        }
+                        sourcePartialUri = sourcePartialUri.replace(rootFileObject.getName().getPath(), "").
+                                replace(sourceFileObject.getName().getBaseName(), "");
                         moveFileToDestination(sourceFileObject, destinationDirUri + sourcePartialUri,
                                 pattern);
                     }
                 }
             }
         } catch (FileSystemException e) {
-            throw new SiddhiAppRuntimeException("Exception occurred when getting the file type " +
-                    uri, e);
+            log.error("Exception occurred when getting the file type " + uri, e);
+            return new Object[]{false};
         }
         return new Object[]{true};
     }
@@ -250,7 +249,8 @@ public class FileMoveExtension extends StreamFunctionProcessor {
 
     }
 
-    private void moveFileToDestination(FileObject sourceFileObject, String destinationDirUri, Pattern pattern) {
+    private void moveFileToDestination(FileObject sourceFileObject, String destinationDirUri, Pattern pattern)
+            throws FileSystemException {
         try {
             String fileName = sourceFileObject.getName().getBaseName();
             String destinationPath;
@@ -280,8 +280,7 @@ public class FileMoveExtension extends StreamFunctionProcessor {
             if (fileMoveMetrics != null) {
                 fileMoveMetrics.getMoveMetric(0);
             }
-            throw new SiddhiAppRuntimeException("Exception occurred when doing file operations when moving for file: " +
-                    sourceFileObject.getName().getPath(), e);
+            throw e;
         }
     }
 }

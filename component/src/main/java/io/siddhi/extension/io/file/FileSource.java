@@ -378,7 +378,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private FileSourceConfiguration fileSourceConfiguration;
     private RemoteFileSystemConnectorFactory fileSystemConnectorFactory;
     private FileSourceServiceProvider fileSourceServiceProvider;
-    private RemoteFileSystemServerConnector fileSystemServerConnector;
     private String filePointer = "0";
     private String[] requiredProperties;
     private boolean isTailingEnabled = true;
@@ -401,6 +400,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private long timeout = 5000;
     private boolean fileServerConnectorStarted = false;
     private ScheduledFuture scheduledFuture;
+    private FileSourcePoller fileSourcePoller;
     private ConnectionCallback connectionCallback;
     private String headerPresent;
     private String readOnlyHeader;
@@ -580,7 +580,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     @Override
     public void disconnect() {
         try {
-            fileSystemServerConnector = null;
             if (isTailingEnabled && fileSourceConfiguration.getFileServerConnector() != null) {
                 fileSourceConfiguration.getFileServerConnector().stop();
                 fileSourceConfiguration.setFileServerConnector(null);
@@ -621,11 +620,23 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     }
 
     public void resume() {
-        try {
-            updateSourceConf();
-            deployServers();
-        } catch (ConnectionUnavailableException e) {
-            throw new SiddhiAppRuntimeException("Failed to resume siddhi app runtime.", e);
+        if (dirUri != null && scheduledFuture != null) {
+            this.scheduledFuture = siddhiAppContext.getScheduledExecutorService().
+                    scheduleAtFixedRate(fileSourcePoller, 0, 1, TimeUnit.SECONDS);
+        }
+        if (isTailingEnabled && fileSourceConfiguration.getFileServerConnector() != null) {
+            FileServerConnector fileServerConnector = fileSourceConfiguration.getFileServerConnector();
+            Runnable runnableServer = () -> {
+                try {
+                    fileServerConnector.start();
+                } catch (ServerConnectorException e) {
+                    log.error(String.format("For the siddhi app '" + siddhiAppContext.getName() +
+                            ",' failed to resume the server for file '%s'." +
+                            "Hence starting to process next file.", fileUri));
+                }
+            };
+            fileSourceConfiguration.getExecutorService().execute(runnableServer);
+            this.fileServerConnectorStarted = true;
         }
     }
 
@@ -759,9 +770,11 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 FileSystemListener fileSystemListener = new FileSystemListener(sourceEventListener,
                         fileSourceConfiguration, metrics, schemeFileOptions);
                 try {
-                    fileSystemServerConnector = fileSystemConnectorFactory.createServerConnector(
-                            siddhiAppContext.getName(), properties, fileSystemListener);
+                    RemoteFileSystemServerConnector fileSystemServerConnector =
+                            fileSystemConnectorFactory.createServerConnector(
+                                        siddhiAppContext.getName(), properties, fileSystemListener);
                     fileSourceConfiguration.setFileSystemServerConnector(fileSystemServerConnector);
+
                     FileSourcePoller.CompletionCallback fileSourceCompletionCallback = (Throwable error) ->
                     {
                         if (error.getClass().equals(RemoteFileSystemConnectorException.class)) {
@@ -771,7 +784,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                             throw new SiddhiAppRuntimeException("File Polling mode run failed.", error);
                         }
                     };
-                    FileSourcePoller fileSourcePoller =
+                    this.fileSourcePoller =
                             new FileSourcePoller(fileSystemServerConnector, siddhiAppContext.getName());
                     fileSourcePoller.setCompletionCallback(fileSourceCompletionCallback);
                     this.scheduledFuture = siddhiAppContext.getScheduledExecutorService().
@@ -953,8 +966,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             filePointer = FileSource.this.fileSourceConfiguration.getFilePointer();
             state.put(Constants.FILE_POINTER, fileSourceConfiguration.getFilePointer());
             state.put(Constants.TAILED_FILE, fileSourceConfiguration.getTailedFileURIMap());
-            state.put(Constants.TAILING_REGEX_STRING_BUILDER,
-                    fileSourceConfiguration.getTailingRegexStringBuilder());
+            state.put(Constants.TAILING_REGEX_STRING_BUILDER, fileSourceConfiguration.getTailingRegexStringBuilder());
+            state.put(Constants.PROCESSED_FILE_LIST, fileSourceConfiguration.getProcessedFileList());
             return state;
         }
 
@@ -966,6 +979,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             fileSourceConfiguration.setTailedFileURIMap(tailedFileURIMap);
             fileSourceConfiguration.updateTailingRegexStringBuilder(
                     (StringBuilder) map.get(Constants.TAILING_REGEX_STRING_BUILDER));
+            fileSourceConfiguration.setProcessedFileList(
+                        (List<String>) map.get(Constants.PROCESSED_FILE_LIST));
         }
     }
 }

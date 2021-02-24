@@ -48,6 +48,7 @@ public class FileSourceConfiguration {
 
     private FileServerConnector fileServerConnector;
     private RemoteFileSystemServerConnector fileSystemServerConnector;
+    private List<String> processedFileList = new ArrayList<>();
     private List<String> tailedFileURIMap;
     private ExecutorService executorService = null;
     private String[] requiredProperties = null;
@@ -306,5 +307,26 @@ public class FileSourceConfiguration {
 
     public Scheduler getScheduler() {
         return scheduler;
+    }
+
+    public List<String> getProcessedFileList() {
+        return processedFileList;
+    }
+
+    public void setProcessedFileList(List<String> processedFileList) {
+        this.processedFileList = processedFileList;
+    }
+
+    /**
+     * Maintains the processedFileList. Adds a file URL to the list if it has not being added already.
+     * @param fileURI the file URI which needs to be added to the list
+     * @return true if the fileURI is absent in the current list and adds to it; false if the URI is already present.
+     */
+    public boolean addFileToListIfAbsent(String fileURI) {
+        if (processedFileList.contains(fileURI)) {
+            return false;
+        }
+        processedFileList.add(fileURI);
+        return true;
     }
 }
