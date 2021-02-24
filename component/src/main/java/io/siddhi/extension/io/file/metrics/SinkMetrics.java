@@ -25,14 +25,13 @@ import org.wso2.carbon.metrics.core.Counter;
 import org.wso2.carbon.metrics.core.Gauge;
 import org.wso2.carbon.metrics.core.Level;
 import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
-import org.wso2.carbon.si.metrics.core.internal.MetricsManagement;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 /**
- * Class which is holds the metrics to monitor source operations.
+ * Class which is holds the metrics to monitor sinks operations. This acts like a metrics handler for file sink.
  */
 public class SinkMetrics extends Metrics {
     private static final Logger log = Logger.getLogger(SinkMetrics.class);
@@ -52,6 +51,8 @@ public class SinkMetrics extends Metrics {
     }
 
     public Counter getTotalWriteMetrics() { //to count the total writes from siddhi app level.
+        /* This is a common for all the extensions which performs writes.
+        Siddhi app name is dynamic and extension name should be given manually. */
         return MetricsDataHolder.getInstance().getMetricService()
                 .counter(String.format("io.siddhi.SiddhiApps.%s.Siddhi.Total.Writes.%s", siddhiAppName, "file"),
                         Level.INFO);
@@ -94,14 +95,17 @@ public class SinkMetrics extends Metrics {
     }
 
     public void setSinkLastPublishedTime() {
+        /* We register the reference to the gauge here, and this should be done only once.
+         In order to update the gauge we have to update the registered reference. */
         MetricsDataHolder.getInstance().getMetricService()
                 .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Sinks.%s.%s",
-                        siddhiAppName, "last_published_time", filePath),
-                        Level.INFO, () -> sinkFileLastPublishedTimeMap.getOrDefault(filePath, 0L));
+                        siddhiAppName, "last_published_time", filePath), Level.INFO,
+                        // We should always pass a reference of a local variable, not as a parameter
+                        () -> sinkFileLastPublishedTimeMap.getOrDefault(filePath, 0L));
     }
 
     public void setSinkElapsedTime(String fileURI) {
-        MetricsManagement.getInstance().getMetricService()
+        MetricsDataHolder.getInstance().getMetricService()
                 .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Sinks.%s.%s",
                         siddhiAppName, "elapsed_time", filePath),
                         Level.INFO, () -> {
@@ -114,7 +118,7 @@ public class SinkMetrics extends Metrics {
     }
 
     public void setSinkFileStatusMetrics() {
-        MetricsManagement.getInstance().getMetricService()
+        MetricsDataHolder.getInstance().getMetricService()
                 .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Sinks.%s.%s",
                         siddhiAppName, "file_status", filePath), Level.INFO, new FileStatusGauge(filePath));
     }

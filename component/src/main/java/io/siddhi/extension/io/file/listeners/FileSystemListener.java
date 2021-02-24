@@ -291,14 +291,14 @@ public class FileSystemListener implements RemoteFileSystemListener {
                     fileSourceConfiguration.getExecutorService().execute(() -> {
                         metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileUri),
                                 StreamStatus.COMPLETED);
-                        increaseMetricsAfterProcess(fileSourceConfiguration.getMoveAfterProcess(), 1);
+                        increaseMetricsAfterProcess(fileSourceConfiguration.getMoveAfterProcess(), 1, fileUri);
                     });
                 }
             }
 
         } catch (ClientConnectorException e) {
             if (metrics != null) {
-                increaseMetricsAfterProcess(fileSourceConfiguration.getMoveAfterProcess(), 0);
+                increaseMetricsAfterProcess(fileSourceConfiguration.getMoveAfterProcess(), 0, fileUri);
             }
             log.error(String.format("Failure occurred in vfs-client while reading the file '%s'.", fileUri), e);
         } catch (InterruptedException e) {
@@ -333,7 +333,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
         }
     }
 
-    private void increaseMetricsAfterProcess(String moveAfterProcess, int value) {
+    private void increaseMetricsAfterProcess(String moveAfterProcess, int value, String fileUri) {
         if (moveAfterProcess == null) {
             metrics.getFileDeleteMetrics().setTime(System.currentTimeMillis());
             metrics.getFileDeleteMetrics().getDeleteMetric(value);
@@ -342,6 +342,6 @@ public class FileSystemListener implements RemoteFileSystemListener {
             metrics.getFileMoveMetrics().setTime(System.currentTimeMillis());
             metrics.getFileMoveMetrics().getMoveMetric(value);
         }
-        metrics.setReadPercentage(100.0);
+        metrics.setReadPercentage(100.0, fileUri);
     }
 }

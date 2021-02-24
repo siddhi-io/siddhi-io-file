@@ -239,13 +239,6 @@ public class FileSink extends Sink {
                     return;
                 }
                 if (send) {
-                    siddhiAppContext.getExecutorService().execute(() -> {
-                        metrics.getTotalWriteMetrics().inc();
-                        metrics.getSinkFilesEventCount().inc();
-                        metrics.getSinkDroppedEvents();
-                        metrics.getErrorCount();
-                        metrics.getWriteBytes().inc(byteSize);
-                        metrics.getSinkFileSize().inc(byteSize);
                         String shortenFilePath = Utils.getShortFilePath(uri);
                         boolean added = metrics.getFilesURI().add(shortenFilePath);
                         if (metrics.getSinkFileLastPublishedTimeMap().containsKey(shortenFilePath)) {
@@ -263,8 +256,14 @@ public class FileSink extends Sink {
                             metrics.setSinkLastPublishedTime();
                             metrics.setSinkElapsedTime(shortenFilePath);
                             metrics.setSinkFileStatusMetrics();
+                        } else {
+                            metrics.getSinkFileSize().inc(byteSize);
                         }
-                    });
+                        metrics.getTotalWriteMetrics().inc();
+                        metrics.getSinkFilesEventCount().inc();
+                        metrics.getSinkDroppedEvents();
+                        metrics.getErrorCount();
+                        metrics.getWriteBytes().inc(byteSize);
                 }
             } catch (ClientConnectorException e) {
                 if (metrics != null) {

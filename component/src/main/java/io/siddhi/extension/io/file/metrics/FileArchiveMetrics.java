@@ -18,7 +18,7 @@
 package io.siddhi.extension.io.file.metrics;
 
 import org.wso2.carbon.metrics.core.Level;
-import org.wso2.carbon.si.metrics.core.internal.MetricsManagement;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 
 /**
  * Class which is holds the metrics to monitor Archive files operations.
@@ -35,7 +35,7 @@ public class FileArchiveMetrics extends Metrics {
     }
 
     public void getArchiveMetric(int status) {
-        MetricsManagement.getInstance().getMetricService()
+        MetricsDataHolder.getInstance().getMetricService()
                 .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Operations.Archived.%s.%s.%s.%s",
                         siddhiAppName, type, time + ".time", source + ".source", destination + ".destination"),
                         Level.INFO, () -> status);

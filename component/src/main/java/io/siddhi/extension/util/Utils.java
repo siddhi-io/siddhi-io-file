@@ -20,6 +20,7 @@ package io.siddhi.extension.util;
 
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.extension.io.file.metrics.Metrics;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -33,6 +34,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.URI;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.charset.CharsetDecoder;
@@ -145,16 +147,16 @@ public class Utils {
         if (uri.startsWith("file:")) {
             uri = uri.replaceFirst("file:", "");
         }
-        return uri.replace("%20", " ");
+        uri = uri.replace("%20", " ");
+        return FilenameUtils.separatorsToSystem(uri).replace("\\", "/");
     }
 
     public static long getLinesCount(String uri) throws IOException {
         if (uri.startsWith("file:")) {
             uri = uri.replaceFirst("file:", "");
         }
-        uri = uri.replace("%20", " ");
         CharsetDecoder dec = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.IGNORE);
-        Path path = Paths.get(uri);
+        Path path = Paths.get(URI.create("file:///" + uri).normalize());
         try (Reader r = Channels.newReader(FileChannel.open(path), dec, -1);
              BufferedReader br = new BufferedReader(r)) {
             return br.lines()
