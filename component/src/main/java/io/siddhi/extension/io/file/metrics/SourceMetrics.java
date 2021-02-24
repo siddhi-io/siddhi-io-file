@@ -35,7 +35,8 @@ import java.util.concurrent.ExecutorService;
 public class SourceMetrics extends Metrics {
     private static final Logger log = Logger.getLogger(SourceMetrics.class);
     private final Map<String, StreamStatus> sourceFileStatusMap = new HashMap<>();
-    private final Map<String, Long> lastConsumedTimeMap = new HashMap<>(); //to get the last consumed time
+    private final Map<String, Long> lastConsumedTimeMap = new HashMap<>(); //to get the last consumed time.
+    private final Map<String, Double> readPercentageMap = new HashMap<>(); //to get read percentage of each file.
 
     private boolean isStarted;
     private String filePath;
@@ -44,7 +45,6 @@ public class SourceMetrics extends Metrics {
     private final String streamName;
     private final FileDeleteMetrics fileDeleteMetrics;
     private final FileMoveMetrics fileMoveMetrics;
-    private double readPercentage;
 
     public SourceMetrics(String siddhiAppName, String readingMode, String streamName) {
         super(siddhiAppName);
@@ -84,7 +84,7 @@ public class SourceMetrics extends Metrics {
                         siddhiAppName, "lines_count", filePath), Level.INFO);
     }
 
-    public void getElapseTimeMetric(Gauge gauge) {
+    public void getElapseTimeMetric(Gauge<Long> gauge) {
         MetricsDataHolder.getInstance().getMetricService()
                 .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.%s.%s",
                         siddhiAppName, "elapse_time", filePath), Level.INFO, gauge);
@@ -96,7 +96,7 @@ public class SourceMetrics extends Metrics {
                         siddhiAppName, "error_count", filePath), Level.INFO);
     }
 
-    public void getFileSizeMetric(Gauge gauge) {
+    public void getFileSizeMetric(Gauge<Double> gauge) {
         MetricsDataHolder.getInstance().getMetricService()
                 .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.%s.%s",
                         siddhiAppName, "file_size", filePath), Level.INFO, gauge);
@@ -126,10 +126,15 @@ public class SourceMetrics extends Metrics {
                         siddhiAppName, "tailing_enable", filePath), Level.INFO, () -> enable);
     }
 
-    public void getReadPercentageMetric() {
+    public void getReadPercentageMetric(String fileUri) {
         MetricsDataHolder.getInstance().getMetricService()
                 .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Source.%s.%s",
-                        siddhiAppName, "read_percentage", filePath), Level.INFO, () -> readPercentage);
+                        siddhiAppName, "read_percentage", filePath), Level.INFO, () -> {
+                            if (readPercentageMap.containsKey(fileUri)) {
+                                return readPercentageMap.get(fileUri);
+                            }
+                            return 0.0;
+                        });
     }
 
     public void setFilePath(String fileURI) {
@@ -179,8 +184,13 @@ public class SourceMetrics extends Metrics {
          return lastConsumedTimeMap;
      }
 
-    public void setReadPercentage(double readPercentage) {
-        this.readPercentage = readPercentage;
+    public void setReadPercentage(double readPercentage, String filePath) {
+        if (this.readPercentageMap.containsKey(filePath)) {
+            this.readPercentageMap.replace(filePath, readPercentage);
+        } else {
+            // saving the full file path as key(not the shortened file path)
+            this.readPercentageMap.put(filePath, readPercentage);
+        }
     }
 
     /**
