@@ -56,6 +56,7 @@ public class FileSourceConfiguration {
     private Pattern pattern;
 
     private String actionAfterProcess = null;
+    private String moveIfExistMode = null;
     private String actionAfterFailure = null;
     private String moveAfterProcess = null;
     private String fileReadWaitTimeout;
@@ -328,5 +329,15 @@ public class FileSourceConfiguration {
         }
         processedFileList.add(fileURI);
         return true;
+    }
+
+    public String getMoveIfExistMode() {
+
+        return moveIfExistMode;
+    }
+
+    public void setMoveIfExistMode(String moveIfExistMode) {
+
+        this.moveIfExistMode = moveIfExistMode;
     }
 }

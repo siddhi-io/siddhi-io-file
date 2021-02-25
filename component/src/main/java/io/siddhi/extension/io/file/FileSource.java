@@ -190,6 +190,19 @@ import static org.quartz.CronExpression.isValidExpression;
                 ),
 
                 @Parameter(
+                        name = "move.if.exist.mode",
+                        description = "" +
+                                "If you specify 'MOVE' as the value for the 'action.after.process' parameter, use " +
+                                "this parameter to specify what happens if a file exist in the same location." +
+                                "Possible values are 'OVERWRITE' and 'KEEP' where KEEP will append a UUID to " +
+                                "existing filename and keep both files while OVERWRITE will simply overwrite the " +
+                                "existing file.\n",
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "<Empty_String>"
+                ),
+
+                @Parameter(
                         name = "move.after.failure",
                         description = "" +
                                 "If you specify 'MOVE' as the value for the 'action.after.failure' parameter, use " +
@@ -384,6 +397,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private SiddhiAppContext siddhiAppContext;
     private String mode;
     private String actionAfterProcess;
+    private String moveIfExistMode = null;
     private String actionAfterFailure = null;
     private String moveAfterProcess;
     private String moveAfterFailure = null;
@@ -502,6 +516,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         } else {
             actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS,
                     Constants.KEEP);
+        }
+        if (optionHolder.isOptionExists(Constants.MOVE_IF_EXIST_MODE)) {
+            moveIfExistMode = optionHolder.validateAndGetStaticValue(Constants.MOVE_IF_EXIST_MODE);
         }
         actionAfterFailure = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_FAILURE, Constants.DELETE);
         // TODO : When file.uri has been provided, the file uri should be provided for move.after.process parameter.
@@ -657,6 +674,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setReadOnlyHeader(readOnlyHeader);
         fileSourceConfiguration.setBufferSize(bufferSizeInBinaryChunked);
         fileSourceConfiguration.setCronExpression(cronExpression);
+        fileSourceConfiguration.setMoveIfExistMode(moveIfExistMode);
     }
 
     private void updateSourceConf() {
@@ -672,6 +690,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             map.put(Constants.ACTION_AFTER_PROCESS_KEY, actionAfterProcess.toUpperCase(Locale.ENGLISH));
         }
         map.put(Constants.MOVE_AFTER_PROCESS_KEY.toUpperCase(Locale.ENGLISH), moveAfterProcess);
+        if (moveIfExistMode != null) {
+            map.put(Constants.MOVE_IF_EXIST_MODE.toUpperCase(Locale.ENGLISH), moveIfExistMode);
+        }
         map.put(Constants.POLLING_INTERVAL, dirPollingInterval);
         map.put(Constants.FILE_SORT_ATTRIBUTE, Constants.NAME);
         map.put(Constants.FILE_SORT_ASCENDING, Constants.TRUE.toUpperCase(Locale.ENGLISH));
@@ -737,6 +758,11 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                     "is 'move'. Hence stopping the siddhi app '" + siddhiAppContext.getName() + "'.");
         }
 
+        if (!(Constants.MOVE.equalsIgnoreCase(actionAfterProcess)) && (moveIfExistMode != null)) {
+            throw new SiddhiAppCreationException("'moveIfExistMode' can only be used when 'action.after.process' " +
+                    "is 'move'. Hence stopping the siddhi app '" + siddhiAppContext.getName() + "'.");
+        }
+
         if (cronExpression != null && moveAfterProcess == null) {
             throw new SiddhiAppCreationException("'move.after.process' has not been provided where it is mandatory " +
                     "when 'cron.expression' is given. Hence stopping the siddhi app " +
@@ -799,6 +825,9 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 properties.put(Constants.POLLING_INTERVAL, filePollingInterval);
                 properties.put(Constants.HEADER_PRESENT, headerPresent);
                 properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
+                if (moveIfExistMode != null) {
+                    properties.put(Constants.MOVE_IF_EXIST_MODE, moveIfExistMode);
+                }
                 if (actionAfterFailure != null) {
                     properties.put(Constants.ACTION_AFTER_FAILURE_KEY, actionAfterFailure);
                 }

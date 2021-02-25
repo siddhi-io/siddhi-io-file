@@ -28,6 +28,7 @@ public class Constants {
     public static final String PATH = "path";
     public static final String MODE = "mode";
     public static final String ACTION_AFTER_PROCESS = "action.after.process";
+    public static final String MOVE_IF_EXIST_MODE = "move.if.exist.mode";
     public static final String ACTION_AFTER_FAILURE = "action.after.failure";
     public static final String MOVE_AFTER_PROCESS = "move.after.process";
     public static final String MOVE_AFTER_FAILURE = "move.after.failure";
