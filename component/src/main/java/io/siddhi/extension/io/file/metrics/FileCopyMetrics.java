@@ -18,7 +18,7 @@
 package io.siddhi.extension.io.file.metrics;
 
 import org.wso2.carbon.metrics.core.Level;
-import org.wso2.carbon.si.metrics.core.internal.MetricsManagement;
+import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 
 /**
  * Class which is holds the metrics to monitor Copy file operations.
@@ -34,7 +34,7 @@ public class FileCopyMetrics extends Metrics {
     }
 
     public void getCopyMetric(int status) {
-        MetricsManagement.getInstance().getMetricService()
+        MetricsDataHolder.getInstance().getMetricService()
                 .gauge(String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Operations.Copy.%s.%s.%s",
                         siddhiAppName, time + ".time", source + ".source", destination + ".destination"),
                         Level.INFO, () -> status);
