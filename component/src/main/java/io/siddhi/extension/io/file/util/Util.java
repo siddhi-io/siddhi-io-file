@@ -133,6 +133,9 @@ public class Util {
         properties.put(Constants.URI, fileURI);
         properties.put(Constants.ACK_TIME_OUT, "1000");
         properties.put(Constants.ACTION, actionAfterProcess);
+        if (actionAfterProcess.equalsIgnoreCase(Constants.MOVE)) {
+            properties.put(Constants.MOVE_IF_EXIST_MODE, fileSourceConfiguration.getMoveIfExistMode());
+        }
         return properties;
     }
 }
