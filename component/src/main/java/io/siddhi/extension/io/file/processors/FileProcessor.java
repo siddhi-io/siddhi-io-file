@@ -40,6 +40,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -121,26 +123,43 @@ public class FileProcessor implements CarbonMessageProcessor {
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         if (carbonMessage instanceof BinaryCarbonMessage) {
             byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
+
+            String[] requiredPropertyValues = new String[0];
+            Map requiredPropertiesMap = new HashMap();
+
+            /**
+             * EOF property will only be supported under REGEX mode, going forward.
+             * TEXT_FULL mode is supported in this version to keep backward compatibility
+             */
+            if (Constants.REGEX.equalsIgnoreCase(mode) || Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
+                extractRequiredProperties(carbonMessage, requiredPropertiesMap);
+            } else {
+                requiredPropertyValues = getRequiredPropertyValues(carbonMessage);
+            }
+
+            long filePointer = 0;
+            if (Constants.LINE.equalsIgnoreCase(mode) && fileSourceConfiguration.isTailingEnabled()) {
+                filePointer = (Long) carbonMessage.getProperties().get(Constants.CURRENT_POSITION);
+            }
+            if (carbonCallback != null) {
+                carbonCallback.done(carbonMessage);
+            }
+
             String msg = new String(content, StandardCharsets.UTF_8);
             if (Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
-                    carbonCallback.done(carbonMessage);
-                    carbonMessage.setProperty
-                            (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
                     sourceEventListener.onEvent(new String(content, StandardCharsets.UTF_8),
-                            getRequiredPropertyValues(carbonMessage));
+                            getRequiredPropertyValuesInRegexMode(true, requiredPropertiesMap));
                     send = true;
                 }
             } else if (Constants.BINARY_FULL.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
-                    carbonCallback.done(carbonMessage);
-                    sourceEventListener.onEvent(content, getRequiredPropertyValues(carbonMessage));
+                    sourceEventListener.onEvent(content, requiredPropertyValues);
                     send = true;
                 }
             } else if (Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
                 if (msg.length() > 0) {
-                    carbonCallback.done(carbonMessage);
-                    sourceEventListener.onEvent(content, getRequiredPropertyValues(carbonMessage));
+                    sourceEventListener.onEvent(content, requiredPropertyValues);
                 }
             } else if (Constants.LINE.equalsIgnoreCase(mode)) {
                 if (!fileSourceConfiguration.isTailingEnabled()) {
@@ -150,17 +169,15 @@ public class FileProcessor implements CarbonMessageProcessor {
                     while ((line = bufferedReader.readLine()) != null) {
                         if (line.length() > 0) {
                             readBytes = line.length();
-                            sourceEventListener.onEvent(line.trim(), getRequiredPropertyValues(carbonMessage));
+                            sourceEventListener.onEvent(line.trim(), requiredPropertyValues);
                             send = true;
                         }
                     }
-                    carbonCallback.done(carbonMessage);
                 } else {
                     if (msg.length() > 0) {
                         readBytes = msg.getBytes(StandardCharsets.UTF_8).length;
-                        fileSourceConfiguration.updateFilePointer(
-                                (Long) carbonMessage.getProperties().get(Constants.CURRENT_POSITION));
-                        sourceEventListener.onEvent(msg, getRequiredPropertyValues(carbonMessage));
+                        fileSourceConfiguration.updateFilePointer(filePointer);
+                        sourceEventListener.onEvent(msg, requiredPropertyValues);
                         send = true;
                         if (metrics != null) {
                             increaseTailingMetrics();
@@ -205,20 +222,17 @@ public class FileProcessor implements CarbonMessageProcessor {
                         }
                         if (matchFound && endOfStream == -1) {
                             if (prevEvent != null) {
-                                carbonMessage.setProperty
-                                        (org.wso2.transport.file.connector.server.util.Constants.EOF, false);
-                                sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                                sourceEventListener.onEvent(prevEvent,
+                                        getRequiredPropertyValuesInRegexMode(false, requiredPropertiesMap));
                                 send = true;
                             }
-                            carbonMessage.setProperty
-                                    (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
-                            sourceEventListener.onEvent(event, getRequiredPropertyValues(carbonMessage));
+                            sourceEventListener.onEvent(event,
+                                    getRequiredPropertyValuesInRegexMode(true, requiredPropertiesMap));
                             send = true;
                         } else if (matchFound) {
                             if (prevEvent != null) {
-                                carbonMessage.setProperty
-                                        (org.wso2.transport.file.connector.server.util.Constants.EOF, false);
-                                sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                                sourceEventListener.onEvent(prevEvent,
+                                        getRequiredPropertyValuesInRegexMode(false, requiredPropertiesMap));
                                 send = true;
                             }
                             prevEvent = event;
@@ -227,9 +241,8 @@ public class FileProcessor implements CarbonMessageProcessor {
                             endOfStream = bufferedReader.read(buf);
                             if (endOfStream == -1) {
                                 if (prevEvent != null) {
-                                    carbonMessage.setProperty
-                                            (org.wso2.transport.file.connector.server.util.Constants.EOF, true);
-                                    sourceEventListener.onEvent(prevEvent, getRequiredPropertyValues(carbonMessage));
+                                    sourceEventListener.onEvent(prevEvent,
+                                            getRequiredPropertyValuesInRegexMode(true, requiredPropertiesMap));
                                     send = true;
                                 }
                             }
@@ -251,12 +264,9 @@ public class FileProcessor implements CarbonMessageProcessor {
                         while (m.find()) {
                             event = m.group(0);
                             sourceEventListener.onEvent
-                                    (sb.substring(sb.indexOf(event)), getRequiredPropertyValues(carbonMessage));
+                                    (sb.substring(sb.indexOf(event)), requiredPropertyValues);
                             send = true;
                         }
-                    }
-                    if (carbonCallback != null) {
-                        carbonCallback.done(carbonMessage);
                     }
                 } else {
                     fileSourceConfiguration.updateFilePointer(readBytes);
@@ -275,7 +285,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                             }
                             remainedLength = sb.length() - event.length() - remainedLength - 1;
                         }
-                        sourceEventListener.onEvent(event, getRequiredPropertyValues(carbonMessage));
+                        sourceEventListener.onEvent(event, requiredPropertyValues);
                         send = true;
                         readBytes += content.length;
                         if (metrics != null) {
@@ -286,10 +296,6 @@ public class FileProcessor implements CarbonMessageProcessor {
                     tmp = sb.substring(lastMatchedIndex);
                     sb.setLength(0);
                     sb.append(tmp);
-
-                    if (carbonCallback != null) {
-                        carbonCallback.done(carbonMessage);
-                    }
                 }
             }
             if (metrics != null && send) {
@@ -325,7 +331,8 @@ public class FileProcessor implements CarbonMessageProcessor {
             if (value != null) {
                 values[i++] = value.toString();
             } else {
-                log.error("Failed to find required transport property '" + propertyKey + "'");
+                log.error("Failed to find required transport property '" + propertyKey + "'. Assigning null value");
+                values[i++] = null;
             }
         }
         return values;
@@ -349,6 +356,43 @@ public class FileProcessor implements CarbonMessageProcessor {
         fileSize = Utils.getFileSize(fileSourceConfiguration.getCurrentlyReadingFileURI());
         metrics.getSourceFileStatusMap().replace(Utils.getShortFilePath(fileURI), StreamStatus.PROCESSING);
         metrics.getTailEnabledFilesMap().replace(Utils.getShortFilePath(fileURI), System.currentTimeMillis());
+    }
+
+    /**
+     * In Regex mode, the user may request for property trp:eol which is not extracted from the carbonMessage.
+     * @param eof Whether EOF reached or not
+     * @return required properties array
+     */
+    private String[] getRequiredPropertyValuesInRegexMode(boolean eof, Map requiredPropertyValues) {
+        String[] values = new String[requiredProperties.length];
+        int i = 0;
+        for (String propertyName: requiredProperties) {
+            if (propertyName.equalsIgnoreCase(Constants.EOF)) {
+                values[i++] = String.valueOf(eof);
+            } else {
+                Object value = requiredPropertyValues.get(propertyName);
+                if (value == null) {
+                    log.error("Failed to find required transport property '" + propertyName +
+                            "'. Assigning null value");
+                    values[i++] = null;
+                } else {
+                    values[i++] = value.toString();
+                }
+            }
+        }
+        return values;
+    }
+
+    private void extractRequiredProperties(CarbonMessage carbonMessage, Map requiredPropertyValues) {
+        for (String property: requiredProperties) {
+            Object value = carbonMessage.getProperty(property);
+            if (value != null) {
+                requiredPropertyValues.put(property, value);
+            } else {
+                //We assume it is okay to proceed even though a trp property value will be null
+                log.error("Failed to find required transport property '" + property + "'");
+            }
+        }
     }
 
 }

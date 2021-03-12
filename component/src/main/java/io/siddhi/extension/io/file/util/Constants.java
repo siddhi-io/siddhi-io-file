@@ -122,4 +122,7 @@ public class Constants {
 
     /*prometheus reporte values*/
     public static final String PROMETHEUS_REPORTER_NAME = "prometheus";
+
+    public static final String EOF = "eof";
+
 }
