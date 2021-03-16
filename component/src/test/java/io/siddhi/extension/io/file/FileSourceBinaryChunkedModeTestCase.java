@@ -127,7 +127,7 @@ public class FileSourceBinaryChunkedModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
     public void siddhiIoFileTestForBinaryChunkedWithFileUri() throws InterruptedException {
         log.info("Siddhi IO File Test with binary.chunked mode and binaryPassThrough Mapper with File Uri");
         File file = new File(dirUri + "/binary/apache.bin");
