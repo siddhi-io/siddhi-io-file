@@ -121,6 +121,8 @@ public class Util {
             properties.put(Constants.MODE, mode);
             properties.put(Constants.HEADER_PRESENT, fileSourceConfiguration.getHeaderPresent());
             properties.put(Constants.READ_ONLY_HEADER, fileSourceConfiguration.getReadOnlyHeader());
+            properties.put(Constants.READ_ONLY_TRAILER, fileSourceConfiguration.getReadOnlyTrailer());
+            properties.put(Constants.SKIP_TRAILER, fileSourceConfiguration.getSkipTrailer());
             properties.put(Constants.CRON_EXPRESSION, fileSourceConfiguration.getCronExpression());
             properties.put(Constants.URI, fileURI);
         }
