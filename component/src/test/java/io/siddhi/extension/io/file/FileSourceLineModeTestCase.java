@@ -1003,7 +1003,7 @@ public class FileSourceLineModeTestCase {
         siddhiAppRuntime.start();
     }
 
-    @Test
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
     public void siddhiIoFileTestForEOFAndFileName() throws InterruptedException {
         log.info("test SiddhiIoFile [mode=line] Test for EOF and File Name");
         String streams = "" +
@@ -1046,7 +1046,7 @@ public class FileSourceLineModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
     public void siddhiIoFileTestForSkipHeader() throws InterruptedException {
         log.info("test SiddhiIoFile header.present parameter Test");
         String streams = "" +
@@ -1082,7 +1082,7 @@ public class FileSourceLineModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
     public void siddhiIoFileTestWithoutSkipHeader() throws InterruptedException {
         log.info("test SiddhiIoFile without header.present parameter Test");
         String streams = "" +

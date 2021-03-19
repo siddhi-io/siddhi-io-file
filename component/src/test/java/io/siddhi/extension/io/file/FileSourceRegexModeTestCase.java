@@ -987,13 +987,13 @@ public class FileSourceRegexModeTestCase {
 
         siddhiAppRuntime.start();
 
-        SiddhiTestHelper.waitForEvents(waitTime, 3, count, timeout);
-
-        File file = new File(dirUri + "/regex/invalid");
-        AssertJUnit.assertEquals(0, file.list().length);
+        SiddhiTestHelper.waitForEvents(waitTime, 3, count, 100000);
 
         //assert event count
         AssertJUnit.assertEquals("Number of events", 3, count.get());
+
+        File file = new File(dirUri + "/regex/invalid");
+        AssertJUnit.assertEquals(0, file.list().length);
         siddhiAppRuntime.shutdown();
     }
 
