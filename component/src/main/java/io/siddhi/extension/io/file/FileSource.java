@@ -563,7 +563,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         createInitialSourceConf();
         updateSourceConf();
         getPattern();
-        validateEOFConfigs();
         if (MetricsDataHolder.getInstance().getMetricService() != null &&
                 MetricsDataHolder.getInstance().getMetricManagementService().isEnabled()) {
             try {
@@ -1011,23 +1010,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                     (StringBuilder) map.get(Constants.TAILING_REGEX_STRING_BUILDER));
             fileSourceConfiguration.setProcessedFileList(
                         (List<String>) map.get(Constants.PROCESSED_FILE_LIST));
-        }
-    }
-
-    private void validateEOFConfigs() {
-        for (String property: requiredProperties) {
-            /**
-             * EOF property will only be supported under REGEX mode with tailing disabled, going forward.
-             * TEXT_FULL mode is supported in this version to keep backward compatibility
-             */
-            if (property.equalsIgnoreCase(Constants.EOF)) {
-                if (!((Constants.REGEX.equalsIgnoreCase(mode) && !isTailingEnabled)
-                        || Constants.TEXT_FULL.equalsIgnoreCase(mode))) { 
-                    throw new SiddhiAppCreationException("Transport property trp:eof can be provided only " +
-                            "on regex mode when tailing disabled or in Text Full mode. Given mode: " + mode
-                            + ". Tailing enabled: " + isTailingEnabled);
-                }
-            }
         }
     }
 }

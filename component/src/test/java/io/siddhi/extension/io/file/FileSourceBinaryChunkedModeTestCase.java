@@ -92,15 +92,15 @@ public class FileSourceBinaryChunkedModeTestCase {
                 "move.after.process='file:/" + moveAfterProcessDir + "', " +
                 "tailing='false', " +
                 "@map(type='binaryPassThrough', " +
-                "@attributes(buffer='0', fileName = 'trp:file.name', " +
+                "@attributes(buffer='0', eof = 'trp:eof', fileName = 'trp:file.name', " +
                 "sequenceNumber = 'trp:sequence.number', length = 'trp:content.length')))\n" +
-                "define stream FooStream (buffer object, fileName string, sequenceNumber int, " +
+                "define stream FooStream (buffer object, eof bool, fileName string, sequenceNumber int, " +
                 "length int);\n" +
                 "@sink(type='log')\n" +
-                "define stream BarStream (fileName string, sequenceNumber int, length int); ";
+                "define stream BarStream (eof bool, fileName string, sequenceNumber int, length int); ";
         String query = "" +
                 "from FooStream " +
-                "select fileName, sequenceNumber, length " +
+                "select eof, fileName, sequenceNumber, length " +
                 "insert into BarStream; ";
         SiddhiManager siddhiManager = new SiddhiManager();
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
@@ -127,7 +127,7 @@ public class FileSourceBinaryChunkedModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    @Test
     public void siddhiIoFileTestForBinaryChunkedWithFileUri() throws InterruptedException {
         log.info("Siddhi IO File Test with binary.chunked mode and binaryPassThrough Mapper with File Uri");
         File file = new File(dirUri + "/binary/apache.bin");
