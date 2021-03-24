@@ -334,32 +334,26 @@ public class FileSourceConfiguration {
     }
 
     public String getMoveIfExistMode() {
-
         return moveIfExistMode;
     }
 
     public void setMoveIfExistMode(String moveIfExistMode) {
-
         this.moveIfExistMode = moveIfExistMode;
     }
 
     public String getReadOnlyTrailer() {
-
         return readOnlyTrailer;
     }
 
     public void setReadOnlyTrailer(String readOnlyTrailer) {
-
         this.readOnlyTrailer = readOnlyTrailer;
     }
 
     public String getSkipTrailer() {
-
         return skipTrailer;
     }
 
     public void setSkipTrailer(String skipTrailer) {
-
         this.skipTrailer = skipTrailer;
     }
 }
