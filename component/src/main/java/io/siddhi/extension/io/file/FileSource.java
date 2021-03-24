@@ -287,6 +287,27 @@ import static org.quartz.CronExpression.isValidExpression;
                         defaultValue = "false"
                 ),
                 @Parameter(
+                        name = "read.only.trailer",
+                        description = "This parameter is applicable only if the value for the 'mode' parameter is" +
+                                " 'LINE'. If this parameter is set to 'true', only the last line (i.e., the trailer" +
+                                " line) of a text file (e.g., CSV) is read. If it is set to 'false', the full content" +
+                                " of the file is read line by line. This will only work if trailer appears once at" +
+                                " the last line of file.",
+                        optional = true,
+                        type = {DataType.BOOL},
+                        defaultValue = "false"
+                ),
+                @Parameter(
+                        name = "skip.trailer",
+                        description = "This parameter is applicable only if the value for the 'mode' parameter is" +
+                                " 'LINE'. If this parameter is set to 'true', only the last line (i.e., the trailer" +
+                                " line) of a text file (e.g., CSV) will be skipped. If it is set to 'false'," +
+                                " the full content of the file is read line by line.",
+                        optional = true,
+                        type = {DataType.BOOL},
+                        defaultValue = "false"
+                ),
+                @Parameter(
                         name = "buffer.size",
                         description = "This parameter used to get the buffer size for binary.chunked mode.",
                         optional = true,
@@ -423,6 +444,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private String cronExpression;
     private String fileNamePattern;
     private String fileSystemOptions;
+    private String readOnlyTrailer;
+    private String skipTrailer;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -506,16 +529,32 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         }
         isTailingEnabled = Boolean.parseBoolean(tailing);
         readOnlyHeader = optionHolder.validateAndGetStaticValue(Constants.READ_ONLY_HEADER, "false");
+        readOnlyTrailer = optionHolder.validateAndGetStaticValue(Constants.READ_ONLY_TRAILER, "false");
+        skipTrailer = optionHolder.validateAndGetStaticValue(Constants.SKIP_TRAILER, "false");
         if (isTailingEnabled) {
             actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS,
                     Constants.NONE);
             if (Boolean.parseBoolean(readOnlyHeader)) {
                 throw new SiddhiAppCreationException("Either 'tailing' or 'read.only.header' should be true. " +
                         "But both of them set to 'true'.");
+            } else if (Boolean.parseBoolean(readOnlyTrailer)) {
+                throw new SiddhiAppCreationException("Either 'tailing' or 'read.only.trailer' should be true. " +
+                        "But both of them set to 'true'.");
+            } else if (Boolean.parseBoolean(skipTrailer)) {
+                throw new SiddhiAppCreationException("Either 'tailing' or 'skip.trailer' should be true. " +
+                        "But both of them set to 'true'.");
             }
         } else {
             actionAfterProcess = optionHolder.validateAndGetStaticValue(Constants.ACTION_AFTER_PROCESS,
                     Constants.KEEP);
+        }
+        if (Boolean.parseBoolean(readOnlyHeader) && Boolean.parseBoolean(readOnlyTrailer)) {
+            throw new SiddhiAppCreationException("Either 'read.only.header' or 'read.only.trailer' should be true. " +
+                    "But both of them set to 'true'.");
+        }
+        if (Boolean.parseBoolean(readOnlyTrailer) && Boolean.parseBoolean(skipTrailer)) {
+            throw new SiddhiAppCreationException("Either 'read.only.trailer' or 'skip.trailer' should be true. " +
+                    "But both of them set to 'true'.");
         }
         if (optionHolder.isOptionExists(Constants.MOVE_IF_EXIST_MODE)) {
             moveIfExistMode = optionHolder.validateAndGetStaticValue(Constants.MOVE_IF_EXIST_MODE);
@@ -673,6 +712,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setFileReadWaitTimeout(fileReadWaitTimeout);
         fileSourceConfiguration.setHeaderPresent(headerPresent);
         fileSourceConfiguration.setReadOnlyHeader(readOnlyHeader);
+        fileSourceConfiguration.setReadOnlyTrailer(readOnlyTrailer);
+        fileSourceConfiguration.setSkipTrailer(skipTrailer);
         fileSourceConfiguration.setBufferSize(bufferSizeInBinaryChunked);
         fileSourceConfiguration.setCronExpression(cronExpression);
         fileSourceConfiguration.setMoveIfExistMode(moveIfExistMode);
@@ -826,6 +867,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 properties.put(Constants.POLLING_INTERVAL, filePollingInterval);
                 properties.put(Constants.HEADER_PRESENT, headerPresent);
                 properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
+                properties.put(Constants.READ_ONLY_TRAILER, readOnlyTrailer);
+                properties.put(Constants.SKIP_TRAILER, skipTrailer);
                 if (moveIfExistMode != null) {
                     properties.put(Constants.MOVE_IF_EXIST_MODE, moveIfExistMode);
                 }
@@ -879,6 +922,8 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                     properties.put(Constants.MODE, fileSourceConfiguration.getMode());
                     properties.put(Constants.HEADER_PRESENT, headerPresent);
                     properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
+                    properties.put(Constants.READ_ONLY_TRAILER, readOnlyTrailer);
+                    properties.put(Constants.SKIP_TRAILER, skipTrailer);
                     properties.put(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED, bufferSizeInBinaryChunked);
                     VFSClientConnector vfsClientConnector = new VFSClientConnector();
                     Map<String, Object> schemeFileOptions = Utils.getFileSystemOptionObjectMap(fileUri,

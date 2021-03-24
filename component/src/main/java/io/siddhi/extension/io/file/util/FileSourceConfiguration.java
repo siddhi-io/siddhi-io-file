@@ -44,6 +44,8 @@ public class FileSourceConfiguration {
     private long timeout = 5000;
     private String headerPresent = "false";
     private String readOnlyHeader = "false";
+    private String readOnlyTrailer = "false";
+    private String skipTrailer = "false";
     private String bufferSizeInBinaryChunked = "65536";
 
     private FileServerConnector fileServerConnector;
@@ -332,12 +334,26 @@ public class FileSourceConfiguration {
     }
 
     public String getMoveIfExistMode() {
-
         return moveIfExistMode;
     }
 
     public void setMoveIfExistMode(String moveIfExistMode) {
-
         this.moveIfExistMode = moveIfExistMode;
+    }
+
+    public String getReadOnlyTrailer() {
+        return readOnlyTrailer;
+    }
+
+    public void setReadOnlyTrailer(String readOnlyTrailer) {
+        this.readOnlyTrailer = readOnlyTrailer;
+    }
+
+    public String getSkipTrailer() {
+        return skipTrailer;
+    }
+
+    public void setSkipTrailer(String skipTrailer) {
+        this.skipTrailer = skipTrailer;
     }
 }

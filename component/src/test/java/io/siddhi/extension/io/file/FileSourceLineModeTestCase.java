@@ -1347,4 +1347,104 @@ public class FileSourceLineModeTestCase {
         AssertJUnit.assertEquals("Number of events", 2, eventCount.get());
         siddhiAppRuntime.shutdown();
     }
+
+    @Test
+    public void siddhiIOFileTestForReadOnlyTrailer() throws InterruptedException {
+        log.info("test SiddhiIOFile read.only.trailer=true parameter Test");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')\n" +
+                "@source(type='file', mode='line', header.present='true', file.uri='file:" + newRoot +
+                "/line/trailer/test.txt', " +
+                "read.only.trailer='true', tailing='false', " +
+                "@map(type='csv', delimiter='|'))\n" +
+                "define stream FileReaderStream (RECORD_TYPE string, count int, SUBSCRIBER_MSISDN string);\n" +
+                "@sink(type='log')" +
+                "define stream FileResultStream (RECORD_TYPE string, count int, " +
+                "SUBSCRIBER_MSISDN string);\n";
+
+        String query = "" +
+                "from FileReaderStream\n" +
+                "select *\n" +
+                "insert into FileResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("FileResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.incrementAndGet();
+                for (Event event : events) {
+                    switch (n) {
+                        case 1:
+                            AssertJUnit.assertEquals("23122020172300", event.getData(2));
+                            break;
+                        default:
+                            AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 1, count.get(), 6000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void siddhiIOFileTestForSkipTrailer() throws InterruptedException {
+        log.info("test SiddhiIOFile read.only.trailer=true parameter Test");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')\n" +
+                "@source(type='file', mode='line', header.present='true', file.uri='file:" + newRoot +
+                "/line/trailer/test.txt', " +
+                "skip.trailer='true', tailing='false', " +
+                "@map(type='csv', delimiter='|', header='true'," +
+                "@attributes(RECORD_TYPE = '0', FEATURE_EXPIRY_DATE = '1', FEATURE_EXPIRY_TIME = '2', " +
+                "SUBSCRIBER_MSISDN = '3', fp = 'trp:file.path', eof = 'trp:eof')))\n" +
+                "define stream FileReaderStream (RECORD_TYPE string, FEATURE_EXPIRY_DATE string, " +
+                "FEATURE_EXPIRY_TIME string, SUBSCRIBER_MSISDN string, fp string, eof string);\n" +
+                "@sink(type='log')" +
+                "define stream FileResultStream (RECORD_TYPE string, FEATURE_EXPIRY_DATE string, " +
+                "FEATURE_EXPIRY_TIME string, SUBSCRIBER_MSISDN string, fp string, eof string);\n";
+
+        String query = "" +
+                "from FileReaderStream\n" +
+                "select *\n" +
+                "insert into FileResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("FileResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.incrementAndGet();
+                for (Event event : events) {
+                    switch (n) {
+                        case 1:
+                            AssertJUnit.assertEquals("5241", event.getData(1));
+                            break;
+                        case 2:
+                            AssertJUnit.assertEquals("5242", event.getData(1));
+                            break;
+                        case 3:
+                            AssertJUnit.assertEquals("5243", event.getData(1));
+                            break;
+                        case 4:
+                            AssertJUnit.assertEquals("5244", event.getData(1));
+                            break;
+                        case 5:
+                            AssertJUnit.assertEquals("5245", event.getData(1));
+                            break;
+                        case 6:
+                            AssertJUnit.assertEquals("5246", event.getData(1));
+                            break;
+                        default:
+                            AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        SiddhiTestHelper.waitForEvents(100, 6, count.get(), 6000);
+        siddhiAppRuntime.shutdown();
+    }
 }
