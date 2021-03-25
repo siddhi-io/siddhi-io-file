@@ -323,21 +323,6 @@ public class FileProcessor implements CarbonMessageProcessor {
         return "file-message-processor";
     }
 
-    private String[] getRequiredPropertyValues(CarbonMessage carbonMessage) {
-        String[] values = new String[requiredProperties.length];
-        int i = 0;
-        for (String propertyKey : requiredProperties) {
-            Object value = carbonMessage.getProperty(propertyKey);
-            if (value != null) {
-                values[i++] = value.toString();
-            } else {
-                log.error("Failed to find required transport property '" + propertyKey + "'. Assigning null value");
-                values[i++] = null;
-            }
-        }
-        return values;
-    }
-
     private void increaseMetrics(int byteLength) {
         metrics.getTotalFileReadCount().inc();
         metrics.getTotalReadsMetrics().inc();
@@ -358,8 +343,23 @@ public class FileProcessor implements CarbonMessageProcessor {
         metrics.getTailEnabledFilesMap().replace(Utils.getShortFilePath(fileURI), System.currentTimeMillis());
     }
 
+    private String[] getRequiredPropertyValues(CarbonMessage carbonMessage) {
+        String[] values = new String[requiredProperties.length];
+        int i = 0;
+        for (String propertyKey : requiredProperties) {
+            Object value = carbonMessage.getProperty(propertyKey);
+            if (value != null) {
+                values[i++] = value.toString();
+            } else {
+                log.error("Failed to find required transport property '" + propertyKey + "'. Assigning null value");
+                values[i++] = null;
+            }
+        }
+        return values;
+    }
+
     /**
-     * In Regex mode, the user may request for property trp:eol which is not extracted from the carbonMessage.
+     * In Regex mode, the user may request for property trp:eof which is not extracted from the carbonMessage.
      * @param eof Whether EOF reached or not
      * @return required properties array
      */
