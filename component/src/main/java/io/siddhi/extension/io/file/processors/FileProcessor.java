@@ -127,10 +127,6 @@ public class FileProcessor implements CarbonMessageProcessor {
             String[] requiredPropertyValues = new String[0];
             Map requiredPropertiesMap = new HashMap();
 
-            /**
-             * EOF property will only be supported under REGEX mode, going forward.
-             * TEXT_FULL mode is supported in this version to keep backward compatibility
-             */
             if (Constants.REGEX.equalsIgnoreCase(mode) || Constants.TEXT_FULL.equalsIgnoreCase(mode)) {
                 extractRequiredProperties(carbonMessage, requiredPropertiesMap);
             } else {
@@ -220,16 +216,7 @@ public class FileProcessor implements CarbonMessageProcessor {
                             buf = new char[10]; // to clean existing content of buffer
                             endOfStream = bufferedReader.read(buf);
                         }
-                        if (matchFound && endOfStream == -1) {
-                            if (prevEvent != null) {
-                                sourceEventListener.onEvent(prevEvent,
-                                        getRequiredPropertyValuesInRegexMode(false, requiredPropertiesMap));
-                                send = true;
-                            }
-                            sourceEventListener.onEvent(event,
-                                    getRequiredPropertyValuesInRegexMode(true, requiredPropertiesMap));
-                            send = true;
-                        } else if (matchFound) {
+                        if (matchFound) {
                             if (prevEvent != null) {
                                 sourceEventListener.onEvent(prevEvent,
                                         getRequiredPropertyValuesInRegexMode(false, requiredPropertiesMap));
@@ -239,13 +226,6 @@ public class FileProcessor implements CarbonMessageProcessor {
                         } else {
                             buf = new char[10]; // to clean existing content of buffer
                             endOfStream = bufferedReader.read(buf);
-                            if (endOfStream == -1) {
-                                if (prevEvent != null) {
-                                    sourceEventListener.onEvent(prevEvent,
-                                            getRequiredPropertyValuesInRegexMode(true, requiredPropertiesMap));
-                                    send = true;
-                                }
-                            }
                         }
                         String tmp;
                         tmp = sb.substring(lastMatchedIndex);
@@ -262,11 +242,22 @@ public class FileProcessor implements CarbonMessageProcessor {
                         Pattern p = Pattern.compile(fileSourceConfiguration.getBeginRegex() + "((.|\n)*?)");
                         Matcher m = p.matcher(sb.toString());
                         while (m.find()) {
+                            if (prevEvent != null) {
+                                sourceEventListener.onEvent(prevEvent,
+                                        getRequiredPropertyValuesInRegexMode(false, requiredPropertiesMap));
+                                prevEvent = null;
+                                send = true;
+                            }
                             event = m.group(0);
-                            sourceEventListener.onEvent
-                                    (sb.substring(sb.indexOf(event)), requiredPropertyValues);
-                            send = true;
+                            event = sb.substring(sb.indexOf(event));
+                            prevEvent = event;
                         }
+                    }
+                    //Sending out the last event
+                    if (prevEvent != null) {
+                        sourceEventListener.onEvent(prevEvent,
+                                getRequiredPropertyValuesInRegexMode(true, requiredPropertiesMap));
+                        send = true;
                     }
                 } else {
                     fileSourceConfiguration.updateFilePointer(readBytes);
@@ -367,7 +358,7 @@ public class FileProcessor implements CarbonMessageProcessor {
         String[] values = new String[requiredProperties.length];
         int i = 0;
         for (String propertyName: requiredProperties) {
-            if (propertyName.equalsIgnoreCase(Constants.EOF)) {
+            if (propertyName.equalsIgnoreCase(org.wso2.transport.file.connector.server.util.Constants.EOF)) {
                 values[i++] = String.valueOf(eof);
             } else {
                 Object value = requiredPropertyValues.get(propertyName);
