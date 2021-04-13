@@ -13,7 +13,7 @@
         <meta name="description" content="Siddhi IO File Extension">
       
       
-        <link rel="canonical" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.10/">
+        <link rel="canonical" href="https://siddhi-io.github.io/siddhi-io-file/api/2.0.16/">
       
       
         <meta name="author" content="WSO2">
@@ -42,7 +42,7 @@
     
     
       
-        <title>2.0.10 - Siddhi IO File</title>
+        <title>2.0.16 - Siddhi IO File</title>
       
     
     
@@ -118,7 +118,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#api-docs-v2010" tabindex="1" class="md-skip">
+      <a href="#api-docs-v2016" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -144,7 +144,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                2.0.10
+                2.0.16
               
             </span>
           
@@ -298,66 +298,6 @@
           
           
 
-
-  <li class="md-nav__item">
-    <a href="../2.0.16/" title="2.0.16" class="md-nav__link">
-      2.0.16
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../2.0.15/" title="2.0.15" class="md-nav__link">
-      2.0.15
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../2.0.14/" title="2.0.14" class="md-nav__link">
-      2.0.14
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../2.0.13/" title="2.0.13" class="md-nav__link">
-      2.0.13
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../2.0.12/" title="2.0.12" class="md-nav__link">
-      2.0.12
-    </a>
-  </li>
-
-        
-          
-          
-          
-
   
 
 
@@ -369,11 +309,11 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        2.0.10
+        2.0.16
       </label>
     
-    <a href="./" title="2.0.10" class="md-nav__link md-nav__link--active">
-      2.0.10
+    <a href="./" title="2.0.16" class="md-nav__link md-nav__link--active">
+      2.0.16
     </a>
     
       
@@ -545,6 +485,66 @@
   
 </nav>
     
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../2.0.15/" title="2.0.15" class="md-nav__link">
+      2.0.15
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../2.0.14/" title="2.0.14" class="md-nav__link">
+      2.0.14
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../2.0.13/" title="2.0.13" class="md-nav__link">
+      2.0.13
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../2.0.12/" title="2.0.12" class="md-nav__link">
+      2.0.12
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../2.0.10/" title="2.0.10" class="md-nav__link">
+      2.0.10
+    </a>
   </li>
 
         
@@ -1112,10 +1112,10 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/siddhi-io/siddhi-io-file/edit/master/docs/api/2.0.10.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/siddhi-io/siddhi-io-file/edit/master/docs/api/2.0.16.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="api-docs-v2010">API Docs - v2.0.10<a class="headerlink" href="#api-docs-v2010" title="Permanent link">&para;</a></h1>
+                <h1 id="api-docs-v2016">API Docs - v2.0.16<a class="headerlink" href="#api-docs-v2016" title="Permanent link">&para;</a></h1>
 <div class="admonition info">
 <p class="admonition-title">Tested Siddhi Core version: <em><a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/">5.1.13</a></em></p>
 <p>It could also support other Siddhi Core minor versions.</p>
@@ -1127,6 +1127,7 @@
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
 <div class="codehilite"><pre><span></span>&lt;BOOL&gt; file:isDirectory(&lt;STRING&gt; uri)
+&lt;BOOL&gt; file:isDirectory(&lt;STRING&gt; uri, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1148,6 +1149,14 @@
         <td style="vertical-align: top">No</td>
         <td style="vertical-align: top">Yes</td>
     </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
@@ -1167,6 +1176,7 @@
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
 <div class="codehilite"><pre><span></span>&lt;BOOL&gt; file:isExist(&lt;STRING&gt; uri)
+&lt;BOOL&gt; file:isExist(&lt;STRING&gt; uri, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1187,6 +1197,14 @@
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">No</td>
         <td style="vertical-align: top">Yes</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
     </tr>
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
@@ -1218,6 +1236,7 @@
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
 <div class="codehilite"><pre><span></span>&lt;BOOL&gt; file:isFile(&lt;STRING&gt; file.path)
+&lt;BOOL&gt; file:isFile(&lt;STRING&gt; file.path, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1239,6 +1258,14 @@
         <td style="vertical-align: top">No</td>
         <td style="vertical-align: top">Yes</td>
     </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
@@ -1259,6 +1286,7 @@
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
 <div class="codehilite"><pre><span></span>&lt;STRING&gt; file:lastModifiedTime(&lt;STRING&gt; uri)
 &lt;STRING&gt; file:lastModifiedTime(&lt;STRING&gt; uri, &lt;STRING&gt; datetime.format)
+&lt;STRING&gt; file:lastModifiedTime(&lt;STRING&gt; uri, &lt;STRING&gt; datetime.format, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1284,6 +1312,14 @@
         <td style="vertical-align: top">datetime.format</td>
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">Format of the last modified datetime to be returned.</p></td>
         <td style="vertical-align: top">MM/dd/yyyy HH:mm:ss</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
@@ -1318,6 +1354,7 @@
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
 <div class="codehilite"><pre><span></span>&lt;LONG&gt; file:size(&lt;STRING&gt; uri)
+&lt;LONG&gt; file:size(&lt;STRING&gt; uri, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1338,6 +1375,14 @@
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">No</td>
         <td style="vertical-align: top">Yes</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
     </tr>
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
@@ -1361,6 +1406,7 @@
 file:archive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt; archive.type)
 file:archive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt; archive.type, &lt;STRING&gt; include.by.regexp)
 file:archive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt; archive.type, &lt;STRING&gt; include.by.regexp, &lt;BOOL&gt; exclude.subdirectories)
+file:archive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt; archive.type, &lt;STRING&gt; include.by.regexp, &lt;BOOL&gt; exclude.subdirectories, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1411,6 +1457,14 @@ file:archive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This flag is used to exclude the subdirectories and its files without archiving.</p></td>
         <td style="vertical-align: top">false</td>
         <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>
@@ -1468,6 +1522,7 @@ file:archive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&
 <div class="codehilite"><pre><span></span>file:copy(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri)
 file:copy(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt; include.by.regexp)
 file:copy(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt; include.by.regexp, &lt;BOOL&gt; exclude.root.dir)
+file:copy(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt; include.by.regexp, &lt;BOOL&gt; exclude.root.dir, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1503,13 +1558,21 @@ file:copy(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt;
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
-        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">Yes</td>
     </tr>
     <tr>
         <td style="vertical-align: top">exclude.root.dir</td>
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This flag is used to exclude parent folder when copying the content.</p></td>
         <td style="vertical-align: top">false</td>
         <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>
@@ -1577,7 +1640,9 @@ file:copy(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt;
 <p style="word-wrap: break-word;margin: 0;">Create a file or a folder in the given location</p>
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<div class="codehilite"><pre><span></span>file:create(&lt;STRING&gt; uri, &lt;STRING&gt; is.directory)
+<div class="codehilite"><pre><span></span>file:create(&lt;STRING&gt; uri)
+file:create(&lt;STRING&gt; uri, &lt;BOOL&gt; is.directory)
+file:create(&lt;STRING&gt; uri, &lt;BOOL&gt; is.directory, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1602,10 +1667,18 @@ file:copy(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt;
     <tr>
         <td style="vertical-align: top">is.directory</td>
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This flag is used when creating file path is a directory</p></td>
-        <td style="vertical-align: top"></td>
-        <td style="vertical-align: top">STRING</td>
-        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">false</td>
+        <td style="vertical-align: top">BOOL</td>
         <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">Yes</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
     </tr>
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
@@ -1637,6 +1710,7 @@ file:copy(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt;
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
 <div class="codehilite"><pre><span></span>file:delete(&lt;STRING&gt; uri)
+file:delete(&lt;STRING&gt; uri, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1657,6 +1731,14 @@ file:copy(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt;
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">No</td>
         <td style="vertical-align: top">Yes</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
     </tr>
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
@@ -1687,9 +1769,10 @@ file:copy(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt;
 <p style="word-wrap: break-word;margin: 0;">This function performs copying file from one directory to another.<br></p>
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<div class="codehilite"><pre><span></span>file:move(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri)
-file:move(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt; include.by.regexp)
-file:move(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt; include.by.regexp, &lt;BOOL&gt; exclude.root.dir)
+<div class="codehilite"><pre><span></span>file:move(&lt;STRING&gt; path, &lt;STRING&gt; destination.dir.path)
+file:move(&lt;STRING&gt; path, &lt;STRING&gt; destination.dir.path, &lt;STRING&gt; include.by.regexp)
+file:move(&lt;STRING&gt; path, &lt;STRING&gt; destination.dir.path, &lt;STRING&gt; include.by.regexp, &lt;BOOL&gt; exclude.root.dir)
+file:move(&lt;STRING&gt; path, &lt;STRING&gt; destination.dir.path, &lt;STRING&gt; include.by.regexp, &lt;BOOL&gt; exclude.root.dir, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1704,7 +1787,7 @@ file:move(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt;
         <th>Dynamic</th>
     </tr>
     <tr>
-        <td style="vertical-align: top">uri</td>
+        <td style="vertical-align: top">path</td>
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">Absolute file or directory path.</p></td>
         <td style="vertical-align: top"></td>
         <td style="vertical-align: top">STRING</td>
@@ -1712,7 +1795,7 @@ file:move(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt;
         <td style="vertical-align: top">Yes</td>
     </tr>
     <tr>
-        <td style="vertical-align: top">destination.dir.uri</td>
+        <td style="vertical-align: top">destination.dir.path</td>
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">Absolute file path to the destination directory.<br>Note: Parent folder structure will be created if it does not exist.</p></td>
         <td style="vertical-align: top"></td>
         <td style="vertical-align: top">STRING</td>
@@ -1725,13 +1808,21 @@ file:move(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt;
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
-        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">Yes</td>
     </tr>
     <tr>
         <td style="vertical-align: top">exclude.root.dir</td>
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">Exclude parent folder when moving the content.</p></td>
         <td style="vertical-align: top">false</td>
         <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">Yes</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>
@@ -1802,6 +1893,7 @@ file:move(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;STRING&gt;
 <div class="codehilite"><pre><span></span>file:search(&lt;STRING&gt; uri)
 file:search(&lt;STRING&gt; uri, &lt;STRING&gt; include.by.regexp)
 file:search(&lt;STRING&gt; uri, &lt;STRING&gt; include.by.regexp, &lt;BOOL&gt; exclude.subdirectories)
+file:search(&lt;STRING&gt; uri, &lt;STRING&gt; include.by.regexp, &lt;BOOL&gt; exclude.subdirectories, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1836,6 +1928,14 @@ file:search(&lt;STRING&gt; uri, &lt;STRING&gt; include.by.regexp, &lt;BOOL&gt; e
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This flag is used to exclude the files un subdirectories when listing.</p></td>
         <td style="vertical-align: top">false</td>
         <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>
@@ -1894,6 +1994,7 @@ file:search(&lt;STRING&gt; uri, &lt;STRING&gt; include.by.regexp, &lt;BOOL&gt; e
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
 <div class="codehilite"><pre><span></span>file:searchInArchive(&lt;STRING&gt; uri)
 file:searchInArchive(&lt;STRING&gt; uri, &lt;STRING&gt; include.by.regexp)
+file:searchInArchive(&lt;STRING&gt; uri, &lt;STRING&gt; include.by.regexp, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -1918,6 +2019,14 @@ file:searchInArchive(&lt;STRING&gt; uri, &lt;STRING&gt; include.by.regexp)
     <tr>
         <td style="vertical-align: top">include.by.regexp</td>
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">Only the files matching the patterns will be searched.<br>Note: Add an empty string to match all files</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -1967,6 +2076,7 @@ file:searchInArchive(&lt;STRING&gt; uri, &lt;STRING&gt; include.by.regexp)
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
 <div class="codehilite"><pre><span></span>file:unarchive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri)
 file:unarchive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;BOOL&gt; exclude.root.dir)
+file:unarchive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;BOOL&gt; exclude.root.dir, &lt;STRING&gt; file.system.options)
 </pre></div>
 
 
@@ -2001,6 +2111,14 @@ file:unarchive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;BOOL&
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This flag excludes parent folder when extracting the content.</p></td>
         <td style="vertical-align: top">false</td>
         <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>
@@ -2045,7 +2163,7 @@ file:unarchive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;BOOL&
 <p style="word-wrap: break-word;margin: 0;">The File Sink component of the 'siddhi-io-fie' extension publishes (writes) event data that is processed within Siddhi to files. <br>Siddhi-io-file sink provides support to write both textual and binary data into files<br></p>
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<div class="codehilite"><pre><span></span>@sink(type=&quot;file&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, append=&quot;&lt;BOOL&gt;&quot;, add.line.separator=&quot;&lt;BOOL&gt;&quot;, @map(...)))
+<div class="codehilite"><pre><span></span>@sink(type=&quot;file&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, append=&quot;&lt;BOOL&gt;&quot;, add.line.separator=&quot;&lt;BOOL&gt;&quot;, file.system.options=&quot;&lt;STRING&gt;&quot;, @map(...)))
 </pre></div>
 
 
@@ -2083,6 +2201,14 @@ file:unarchive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;BOOL&
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
@@ -2102,7 +2228,7 @@ file:unarchive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;BOOL&
 <p style="word-wrap: break-word;margin: 0;">The File Source component of the 'siddhi-io-fie' extension allows you to receive the input data to be processed by Siddhi via files. Both text files and binary files are supported.</p>
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<div class="codehilite"><pre><span></span>@source(type=&quot;file&quot;, dir.uri=&quot;&lt;STRING&gt;&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, mode=&quot;&lt;STRING&gt;&quot;, tailing=&quot;&lt;BOOL&gt;&quot;, action.after.process=&quot;&lt;STRING&gt;&quot;, action.after.failure=&quot;&lt;STRING&gt;&quot;, move.after.process=&quot;&lt;STRING&gt;&quot;, move.after.failure=&quot;&lt;STRING&gt;&quot;, begin.regex=&quot;&lt;STRING&gt;&quot;, end.regex=&quot;&lt;STRING&gt;&quot;, file.polling.interval=&quot;&lt;STRING&gt;&quot;, dir.polling.interval=&quot;&lt;STRING&gt;&quot;, timeout=&quot;&lt;STRING&gt;&quot;, file.read.wait.timeout=&quot;&lt;STRING&gt;&quot;, header.present=&quot;&lt;BOOL&gt;&quot;, read.only.header=&quot;&lt;BOOL&gt;&quot;, buffer.size=&quot;&lt;STRING&gt;&quot;, cron.expression=&quot;&lt;STRING&gt;&quot;, @map(...)))
+<div class="codehilite"><pre><span></span>@source(type=&quot;file&quot;, dir.uri=&quot;&lt;STRING&gt;&quot;, file.uri=&quot;&lt;STRING&gt;&quot;, mode=&quot;&lt;STRING&gt;&quot;, tailing=&quot;&lt;BOOL&gt;&quot;, action.after.process=&quot;&lt;STRING&gt;&quot;, action.after.failure=&quot;&lt;STRING&gt;&quot;, move.after.process=&quot;&lt;STRING&gt;&quot;, move.if.exist.mode=&quot;&lt;STRING&gt;&quot;, move.after.failure=&quot;&lt;STRING&gt;&quot;, begin.regex=&quot;&lt;STRING&gt;&quot;, end.regex=&quot;&lt;STRING&gt;&quot;, file.polling.interval=&quot;&lt;STRING&gt;&quot;, dir.polling.interval=&quot;&lt;STRING&gt;&quot;, timeout=&quot;&lt;STRING&gt;&quot;, file.read.wait.timeout=&quot;&lt;STRING&gt;&quot;, header.present=&quot;&lt;BOOL&gt;&quot;, read.only.header=&quot;&lt;BOOL&gt;&quot;, read.only.trailer=&quot;&lt;BOOL&gt;&quot;, skip.trailer=&quot;&lt;BOOL&gt;&quot;, buffer.size=&quot;&lt;STRING&gt;&quot;, cron.expression=&quot;&lt;STRING&gt;&quot;, file.name.pattern=&quot;&lt;STRING&gt;&quot;, file.system.options=&quot;&lt;STRING&gt;&quot;, @map(...)))
 </pre></div>
 
 
@@ -2167,6 +2293,14 @@ file:unarchive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;BOOL&
     <tr>
         <td style="vertical-align: top">move.after.process</td>
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">If you specify 'MOVE' as the value for the 'action.after.process' parameter, use this parameter to specify the location to which the consumed files need to be moved.This should be the absolute path of the file that is going to be created after the moving is done.<br>This URI must include the file handling protocol used for file processing.<br>e.g., If the file handling protocol is 'ftp', the URI must be provided as 'ftp://&lt;FILE_PATH&gt;&gt;'.</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">move.if.exist.mode</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">If you specify 'MOVE' as the value for the 'action.after.process' parameter, use this parameter to specify what happens if a file exist in the same location.Possible values are 'OVERWRITE' and 'KEEP' where KEEP will append a UUID to existing filename and keep both files while OVERWRITE will simply overwrite the existing file.<br></p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -2245,6 +2379,22 @@ file:unarchive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;BOOL&
         <td style="vertical-align: top">No</td>
     </tr>
     <tr>
+        <td style="vertical-align: top">read.only.trailer</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter is applicable only if the value for the 'mode' parameter is 'LINE'. If this parameter is set to 'true', only the last line (i.e., the trailer line) of a text file (e.g., CSV) is read. If it is set to 'false', the full content of the file is read line by line. This will only work if trailer appears once at the last line of file.</p></td>
+        <td style="vertical-align: top">false</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">skip.trailer</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter is applicable only if the value for the 'mode' parameter is 'LINE'. If this parameter is set to 'true', only the last line (i.e., the trailer line) of a text file (e.g., CSV) will be skipped. If it is set to 'false', the full content of the file is read line by line.</p></td>
+        <td style="vertical-align: top">false</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
         <td style="vertical-align: top">buffer.size</td>
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This parameter used to get the buffer size for binary.chunked mode.</p></td>
         <td style="vertical-align: top">65536</td>
@@ -2256,6 +2406,22 @@ file:unarchive(&lt;STRING&gt; uri, &lt;STRING&gt; destination.dir.uri, &lt;BOOL&
         <td style="vertical-align: top">cron.expression</td>
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">This is used to specify a timestamp in cron expression. The file or files in the given dir.uri or file.uri will be processed when the given expression satisfied by the system time.</p></td>
         <td style="vertical-align: top">None</td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.name.pattern</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">Regex pattern for the filenames that should be read from the directory. Note: This parameter is applicable only if the connector is reading from a directory</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
@@ -2314,10 +2480,10 @@ define stream FooStream (symbol string, price float, volume long);
 
 <h3 id="fileeventlistener-source">fileeventlistener <em><a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/#source">(Source)</a></em><a class="headerlink" href="#fileeventlistener-source" title="Permanent link">&para;</a></h3>
 <p><p></p>
-<p style="word-wrap: break-word;margin: 0;">The 'fileeventlistener' component of the 'siddhi-io-fie' extension allows you to get the details of files that have been created, modified or deleted during execution time.</p>
+<p style="word-wrap: break-word;margin: 0;">The 'fileeventlistener' component of the 'siddhi-io-fie' extension allows you to get the details of files that have been created, modified or deleted during execution time.Supports listening to local folder/file paths.</p>
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<div class="codehilite"><pre><span></span>@source(type=&quot;fileeventlistener&quot;, dir.uri=&quot;&lt;STRING&gt;&quot;, monitoring.interval=&quot;&lt;STRING&gt;&quot;, file.name.list=&quot;&lt;STRING&gt;&quot;, @map(...)))
+<div class="codehilite"><pre><span></span>@source(type=&quot;fileeventlistener&quot;, dir.uri=&quot;&lt;STRING&gt;&quot;, monitoring.interval=&quot;&lt;STRING&gt;&quot;, file.name.list=&quot;&lt;STRING&gt;&quot;, file.system.options=&quot;&lt;STRING&gt;&quot;, @map(...)))
 </pre></div>
 
 
@@ -2333,7 +2499,7 @@ define stream FooStream (symbol string, price float, volume long);
     </tr>
     <tr>
         <td style="vertical-align: top">dir.uri</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The path to the directory to be processed. During execution time, Siddhi by default processes all the files within this directory. However, if you have entered specific files to be processed via the 'file.name.list' parameter, only those files are processed. The URI specified must include the file handling protocol to be used for file processing.<br>&nbsp;e.g., If the file handling protocol to be used is 'ftp', the URI must be provided as 'ftp://&lt;DIRECTORY_PATH&gt;&gt;'.<br></p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The path to the directory to be processed. During execution time, Siddhi by default processes all the files within this directory. However, if you have entered specific files to be processed via the 'file.name.list' parameter, only those files are processed. The URI specified must include the file handling protocol to be used for file processing.<br></p></td>
         <td style="vertical-align: top"></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">No</td>
@@ -2350,6 +2516,14 @@ define stream FooStream (symbol string, price float, volume long);
     <tr>
         <td style="vertical-align: top">file.name.list</td>
         <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">If you want to carry out processing for only for one or more specific files in the the given directory URI, you can use this parameter to specify those files as a comma-separated list. <br>e.g., 'abc.txt,xyz.csv'</p></td>
+        <td style="vertical-align: top"><Empty_String></td>
+        <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">file.system.options</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -2427,7 +2601,7 @@ insert into FooStream;
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../2.0.12/" title="2.0.12" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../latest/" title="latest" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -2436,19 +2610,19 @@ insert into FooStream;
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                2.0.12
+                latest
               </span>
             </div>
           </a>
         
         
-          <a href="../2.0.9/" title="2.0.9" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../2.0.15/" title="2.0.15" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                2.0.9
+                2.0.15
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">
