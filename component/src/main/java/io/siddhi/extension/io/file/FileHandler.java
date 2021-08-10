@@ -49,6 +49,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -222,7 +223,11 @@ public class FileHandler extends Source<FileHandler.FileHandlerState> {
             listeningFileObject = Utils.getFileObject(fileObjectPath, fileSystemOptions);
             String filePath = null;
             try {
-                filePath = listeningFileObject.getURL().toURI().toURL().getPath();
+                if (tmpURL.toLowerCase(Locale.ROOT).startsWith(Constants.TYPE_WEBDAV)) {
+                    filePath = listeningFileObject.getURL().getPath();
+                } else {
+                    filePath = listeningFileObject.getURL().toURI().toURL().getPath();
+                }
                 if (!filePath.contains(File.separator)) {
                     //this flow will only executed on windows environment
                     filePath = filePath.replace("/", File.separator).substring(1);
