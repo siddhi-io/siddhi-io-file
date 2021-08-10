@@ -33,6 +33,18 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.hierynomus</groupId>
+            <artifactId>smbj</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.codelibs</groupId>
+            <artifactId>jcifs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.engio</groupId>
+            <artifactId>mbassador</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wso2.transport.file</groupId>
             <artifactId>org.wso2.transport.file</artifactId>
         </dependency>
@@ -82,8 +94,24 @@
             <artifactId>commons-vfs2</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.org.apache.commons</groupId>
+            <artifactId>commons-vfs2-sandbox</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-webdav</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -92,6 +120,10 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -160,13 +192,19 @@
                             org.wso2.carbon.connector.framework.server.polling.*,
                             org.wso2.transport.remotefilesystem.*,
                             org.wso2.carbon.messaging.*,
-                            org.apache.commons.vfs2.*,
+                            org.apache.commons.vfs2.*,version="${commons-vfs2.wso2.version}",
                             org.apache.commons.compress.*,
                             org.wso2.transport.file.*,
                             org.apache.commons.net.*,
                             org.quartz.*,
                             io.siddhi.extension.util.*,
-                            com.jcraft.jsch.*
+                            com.jcraft.jsch.*,
+                            com.hierynomus.*,
+                            jcifs.*,
+                            org.apache.jackrabbit.*,
+                            org.apache.commons.codec.*,
+                            org.apache.commons.httpclient.*,
+                            org.bouncycastle.*
                         </Private-Package>
                         <Export-Package>
                             io.siddhi.extension.io.file.*,
@@ -179,7 +217,12 @@
                             !org.wso2.transport.file.*,
                             !org.apache.commons.net.*,
                             !org.quartz.*,
-                            !com.jcraft.jsch.*
+                            !com.jcraft.jsch.*,
+                            !com.hierynomus.*,
+                            !org.apache.jackrabbit.*,
+                            !org.apache.commons.codec.*,
+                            !org.bouncycastle.*,
+                            !org.apache.commons.httpclient.*
                         </Export-Package>
                         <Import-Package>
                             !org.wso2.carbon.messaging.*,
@@ -188,14 +231,19 @@
                             !org.wso2.transport.file.*,
                             !org.apache.commons.net.*,
                             !com.jcraft.jsch.*,
+                            !org.apache.jackrabbit.*,
+                            !org.bouncycastle.*,
+                            !org.apache.commons.httpclient.*,
                             io.siddhi.core.*;version="${siddhi.version.range}",
                             io.siddhi.annotation.*;version="${siddhi.version.range}",
                             io.siddhi.query.compiler.*;version="${siddhi.version.range}",
                             *;resolution:=optional
                         </Import-Package>
                         <Include-Resource>
-                            META-INF=target/classes/META-INF
+                            META-INF=target/classes/META-INF,
+                            META-INF/vfs-providers.xml=../resources/vfs-providers.xml
                         </Include-Resource>
+                        <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>

@@ -25,6 +25,7 @@ import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.output.sink.Sink;
 import io.siddhi.core.util.config.ConfigReader;
@@ -37,6 +38,7 @@ import io.siddhi.extension.io.file.metrics.SinkMetrics;
 import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.util.Utils;
+import io.siddhi.query.api.annotation.Annotation;
 import io.siddhi.query.api.definition.StreamDefinition;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
@@ -151,6 +153,16 @@ public class FileSink extends Sink {
         this.siddhiAppName = siddhiAppContext.getName();
         uriOption = optionHolder.validateAndGetOption(Constants.FILE_URI);
         String append = optionHolder.validateAndGetStaticValue(Constants.APPEND, Constants.TRUE);
+
+        //Not doing null check for uriOption as it is already done in optionHolder.validateAndGetOption() method
+        if (Constants.TRUE.equalsIgnoreCase(append)) {
+            if (uriOption.isStatic() && uriOption.getValue().startsWith(Constants.TYPE_WEBDAV)) {
+                throw new SiddhiAppCreationException("'append' mode is not supported for webdav URIs. Given URI: "
+                        + uriOption.getValue() + ". Set append='false' parameter");
+            } else if (!uriOption.isStatic()) {
+                validateDynamicFileURI(streamDefinition);
+            }
+        }
         properties = new HashMap<>();
         properties.put(Constants.ACTION, Constants.WRITE);
         if (Constants.TRUE.equalsIgnoreCase(append)) {
@@ -273,6 +285,25 @@ public class FileSink extends Sink {
                 throw new ConnectionUnavailableException("Writing data into the file " + uri + " failed during the " +
                         "execution of '" + siddhiAppName + "' SiddhiApp, due to " +
                         e.getMessage(), e);
+            }
+        }
+    }
+
+    private void validateDynamicFileURI(StreamDefinition streamDefinition) {
+        String uriTemplate = null;
+        if (streamDefinition.getAnnotations() != null) {
+            while (streamDefinition.getAnnotations().iterator().hasNext()) {
+                Annotation annotation = streamDefinition.getAnnotations().iterator().next();
+                if (annotation.getName().equalsIgnoreCase("sink")) {
+                    uriTemplate = annotation.getElement(Constants.FILE_URI);
+                    break;
+                }
+            }
+        }
+        if (uriTemplate != null) {
+            if (uriTemplate.contains(Constants.TYPE_WEBDAV)) {
+                throw new SiddhiAppCreationException("'append' mode is not supported for webdav URIs. Given URI: "
+                        + uriTemplate + ". Set append='false' parameter");
             }
         }
     }

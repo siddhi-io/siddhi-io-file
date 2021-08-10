@@ -465,27 +465,6 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         this.fileSourceServiceProvider = FileSourceServiceProvider.getInstance();
         this.fileSystemConnectorFactory = fileSourceServiceProvider.getFileSystemConnectorFactory();
         this.fileSystemOptions = optionHolder.validateAndGetStaticValue(Constants.FILE_SYSTEM_OPTIONS, null);
-        if (optionHolder.isOptionExists(Constants.DIR_URI)) {
-            dirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
-            validateURL(dirUri, "dir.uri");
-            FileObject listeningFileObject = Utils.getFileObject(dirUri, fileSystemOptions);
-            uri = listeningFileObject.getName().getPath();
-        }
-        if (optionHolder.isOptionExists(Constants.FILE_URI)) {
-            fileUri = optionHolder.validateAndGetStaticValue(Constants.FILE_URI);
-            validateURL(fileUri, "file.uri");
-            FileObject listeningFileObject = Utils.getFileObject(fileUri, fileSystemOptions);
-            uri = listeningFileObject.getName().getPath();
-        }
-
-        if (dirUri != null && fileUri != null) {
-            throw new SiddhiAppCreationException("Only one of directory uri or file uri should be provided. But both " +
-                    "have been provided.");
-        }
-        if (dirUri == null && fileUri == null) {
-            throw new SiddhiAppCreationException("Either directory uri or file uri must be provided. But none of them" +
-                    "found.");
-        }
 
         mode = optionHolder.validateAndGetStaticValue(Constants.MODE, Constants.LINE);
         List<Annotation> annotations = getMapper().getStreamDefinition().getAnnotations();
@@ -521,6 +500,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             }
         });
 
+        //Note: tailingEnabled has to be resolved before validating URIs
         if (Constants.TEXT_FULL.equalsIgnoreCase(mode) || Constants.BINARY_FULL.equalsIgnoreCase(mode) ||
                 Constants.BINARY_CHUNKED.equalsIgnoreCase(mode)) {
             tailing = optionHolder.validateAndGetStaticValue(Constants.TAILING, Constants.FALSE);
@@ -556,6 +536,33 @@ public class FileSource extends Source<FileSource.FileSourceState> {
             throw new SiddhiAppCreationException("Either 'read.only.trailer' or 'skip.trailer' should be true. " +
                     "But both of them set to 'true'.");
         }
+
+        if (optionHolder.isOptionExists(Constants.DIR_URI)) {
+            dirUri = optionHolder.validateAndGetStaticValue(Constants.DIR_URI);
+            if (dirUri.startsWith("webdav")) {
+                throw new SiddhiAppCreationException("Directory polling not supported for webdav protocol. " +
+                        "Provided dir.uri=" + dirUri);
+            }
+            validateURL(dirUri, "dir.uri");
+            FileObject listeningFileObject = Utils.getFileObject(dirUri, fileSystemOptions);
+            uri = listeningFileObject.getName().getPath();
+        }
+        if (optionHolder.isOptionExists(Constants.FILE_URI)) {
+            fileUri = optionHolder.validateAndGetStaticValue(Constants.FILE_URI);
+            validateURL(fileUri, "file.uri");
+            FileObject listeningFileObject = Utils.getFileObject(fileUri, fileSystemOptions);
+            uri = listeningFileObject.getName().getPath();
+        }
+
+        if (dirUri != null && fileUri != null) {
+            throw new SiddhiAppCreationException("Only one of directory uri or file uri should be provided. But both " +
+                    "have been provided.");
+        }
+        if (dirUri == null && fileUri == null) {
+            throw new SiddhiAppCreationException("Either directory uri or file uri must be provided. But none of them" +
+                    "found.");
+        }
+
         if (optionHolder.isOptionExists(Constants.MOVE_IF_EXIST_MODE)) {
             moveIfExistMode = optionHolder.validateAndGetStaticValue(Constants.MOVE_IF_EXIST_MODE);
         }
@@ -1007,18 +1014,33 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setPattern(pattern);
     }
 
-    private void validateURL(String uri, String parameterName) {
+    private void validateURL(String initialUri, String parameterName) {
         try {
-            if (uri.startsWith("sftp")) {
-                uri = uri.replaceFirst("s", "");
+            String uri = initialUri;
+            if (initialUri.startsWith("sftp")) {
+                uri = initialUri.replaceFirst("s", "");
+            } else if (initialUri.startsWith(Constants.TYPE_SMB) ||
+                    initialUri.startsWith(Constants.TYPE_WEBDAV)) {
+                if (isTailingEnabled) {
+                    throw new SiddhiAppCreationException("tailing cannot be enabled for smb and webdav URIs. " +
+                            "URI: " + initialUri);
+                }
+                if (initialUri.startsWith(Constants.TYPE_SMB)) {
+                    uri = initialUri.replaceFirst(Constants.TYPE_SMB, "ftp");
+                } else {
+                    uri = initialUri.replaceFirst(Constants.TYPE_WEBDAV, "http");
+                }
             }
             new URL(uri);
+            if (initialUri.startsWith("sftp")) {
+                initialUri = initialUri.replaceFirst("s", "");
+            }
             String splitRegex = File.separatorChar == '\\' ? "\\\\" : File.separator;
-            fileSourceConfiguration.setProtocolForMoveAfterProcess(uri.split(splitRegex)[0]);
+            fileSourceConfiguration.setProtocolForMoveAfterProcess(initialUri.split(splitRegex)[0]);
         } catch (MalformedURLException e) {
             throw new SiddhiAppCreationException(String.format("In 'file' source of siddhi app '" +
                             siddhiAppContext.getName() + "', provided uri for '%s' parameter '%s' is invalid.",
-                    parameterName, uri), e);
+                    parameterName, initialUri), e);
         }
     }
 
