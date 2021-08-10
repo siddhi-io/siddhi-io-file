@@ -195,7 +195,7 @@
         <siddhi.version>5.1.13</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
         <wso2.transport.file.version>6.1.4</wso2.transport.file.version>
-        <org.apache.commons-compress.version>1.19</org.apache.commons-compress.version>
+        <org.apache.commons-compress.version>1.21</org.apache.commons-compress.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>5.0.6</siddhi.map.json.version>
         <siddhi.map.xml.version>5.0.4</siddhi.map.xml.version>
