@@ -313,6 +313,9 @@ public class FileSystemListener implements RemoteFileSystemListener {
 
     private String getFileName(String uri, String protocol) {
         try {
+            if ("smb:".equalsIgnoreCase(protocol)) {
+                protocol = "ftp:";
+            }
             URL url = new URL(String.format("%s%s%s", protocol, File.separator, uri));
             return FilenameUtils.getName(url.getPath());
         } catch (MalformedURLException e) {
