@@ -243,7 +243,6 @@
                             META-INF=target/classes/META-INF,
                             META-INF/vfs-providers.xml=../resources/vfs-providers.xml
                         </Include-Resource>
-                        <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
