@@ -22,7 +22,8 @@ import io.siddhi.core.stream.input.source.SourceEventListener;
 import io.siddhi.extension.io.file.util.Status;
 import org.apache.commons.io.monitor.FileAlterationListener;
 import org.apache.commons.io.monitor.FileAlterationObserver;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.List;
@@ -36,7 +37,7 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
  *  This class throw events if any file or Directory gets created, modified or deleted.
  */
 public class FileAlterationImpl implements FileAlterationListener {
-    private static final Logger log = Logger.getLogger(FileHandler.class);
+    private static final Logger log = LogManager.getLogger(FileAlterationImpl.class);
     private Map<String, Long> fileObjectMap = new ConcurrentHashMap<>();
     private SourceEventListener sourceEventListener;
     private List<String> fileObjectList;

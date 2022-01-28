@@ -20,7 +20,8 @@ package io.siddhi.extension.io.file.util;
 
 import io.siddhi.core.event.Event;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -34,7 +35,7 @@ import java.util.Map;
  * This method used to get the fileHandlerEvent
  */
 public class Util {
-    private static final Logger log = Logger.getLogger(Util.class);
+    private static final Logger log = LogManager.getLogger(Util.class);
     public static Event getFileHandlerEvent(final File file, List<String> fileObjectList, Status enumStatus) {
         boolean listenerEventsURLValidated = false;
         String status;

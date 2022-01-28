@@ -26,7 +26,8 @@ import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.util.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
@@ -49,7 +50,7 @@ import java.util.regex.Pattern;
  * Message processor for handling data retrieved from consumed files.
  */
 public class FileProcessor implements CarbonMessageProcessor {
-    private static final Logger log = Logger.getLogger(FileProcessor.class);
+    private static final Logger log = LogManager.getLogger(FileProcessor.class);
 
     private final SourceEventListener sourceEventListener;
     private final FileSourceConfiguration fileSourceConfiguration;

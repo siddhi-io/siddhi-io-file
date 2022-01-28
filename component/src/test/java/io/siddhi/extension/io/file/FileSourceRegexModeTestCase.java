@@ -26,7 +26,8 @@ import io.siddhi.core.stream.output.StreamCallback;
 import io.siddhi.core.util.EventPrinter;
 import io.siddhi.core.util.SiddhiTestHelper;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testng.AssertJUnit;
 import org.testng.TestException;
 import org.testng.annotations.AfterMethod;
@@ -44,7 +45,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Test cases for siddhi-io-file source.
  * */
 public class FileSourceRegexModeTestCase {
-    private static final Logger log = Logger.getLogger(FileSourceRegexModeTestCase.class);
+    private static final Logger log = LogManager.getLogger(FileSourceRegexModeTestCase.class);
     private AtomicInteger count = new AtomicInteger();
     private int waitTime = 2000;
     private int timeout = 30000;

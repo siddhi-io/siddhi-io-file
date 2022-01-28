@@ -40,7 +40,8 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 
 import java.io.BufferedInputStream;
@@ -159,7 +160,7 @@ import static io.siddhi.extension.util.Constant.ZIP_FILE_EXTENSION;
         }
 )
 public class FileArchiveExtension extends StreamFunctionProcessor {
-    private static final Logger log = Logger.getLogger(FileArchiveExtension.class);
+    private static final Logger log = LogManager.getLogger(FileArchiveExtension.class);
     private Pattern pattern = null;
     private int inputExecutorLength;
     private String siddhiAppName;

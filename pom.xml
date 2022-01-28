@@ -60,11 +60,23 @@
                 <groupId>org.wso2.transport.file</groupId>
                 <artifactId>org.wso2.transport.file</artifactId>
                 <version>${wso2.transport.file.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.wso2.transport.file</groupId>
                 <artifactId>org.wso2.transport.remote-file-system</artifactId>
                 <version>${wso2.transport.file.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>io.siddhi</groupId>
@@ -115,6 +127,12 @@
                 <groupId>com.jcraft</groupId>
                 <artifactId>jsch</artifactId>
                 <version>${com.jcraft.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>
@@ -126,82 +144,160 @@
                 <groupId>commons-net</groupId>
                 <artifactId>commons-net</artifactId>
                 <version>${commons-net.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
                 <version>${org.apache.commons-compress.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>io.siddhi.extension.execution.list</groupId>
                 <artifactId>siddhi-execution-list</artifactId>
                 <version>${siddhi.execution.list}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons.io.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.analytics</groupId>
                 <artifactId>org.wso2.carbon.si.metrics.core</artifactId>
                 <version>${carbon.analytics.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.wso2.org.apache.commons</groupId>
                 <artifactId>commons-vfs2-sandbox</artifactId>
                 <version>${commons-vfs2.wso2.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.codelibs</groupId>
                 <artifactId>jcifs</artifactId>
                 <version>${jcifs.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.hierynomus</groupId>
                 <artifactId>smbj</artifactId>
                 <version>${com.hierynomus.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
                 <groupId>net.engio</groupId>
                 <artifactId>mbassador</artifactId>
                 <version>${net.engio.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>commons-httpclient</groupId>
                 <artifactId>commons-httpclient</artifactId>
                 <version>${org.apache.httpclinet.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.jackrabbit</groupId>
                 <artifactId>jackrabbit-webdav</artifactId>
                 <version>${jackrabbit.webdav.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
                 <version>${commons.codec.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15on</artifactId>
                 <version>${bouncy.castle.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <properties>
-        <siddhi.version>5.1.13</siddhi.version>
+        <siddhi.version>5.1.21-SNAPSHOT</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
         <wso2.transport.file.version>6.1.4</wso2.transport.file.version>
         <org.apache.commons-compress.version>1.19</org.apache.commons-compress.version>
         <testng.version>6.8</testng.version>
-        <siddhi.map.json.version>5.0.6</siddhi.map.json.version>
-        <siddhi.map.xml.version>5.0.4</siddhi.map.xml.version>
+        <siddhi.map.json.version>5.2.2-SNAPSHOT</siddhi.map.json.version>
+        <siddhi.map.xml.version>5.2.2-SNAPSHOT</siddhi.map.xml.version>
         <siddhi.map.text.version>2.0.4</siddhi.map.text.version>
-        <siddhi.map.csv.version>2.0.5</siddhi.map.csv.version>
-        <siddhi.map.binary.version>2.0.5</siddhi.map.binary.version>
+        <siddhi.map.csv.version>2.1.1-SNAPSHOT</siddhi.map.csv.version>
+        <siddhi.map.binary.version>2.1.1-SNAPSHOT</siddhi.map.binary.version>
         <siddhi.map.binarypassthrough.version>1.0.0</siddhi.map.binarypassthrough.version>
         <siddhi.execution.list>1.0.0</siddhi.execution.list>
         <jacoco.version>0.7.9</jacoco.version>

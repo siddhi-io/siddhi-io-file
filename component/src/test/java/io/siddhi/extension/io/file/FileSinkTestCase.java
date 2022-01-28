@@ -23,7 +23,8 @@ import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.exception.CannotRestoreSiddhiAppStateException;
 import io.siddhi.core.stream.input.InputHandler;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testng.AssertJUnit;
 import org.testng.TestException;
 import org.testng.annotations.AfterMethod;
@@ -46,7 +47,7 @@ import java.util.stream.Stream;
  * Test cases for siddhi-io-file sink.
  * */
 public class FileSinkTestCase {
-    private static final Logger log = Logger.getLogger(FileSinkTestCase.class);
+    private static final Logger log = LogManager.getLogger(FileSinkTestCase.class);
     private AtomicInteger count = new AtomicInteger();
 
     private String dirUri, sinkUri;

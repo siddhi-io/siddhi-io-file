@@ -28,7 +28,8 @@ import io.siddhi.extension.io.file.metrics.StreamStatus;
 import io.siddhi.extension.io.file.util.TestUtils;
 import io.siddhi.extension.util.Utils;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
 import org.testng.AssertJUnit;
 import org.testng.TestException;
@@ -59,7 +60,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class FileSinkMetricsTestCase {
 
-    private static final Logger log = Logger.getLogger(FileSinkTestCase.class);
+    private static final Logger log = LogManager.getLogger(FileSinkTestCase.class);
     private final AtomicInteger count = new AtomicInteger();
 
     private String dirUri;

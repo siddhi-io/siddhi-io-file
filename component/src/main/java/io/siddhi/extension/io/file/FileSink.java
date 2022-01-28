@@ -40,7 +40,8 @@ import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.annotation.Annotation;
 import io.siddhi.query.api.definition.StreamDefinition;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
@@ -127,7 +128,7 @@ import java.util.Map;
         }
 )
 public class FileSink extends Sink {
-    private static final Logger log = Logger.getLogger(FileSink.class);
+    private static final Logger log = LogManager.getLogger(FileSink.class);
 
     private VFSClientConnector vfsClientConnector = null;
     private Map<String, String> properties = null;

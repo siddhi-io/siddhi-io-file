@@ -29,7 +29,8 @@ import io.siddhi.extension.util.Utils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.Selectors;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -40,7 +41,7 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FTPFileSourceSinkTestCase {
-    private static final Logger log = Logger.getLogger(FTPFileSourceSinkTestCase.class);
+    private static final Logger log = LogManager.getLogger(FTPFileSourceSinkTestCase.class);
     private AtomicInteger count = new AtomicInteger();
     private FileObject sourceLocalRoot, tempFTPSource, ftpDestination;
     String fileOptions;

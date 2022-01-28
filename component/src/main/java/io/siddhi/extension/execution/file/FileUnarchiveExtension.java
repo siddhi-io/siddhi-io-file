@@ -39,7 +39,8 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -119,7 +120,7 @@ import static io.siddhi.extension.io.file.util.Constants.BUFFER_SIZE;
         }
 )
 public class FileUnarchiveExtension extends StreamFunctionProcessor {
-    private static final Logger log = Logger.getLogger(FileUnarchiveExtension.class);
+    private static final Logger log = LogManager.getLogger(FileUnarchiveExtension.class);
     private int inputExecutorLength;
     private String fileSystemOptions = null;
 

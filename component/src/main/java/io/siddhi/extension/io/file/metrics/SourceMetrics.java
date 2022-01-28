@@ -19,7 +19,8 @@
 package io.siddhi.extension.io.file.metrics;
 
 import io.siddhi.extension.util.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.carbon.metrics.core.Counter;
 import org.wso2.carbon.metrics.core.Gauge;
 import org.wso2.carbon.metrics.core.Level;
@@ -33,7 +34,7 @@ import java.util.concurrent.ExecutorService;
  * Class which is holds the metrics to monitor sink operations.
  */
 public class SourceMetrics extends Metrics {
-    private static final Logger log = Logger.getLogger(SourceMetrics.class);
+    private static final Logger log = LogManager.getLogger(SourceMetrics.class);
     private final Map<String, StreamStatus> sourceFileStatusMap = new HashMap<>();
     private final Map<String, Long> lastConsumedTimeMap = new HashMap<>(); //to get the last consumed time.
     private final Map<String, Double> readPercentageMap = new HashMap<>(); //to get read percentage of each file.

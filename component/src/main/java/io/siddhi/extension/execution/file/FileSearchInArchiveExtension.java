@@ -39,7 +39,8 @@ import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.vfs2.FileObject;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -112,7 +113,7 @@ import java.util.zip.ZipInputStream;
         }
 )
 public class FileSearchInArchiveExtension extends StreamFunctionProcessor {
-    private static final Logger log = Logger.getLogger(FileSearchInArchiveExtension.class);
+    private static final Logger log = LogManager.getLogger(FileSearchInArchiveExtension.class);
     private Pattern pattern = null;
     private int inputExecutorLength;
     private String fileSystemOptions = null;

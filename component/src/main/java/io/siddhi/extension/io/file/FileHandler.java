@@ -41,7 +41,8 @@ import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -168,7 +169,7 @@ import static io.siddhi.extension.io.file.util.Util.getFileHandlerEvent;
 )
 
 public class FileHandler extends Source<FileHandler.FileHandlerState> {
-    private static final Logger log = Logger.getLogger(FileHandler.class);
+    private static final Logger log = LogManager.getLogger(FileHandler.class);
     private static final String EMPTY_STRING = "";
     private SourceEventListener sourceEventListener;
     private long monitoringInterval = 100;

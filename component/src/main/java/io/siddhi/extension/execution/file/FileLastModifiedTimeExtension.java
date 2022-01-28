@@ -35,7 +35,6 @@ import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.log4j.Logger;
 
 import java.text.SimpleDateFormat;
 
@@ -105,7 +104,7 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
         }
 )
 public class FileLastModifiedTimeExtension extends FunctionExecutor {
-    private static final Logger log = Logger.getLogger(FileLastModifiedTimeExtension.class);
+    private static final long serialVersionUID = 1L;
     private Attribute.Type returnType = STRING;
     private SimpleDateFormat simpleDateFormat = null;
     private int inputExecutorLength;

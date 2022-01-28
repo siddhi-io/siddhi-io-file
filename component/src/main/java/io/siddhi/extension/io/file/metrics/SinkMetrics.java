@@ -20,7 +20,8 @@ package io.siddhi.extension.io.file.metrics;
 
 import com.google.common.base.Stopwatch;
 import io.siddhi.extension.util.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.carbon.metrics.core.Counter;
 import org.wso2.carbon.metrics.core.Gauge;
 import org.wso2.carbon.metrics.core.Level;
@@ -34,7 +35,7 @@ import java.util.concurrent.ExecutorService;
  * Class which is holds the metrics to monitor sinks operations. This acts like a metrics handler for file sink.
  */
 public class SinkMetrics extends Metrics {
-    private static final Logger log = Logger.getLogger(SinkMetrics.class);
+    private static final Logger log = LogManager.getLogger(SinkMetrics.class);
     private final Map<String, StreamStatus> sinkFileStatusMap = new HashMap<>(); // string -> fileURI
     private final Map<String, Long> sinkFileLastPublishedTimeMap = new HashMap<>();
     private final Map<String, Stopwatch> sinkElapsedTimeMap =  new HashMap<>();

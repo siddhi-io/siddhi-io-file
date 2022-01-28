@@ -27,7 +27,8 @@ import io.siddhi.core.util.EventPrinter;
 import io.siddhi.core.util.SiddhiTestHelper;
 import io.siddhi.extension.io.file.util.FileTestUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testng.AssertJUnit;
 import org.testng.TestException;
 import org.testng.annotations.AfterMethod;
@@ -45,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * This class provides the test cases for the parameter move.if.exist.mode
  */
 public class FileSourceMoveIfExistsTestcase {
-    private static final Logger log = Logger.getLogger(FileSourceMoveIfExistsTestcase.class);
+    private static final Logger log = LogManager.getLogger(FileSourceMoveIfExistsTestcase.class);
     private AtomicInteger count = new AtomicInteger();
     private int waitTime = 2000;
     private int timeout = 30000;

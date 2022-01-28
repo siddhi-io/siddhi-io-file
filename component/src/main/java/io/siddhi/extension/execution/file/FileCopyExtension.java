@@ -39,7 +39,8 @@ import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.Selectors;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
 
 import java.io.File;
@@ -141,7 +142,7 @@ import java.util.regex.Pattern;
 )
 public class FileCopyExtension extends StreamFunctionProcessor {
 
-    private static final Logger log = Logger.getLogger(FileCopyExtension.class);
+    private static final Logger log = LogManager.getLogger(FileCopyExtension.class);
     private Pattern pattern = null;
     private int inputExecutorLength;
     private FileCopyMetrics fileCopyMetrics;
