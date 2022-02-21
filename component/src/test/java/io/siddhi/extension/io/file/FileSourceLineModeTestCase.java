@@ -27,7 +27,8 @@ import io.siddhi.core.stream.output.StreamCallback;
 import io.siddhi.core.util.EventPrinter;
 import io.siddhi.core.util.SiddhiTestHelper;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testng.AssertJUnit;
 import org.testng.TestException;
 import org.testng.annotations.AfterMethod;
@@ -46,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * mode = line.
  */
 public class FileSourceLineModeTestCase {
-    private static final Logger log = Logger.getLogger(FileSourceLineModeTestCase.class);
+    private static final Logger log = LogManager.getLogger(FileSourceLineModeTestCase.class);
     private AtomicInteger count = new AtomicInteger();
     private int waitTime = 10000;
     private int timeout = 30000;

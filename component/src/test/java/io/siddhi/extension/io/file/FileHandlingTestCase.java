@@ -28,7 +28,8 @@ import io.siddhi.core.util.EventPrinter;
 import io.siddhi.core.util.SiddhiTestHelper;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
 import org.testng.TestException;
 import org.testng.annotations.AfterMethod;
@@ -45,7 +46,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FileHandlingTestCase {
-    private static final Logger log = Logger.getLogger(FileHandlingTestCase.class);
+    private static final Logger log = LogManager.getLogger(FileHandlingTestCase.class);
     private AtomicInteger count = new AtomicInteger();
 
     private File newRoot;

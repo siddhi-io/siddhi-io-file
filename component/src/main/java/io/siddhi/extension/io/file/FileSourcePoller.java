@@ -18,7 +18,8 @@
 
 package io.siddhi.extension.io.file;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 import org.wso2.transport.remotefilesystem.server.connector.contract.RemoteFileSystemServerConnector;
 
@@ -26,7 +27,7 @@ import org.wso2.transport.remotefilesystem.server.connector.contract.RemoteFileS
  * Polls files in a directory for changes and uses a callback to handle connection unavailable exception
  */
 public class FileSourcePoller implements Runnable {
-    private static final Logger log = Logger.getLogger(FileSourcePoller.class);
+    private static final Logger log = LogManager.getLogger(FileSourcePoller.class);
     private CompletionCallback completionCallback;
     private RemoteFileSystemServerConnector fileSystemServerConnector;
     private String siddhiAppName;

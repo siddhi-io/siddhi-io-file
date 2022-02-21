@@ -31,7 +31,8 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.VFS;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -45,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 public class FileFunctionsTestCase {
-    private static final Logger log = Logger.getLogger(FileFunctionsTestCase.class);
+    private static final Logger log = LogManager.getLogger(FileFunctionsTestCase.class);
     private AtomicInteger count = new AtomicInteger();
     private File sourceRoot, tempSource, destination;
 

@@ -36,7 +36,6 @@ import io.siddhi.query.api.definition.Attribute;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.log4j.Logger;
 
 import static io.siddhi.query.api.definition.Attribute.Type.LONG;
 import static io.siddhi.query.api.definition.Attribute.Type.STRING;
@@ -88,7 +87,7 @@ import static io.siddhi.query.api.definition.Attribute.Type.STRING;
         }
 )
 public class FileSizeExtension extends FunctionExecutor {
-    private static final Logger log = Logger.getLogger(FileSizeExtension.class);
+    private static final long serialVersionUID = 1L;
     private Attribute.Type returnType = LONG;
     private String fileSystemOptions = null;
 

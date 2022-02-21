@@ -35,7 +35,6 @@ import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +95,6 @@ import java.util.List;
         }
 )
 public class FileCreateExtension extends StreamFunctionProcessor {
-    private static final Logger log = Logger.getLogger(FileCreateExtension.class);
     private int inputExecutorLength;
     private String fileSystemOptions = null;
 

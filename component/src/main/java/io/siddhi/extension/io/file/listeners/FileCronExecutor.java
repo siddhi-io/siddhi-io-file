@@ -24,7 +24,8 @@ import io.siddhi.extension.io.file.processors.FileProcessor;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -57,7 +58,7 @@ import static io.siddhi.extension.io.file.util.Util.reProcessFileGeneratePropert
  * expression then the file processing will be executed.
  */
 public class FileCronExecutor implements Job {
-    private static final Logger log = Logger.getLogger(FileCronExecutor.class);
+    private static final Logger log = LogManager.getLogger(FileCronExecutor.class);
 
     public FileCronExecutor() {
     }

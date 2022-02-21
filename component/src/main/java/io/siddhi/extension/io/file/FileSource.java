@@ -45,7 +45,8 @@ import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.annotation.Annotation;
 import io.siddhi.query.api.annotation.Element;
 import org.apache.commons.vfs2.FileObject;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -407,7 +408,7 @@ import static org.quartz.CronExpression.isValidExpression;
         }
 )
 public class FileSource extends Source<FileSource.FileSourceState> {
-    private static final Logger log = Logger.getLogger(FileSource.class);
+    private static final Logger log = LogManager.getLogger(FileSource.class);
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private RemoteFileSystemConnectorFactory fileSystemConnectorFactory;

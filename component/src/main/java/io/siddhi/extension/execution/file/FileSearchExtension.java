@@ -40,7 +40,8 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileType;
 import org.apache.commons.vfs2.provider.local.LocalFileName;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -127,7 +128,7 @@ import java.util.regex.Pattern;
         }
 )
 public class FileSearchExtension extends StreamFunctionProcessor {
-    private static final Logger log = Logger.getLogger(FileSearchExtension.class);
+    private static final Logger log = LogManager.getLogger(FileSearchExtension.class);
     private Pattern pattern = null;
     private int inputExecutorLength;
     private boolean excludeSubdirectories = false;

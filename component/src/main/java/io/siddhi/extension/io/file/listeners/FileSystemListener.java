@@ -28,7 +28,8 @@ import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
 import io.siddhi.extension.util.Utils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
@@ -56,7 +57,7 @@ import static io.siddhi.extension.io.file.util.Util.reProcessFileGeneratePropert
  * Test {@link RemoteFileSystemListener} implementation for testing purpose.
  */
 public class FileSystemListener implements RemoteFileSystemListener {
-    private static final Logger log = Logger.getLogger(FileSystemListener.class);
+    private static final Logger log = LogManager.getLogger(FileSystemListener.class);
     private SourceEventListener sourceEventListener;
     private FileSourceConfiguration fileSourceConfiguration;
     private FileSourceServiceProvider fileSourceServiceProvider;

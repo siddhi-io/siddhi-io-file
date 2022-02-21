@@ -34,7 +34,6 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.log4j.Logger;
 
 import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
 
@@ -87,7 +86,7 @@ import static io.siddhi.query.api.definition.Attribute.Type.BOOL;
         }
 )
 public class FileIsDirectoryExtension extends FunctionExecutor {
-    private static final Logger log = Logger.getLogger(FileIsDirectoryExtension.class);
+    private static final long serialVersionUID = 1L;
     private Attribute.Type returnType = BOOL;
     private String fileSystemOptions = null;
     private int inputExecutorLength;
