@@ -10,6 +10,78 @@ Siddhi IO File
 
 The **siddhi-io-file extension** is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> which used to receive/publish event data from/to file. It supports both binary and text formats.
 
+The **siddhi-io-file extension** supports local data storage and also following file protocols for file/folder, read/write operations
+
+- FTP
+- SFTP
+- SMB
+- WebDav
+
+### Examples
+
+#### FTP
+
+**Sink**
+
+```sql
+@sink(type='file', @map(type='json'), append='true', file.uri='ftp://bob:password@localhost:21/source/published.json')
+define stream BarStream (symbol string, price float, volume long);
+```
+
+**Source**
+
+```sql
+@source(type='file', mode='line', file.uri='ftp://bob:password@localhost:21/source/published.json', action.after.process='keep', tailing='false', @map(type='json')) 
+define stream FooStream (symbol string, price float, volume long);
+```
+
+#### SFTP
+
+**Sink**
+
+```sql
+@sink(type='file', @map(type='json'), append='false', file.system.options='USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true', file.uri='sftp://demo:demo@localhost:22/sftp/source/published.json') 
+define stream BarStream (symbol string, price float, volume long);
+```
+
+**Source**
+
+```sql
+@source(type='file', mode='line', file.uri='sftp://demo:demo@localhost:22/sftp/source/published.json', action.after.process='keep', tailing='false', file.system.options='USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true', @map(type='json'))
+define stream FooStream (symbol string, price float, volume long);
+```
+
+#### SMB
+**Sink**
+
+```sql
+@sink(type='file', @map(type='json'), append='true', file.uri='smb://ubuntu:admin@212.47.250.24/sambashare/source/published.json') 
+define stream BarStream (symbol string, price float, volume long);
+```
+
+**Source**
+
+```sql
+@source(type='file', mode='line', file.uri='smb://ubuntu:admin@212.47.250.24/sambashare/source/published.json', action.after.process='keep', tailing='false', @map(type='json'))
+define stream FooStream (symbol string, price float, volume long);
+```
+
+#### WebDav
+**Sink**
+
+```sql
+@sink(type='file', @map(type='json'), append='true', file.uri='webdav://alice:secret1234@localhost/source/published.json') 
+define stream BarStream (symbol string, price float, volume long); 
+```
+
+**Source**
+
+```sql
+@sink(type='file', @map(type='json'), append='false', file.uri='webdav://alice:secret1234@localhost/source/published.json') 
+define stream BarStream (symbol string, price float, volume long);
+```
+
+
 For information on <a target="_blank" href="https://siddhi.io/">Siddhi</a> and it's features refer <a target="_blank" href="https://siddhi.io/redirect/docs.html">Siddhi Documentation</a>. 
 
 ## Download
