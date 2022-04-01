@@ -282,6 +282,47 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#examples" title="Examples" class="md-nav__link">
+    Examples
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ftp" title="FTP" class="md-nav__link">
+    FTP
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sftp" title="SFTP" class="md-nav__link">
+    SFTP
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smb" title="SMB" class="md-nav__link">
+    SMB
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#webdav" title="WebDav" class="md-nav__link">
+    WebDav
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#download" title="Download" class="md-nav__link">
     Download
   </a>
@@ -859,6 +900,47 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#examples" title="Examples" class="md-nav__link">
+    Examples
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ftp" title="FTP" class="md-nav__link">
+    FTP
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sftp" title="SFTP" class="md-nav__link">
+    SFTP
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smb" title="SMB" class="md-nav__link">
+    SMB
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#webdav" title="WebDav" class="md-nav__link">
+    WebDav
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#download" title="Download" class="md-nav__link">
     Download
   </a>
@@ -927,6 +1009,66 @@
   <a href="https://github.com/siddhi-io/siddhi-io-file/commits/master"><img alt="GitHub Last Commit" src="https://img.shields.io/github/last-commit/siddhi-io/siddhi-io-file.svg" /></a>
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" /></a></p>
 <p>The <strong>siddhi-io-file extension</strong> is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> which used to receive/publish event data from/to file. It supports both binary and text formats.</p>
+<p>The <strong>siddhi-io-file extension</strong> supports local data storage and also following file protocols for file/folder, read/write operations</p>
+<ul>
+<li>FTP</li>
+<li>SFTP</li>
+<li>SMB</li>
+<li>WebDav</li>
+</ul>
+<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
+<h4 id="ftp">FTP<a class="headerlink" href="#ftp" title="Permanent link">&para;</a></h4>
+<p><strong>Sink</strong></p>
+<div class="codehilite"><pre><span></span><span class="o">@</span><span class="n">sink</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="o">@</span><span class="k">map</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">),</span> <span class="n">append</span><span class="o">=</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">.</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;ftp://bob:password@localhost:21/source/published.json&#39;</span><span class="p">)</span>
+<span class="n">define</span> <span class="n">stream</span> <span class="n">BarStream</span> <span class="p">(</span><span class="n">symbol</span> <span class="n">string</span><span class="p">,</span> <span class="n">price</span> <span class="nb">float</span><span class="p">,</span> <span class="n">volume</span> <span class="n">long</span><span class="p">);</span>
+</pre></div>
+
+
+<p><strong>Source</strong></p>
+<div class="codehilite"><pre><span></span><span class="o">@</span><span class="k">source</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="k">mode</span><span class="o">=</span><span class="s1">&#39;line&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">.</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;ftp://bob:password@localhost:21/source/published.json&#39;</span><span class="p">,</span> <span class="n">action</span><span class="p">.</span><span class="k">after</span><span class="p">.</span><span class="n">process</span><span class="o">=</span><span class="s1">&#39;keep&#39;</span><span class="p">,</span> <span class="n">tailing</span><span class="o">=</span><span class="s1">&#39;false&#39;</span><span class="p">,</span> <span class="o">@</span><span class="k">map</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">))</span> 
+<span class="n">define</span> <span class="n">stream</span> <span class="n">FooStream</span> <span class="p">(</span><span class="n">symbol</span> <span class="n">string</span><span class="p">,</span> <span class="n">price</span> <span class="nb">float</span><span class="p">,</span> <span class="n">volume</span> <span class="n">long</span><span class="p">);</span>
+</pre></div>
+
+
+<h4 id="sftp">SFTP<a class="headerlink" href="#sftp" title="Permanent link">&para;</a></h4>
+<p><strong>Sink</strong></p>
+<div class="codehilite"><pre><span></span><span class="o">@</span><span class="n">sink</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="o">@</span><span class="k">map</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">),</span> <span class="n">append</span><span class="o">=</span><span class="s1">&#39;false&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">.</span><span class="k">system</span><span class="p">.</span><span class="k">options</span><span class="o">=</span><span class="s1">&#39;USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">.</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;sftp://demo:demo@localhost:22/sftp/source/published.json&#39;</span><span class="p">)</span> 
+<span class="n">define</span> <span class="n">stream</span> <span class="n">BarStream</span> <span class="p">(</span><span class="n">symbol</span> <span class="n">string</span><span class="p">,</span> <span class="n">price</span> <span class="nb">float</span><span class="p">,</span> <span class="n">volume</span> <span class="n">long</span><span class="p">);</span>
+</pre></div>
+
+
+<p><strong>Source</strong></p>
+<div class="codehilite"><pre><span></span><span class="o">@</span><span class="k">source</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="k">mode</span><span class="o">=</span><span class="s1">&#39;line&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">.</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;sftp://demo:demo@localhost:22/sftp/source/published.json&#39;</span><span class="p">,</span> <span class="n">action</span><span class="p">.</span><span class="k">after</span><span class="p">.</span><span class="n">process</span><span class="o">=</span><span class="s1">&#39;keep&#39;</span><span class="p">,</span> <span class="n">tailing</span><span class="o">=</span><span class="s1">&#39;false&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">.</span><span class="k">system</span><span class="p">.</span><span class="k">options</span><span class="o">=</span><span class="s1">&#39;USER_DIR_IS_ROOT:false,AVOID_PERMISSION_CHECK:true&#39;</span><span class="p">,</span> <span class="o">@</span><span class="k">map</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">))</span>
+<span class="n">define</span> <span class="n">stream</span> <span class="n">FooStream</span> <span class="p">(</span><span class="n">symbol</span> <span class="n">string</span><span class="p">,</span> <span class="n">price</span> <span class="nb">float</span><span class="p">,</span> <span class="n">volume</span> <span class="n">long</span><span class="p">);</span>
+</pre></div>
+
+
+<h4 id="smb">SMB<a class="headerlink" href="#smb" title="Permanent link">&para;</a></h4>
+<p><strong>Sink</strong></p>
+<div class="codehilite"><pre><span></span><span class="o">@</span><span class="n">sink</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="o">@</span><span class="k">map</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">),</span> <span class="n">append</span><span class="o">=</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">.</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;smb://ubuntu:admin@212.47.250.24/sambashare/source/published.json&#39;</span><span class="p">)</span> 
+<span class="n">define</span> <span class="n">stream</span> <span class="n">BarStream</span> <span class="p">(</span><span class="n">symbol</span> <span class="n">string</span><span class="p">,</span> <span class="n">price</span> <span class="nb">float</span><span class="p">,</span> <span class="n">volume</span> <span class="n">long</span><span class="p">);</span>
+</pre></div>
+
+
+<p><strong>Source</strong></p>
+<div class="codehilite"><pre><span></span><span class="o">@</span><span class="k">source</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="k">mode</span><span class="o">=</span><span class="s1">&#39;line&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">.</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;smb://ubuntu:admin@212.47.250.24/sambashare/source/published.json&#39;</span><span class="p">,</span> <span class="n">action</span><span class="p">.</span><span class="k">after</span><span class="p">.</span><span class="n">process</span><span class="o">=</span><span class="s1">&#39;keep&#39;</span><span class="p">,</span> <span class="n">tailing</span><span class="o">=</span><span class="s1">&#39;false&#39;</span><span class="p">,</span> <span class="o">@</span><span class="k">map</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">))</span>
+<span class="n">define</span> <span class="n">stream</span> <span class="n">FooStream</span> <span class="p">(</span><span class="n">symbol</span> <span class="n">string</span><span class="p">,</span> <span class="n">price</span> <span class="nb">float</span><span class="p">,</span> <span class="n">volume</span> <span class="n">long</span><span class="p">);</span>
+</pre></div>
+
+
+<h4 id="webdav">WebDav<a class="headerlink" href="#webdav" title="Permanent link">&para;</a></h4>
+<p><strong>Sink</strong></p>
+<div class="codehilite"><pre><span></span><span class="o">@</span><span class="n">sink</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="o">@</span><span class="k">map</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">),</span> <span class="n">append</span><span class="o">=</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">.</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;webdav://alice:secret1234@localhost/source/published.json&#39;</span><span class="p">)</span> 
+<span class="n">define</span> <span class="n">stream</span> <span class="n">BarStream</span> <span class="p">(</span><span class="n">symbol</span> <span class="n">string</span><span class="p">,</span> <span class="n">price</span> <span class="nb">float</span><span class="p">,</span> <span class="n">volume</span> <span class="n">long</span><span class="p">);</span> 
+</pre></div>
+
+
+<p><strong>Source</strong></p>
+<div class="codehilite"><pre><span></span><span class="o">@</span><span class="n">sink</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="o">@</span><span class="k">map</span><span class="p">(</span><span class="k">type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">),</span> <span class="n">append</span><span class="o">=</span><span class="s1">&#39;false&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">.</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;webdav://alice:secret1234@localhost/source/published.json&#39;</span><span class="p">)</span> 
+<span class="n">define</span> <span class="n">stream</span> <span class="n">BarStream</span> <span class="p">(</span><span class="n">symbol</span> <span class="n">string</span><span class="p">,</span> <span class="n">price</span> <span class="nb">float</span><span class="p">,</span> <span class="n">volume</span> <span class="n">long</span><span class="p">);</span>
+</pre></div>
+
+
 <p>For information on <a target="_blank" href="https://siddhi.io/">Siddhi</a> and it's features refer <a target="_blank" href="https://siddhi.io/redirect/docs.html">Siddhi Documentation</a>. </p>
 <h2 id="download">Download<a class="headerlink" href="#download" title="Permanent link">&para;</a></h2>
 <ul>
