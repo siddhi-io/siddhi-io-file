@@ -288,7 +288,7 @@
     </dependencyManagement>
 
     <properties>
-        <siddhi.version>5.1.21</siddhi.version>
+        <siddhi.version>5.1.26</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
         <wso2.transport.file.version>6.1.4</wso2.transport.file.version>
         <org.apache.commons-compress.version>1.19</org.apache.commons-compress.version>
