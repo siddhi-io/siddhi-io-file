@@ -28,7 +28,8 @@ import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.VFS;
 import org.apache.commons.vfs2.provider.UriParser;
 import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 import org.wso2.transport.remotefilesystem.server.util.FileTransportUtils;
 
@@ -55,7 +56,7 @@ import static io.siddhi.extension.util.Constant.VFS_SCHEME_KEY;
  * Util Class.
  */
 public class Utils {
-    private static final Logger log = Logger.getLogger(Utils.class);
+    private static final Logger log = LogManager.getLogger(Utils.class);
 
     /**
      * Returns the FileObject in the given file path
