@@ -49,6 +49,7 @@ public class Constants {
     public static final String FILE_READ_WAIT_TIMEOUT = "file.read.wait.timeout";
     public static final int WAIT_TILL_DONE = 5000;
     public static final String HEADER_PRESENT = "header.present";
+    public static final String HEADER_LINE_COUNT = "header.line.count";
     public static final String READ_ONLY_HEADER = "read.only.header";
     public static final String READ_ONLY_TRAILER = "read.only.trailer";
     public static final String SKIP_TRAILER = "skip.trailer";

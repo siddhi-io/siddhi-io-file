@@ -273,9 +273,18 @@ import static org.quartz.CronExpression.isValidExpression;
                 @Parameter(
                         name = "header.present",
                         description = "If this parameter is set to 'true', it indicates the file(s) to be processed " +
-                                "includes a header line. In such a scenario, the header line is not processed.\n",
+                                "includes a header line(s). In such a scenario, the header line(s) are not processed" +
+                                ". Number of header lines can be configured via 'header.line.count' parameter.\n",
                         optional = true, defaultValue = "false",
                         type = {DataType.BOOL}
+                ),
+                @Parameter(
+                        name = "header.line.count",
+                        description = "Number of lines to be considered as the file header. This parameter is " +
+                                "applicable only if the parameter 'header.present' is set to 'true'.\n",
+                        optional = true,
+                        defaultValue = "1",
+                        type = {DataType.INT}
                 ),
                 @Parameter(
                         name = "read.only.header",
@@ -439,6 +448,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
     private FileSourcePoller fileSourcePoller;
     private ConnectionCallback connectionCallback;
     private String headerPresent;
+    private int headerLineCount;
     private String readOnlyHeader;
     private String bufferSizeInBinaryChunked;
     private SourceMetrics metrics;
@@ -594,6 +604,17 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         endRegex = optionHolder.validateAndGetStaticValue(Constants.END_REGEX, null);
         fileReadWaitTimeout = optionHolder.validateAndGetStaticValue(Constants.FILE_READ_WAIT_TIMEOUT, "1000");
         headerPresent = optionHolder.validateAndGetStaticValue(Constants.HEADER_PRESENT, "false");
+        String headerLineCountValue = optionHolder.validateAndGetStaticValue(Constants.HEADER_LINE_COUNT, "1");
+        try {
+            headerLineCount = Integer.parseInt(headerLineCountValue);
+        } catch (NumberFormatException e) {
+            throw new SiddhiAppRuntimeException("Value provided for header.line.count, " + headerLineCount +
+                    " is invalid.", e);
+        }
+        if (headerLineCount < 0) {
+            throw new SiddhiAppRuntimeException("Value provided for header.line.count, " + headerLineCount +
+                    " is invalid. It should be a positive integer.");
+        }
         bufferSizeInBinaryChunked = optionHolder.validateAndGetStaticValue(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED,
                 "65536");
         fileNamePattern = optionHolder.validateAndGetStaticValue(Constants.FILE_NAME_PATTERN, null);
@@ -718,6 +739,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
         fileSourceConfiguration.setTimeout(timeout);
         fileSourceConfiguration.setFileReadWaitTimeout(fileReadWaitTimeout);
         fileSourceConfiguration.setHeaderPresent(headerPresent);
+        fileSourceConfiguration.setHeaderLineCount(headerLineCount);
         fileSourceConfiguration.setReadOnlyHeader(readOnlyHeader);
         fileSourceConfiguration.setReadOnlyTrailer(readOnlyTrailer);
         fileSourceConfiguration.setSkipTrailer(skipTrailer);
@@ -873,6 +895,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                 properties.put(Constants.MAX_LINES_PER_POLL, "10");
                 properties.put(Constants.POLLING_INTERVAL, filePollingInterval);
                 properties.put(Constants.HEADER_PRESENT, headerPresent);
+                properties.put(Constants.HEADER_LINE_COUNT, String.valueOf(headerLineCount));
                 properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
                 properties.put(Constants.READ_ONLY_TRAILER, readOnlyTrailer);
                 properties.put(Constants.SKIP_TRAILER, skipTrailer);
@@ -928,6 +951,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                     properties.put(Constants.ACK_TIME_OUT, "1000");
                     properties.put(Constants.MODE, fileSourceConfiguration.getMode());
                     properties.put(Constants.HEADER_PRESENT, headerPresent);
+                    properties.put(Constants.HEADER_LINE_COUNT, String.valueOf(headerLineCount));
                     properties.put(Constants.READ_ONLY_HEADER, readOnlyHeader);
                     properties.put(Constants.READ_ONLY_TRAILER, readOnlyTrailer);
                     properties.put(Constants.SKIP_TRAILER, skipTrailer);
