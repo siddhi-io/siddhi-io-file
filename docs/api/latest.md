@@ -193,7 +193,7 @@ file:isFile(filePath) as isFile
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:<Realative path from 'wso2si-tooling-1.1.0/wso2/server/' directory>,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
