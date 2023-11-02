@@ -1247,6 +1247,40 @@ public class FileFunctionsTestCase {
         siddhiAppRuntime.shutdown();
     }
 
+    @Test
+    public void fileRenameFunction() throws InterruptedException {
+        log.info("test Siddhi Io File Function for fileRename");
+        String app = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream FileRenameStream(sample string);\n" +
+                "from FileRenameStream#file:rename('" + sourceRoot + "/rename/folder1/test.txt', '" + sourceRoot +
+                "/rename/folder1/test2.xml')" +
+                "select isSuccess\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FileRenameStream");
+        siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
+
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.getAndIncrement();
+                for (Event event : events) {
+                    if (n == 0) {
+                        AssertJUnit.assertTrue(Boolean.parseBoolean(event.getData(0).toString()));
+                    } else {
+                        AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        stockStream.send(new Object[]{"WSO2"});
+        Thread.sleep(100);
+        siddhiAppRuntime.shutdown();
+    }
+
     private boolean isFileExist(String filePathUri, boolean isDirectory) {
         FileSystemOptions opts = new FileSystemOptions();
         FileSystemManager fsManager;

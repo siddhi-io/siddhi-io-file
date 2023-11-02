@@ -25,7 +25,6 @@ import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiQueryContext;
-import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.executor.ConstantExpressionExecutor;
 import io.siddhi.core.executor.ExpressionExecutor;
 import io.siddhi.core.query.processor.stream.function.StreamFunctionProcessor;
@@ -52,7 +51,12 @@ import java.util.List;
 @Extension(
         name = "rename",
         namespace = "file",
-        description = "Rename file/folder in a particular path",
+        description = "This method can be used to rename a file/folder in a particular path, move a file from to a " +
+                "different path. \n" +
+                "Ex- \n" +
+                " file:rename('/User/wso2/source', 'User/wso2/destination') \n" +
+                " file:rename('/User/wso2/source/file.csv', 'User/wso2/source/newFile.csv') \n " +
+                " file:rename('/User/wso2/source/file.csv', 'User/wso2/destination/file.csv')",
         parameters = {
                 @Parameter(
                         name = "uri",
@@ -167,34 +171,35 @@ public class FileRenameExtension extends StreamFunctionProcessor {
         }
         FileObject oldFileObject = Utils.getFileObject(oldFileOrFolderName, fileSystemOptions);
         FileObject newFileObject = Utils.getFileObject(newFileOrFolderName, fileSystemOptions);
-        try {
-            oldFileObject.canRenameTo(newFileObject);
 
-            newFileObject.copyFrom(oldFileObject, Selectors.SELECT_ALL);
-
-        } catch (FileSystemException e) {
-            log.error("Error while copying the content from " + oldFileOrFolderName + " to "
-                    + newFileOrFolderName, e);
-            if (fileRenameMetrics != null) {
-                fileRenameMetrics.getRenameMetric(0);
+        if (oldFileObject.canRenameTo(newFileObject)) {
+            try {
+                newFileObject.copyFrom(oldFileObject, Selectors.SELECT_ALL);
+            } catch (FileSystemException e) {
+                log.error("Error while copying the content from " + oldFileOrFolderName + " to "
+                        + newFileOrFolderName + ": " + e.getMessage());
+                if (fileRenameMetrics != null) {
+                    fileRenameMetrics.getRenameMetric(0);
+                }
+                return new Object[]{false};
             }
-            throw new SiddhiAppRuntimeException("Error while copying the content from "
-                    + oldFileOrFolderName + " to " + newFileOrFolderName, e);
-        }
 
-        try {
-            oldFileObject.delete(Selectors.SELECT_ALL);
-        } catch (FileSystemException e) {
-            log.error("Error while deleting the content from " + oldFileOrFolderName, e);
-            if (fileRenameMetrics != null) {
-                fileRenameMetrics.getRenameMetric(0);
+            try {
+                oldFileObject.delete(Selectors.SELECT_ALL);
+            } catch (FileSystemException e) {
+                log.error("Error while deleting the file " + oldFileOrFolderName + " after renaming ",
+                        e);
+                if (fileRenameMetrics != null) {
+                    fileRenameMetrics.getRenameMetric(0);
+                }
             }
-            throw new SiddhiAppRuntimeException("Error while deleting the file " + oldFileObject.getName() + " from " +
-                    oldFileOrFolderName, e);
+        } else {
+            log.error("Cannot rename the given file " + oldFileOrFolderName + " to " + newFileOrFolderName);
+            return new Object[]{false};
         }
         if (fileRenameMetrics != null) {
             fileRenameMetrics.getRenameMetric(1);
         }
-        return new Object[0];
+        return new Object[]{true};
     }
 }
