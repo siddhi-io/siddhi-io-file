@@ -24,6 +24,7 @@ package io.siddhi.extension.util;
 public class Constant {
     public static final String ZIP_FILE_EXTENSION = "zip";
     public static final String TAR_FILE_EXTENSION = "tar";
+    public static final String GZ_FILE_EXTENSION = "gz";
     public static final String CREATE_FOLDER = "create-folder";
     public static final String LAST_MODIFIED_DATETIME_FORMAT = "MM/dd/yyyy HH:mm:ss";
     public static final String CREATE = "create";

@@ -48,6 +48,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -224,6 +225,15 @@ public class FileUnarchiveExtension extends StreamFunctionProcessor {
                         File curfile = new File(destinationDirFile.getName().getPath(), entry.getName());
                         createParentDirectory(curfile, filePathUri);
                         IOUtils.copy(fin, new FileOutputStream(curfile));
+                    }
+                }
+            } else if (sourceFileExtension.compareToIgnoreCase(Constant.GZ_FILE_EXTENSION) == 0) {
+                String fileOutputPath = destinationDirUri + File.separator + destinationDirFile.getName().getBaseName();
+                try (GZIPInputStream gzipInputStream = new GZIPInputStream(new FileInputStream(filePathUri));
+                     FileOutputStream fileOutputStream = new FileOutputStream(fileOutputPath)) {
+                    int length;
+                    while ((length = gzipInputStream.read(buffer)) > 0) {
+                        fileOutputStream.write(buffer, 0, length);
                     }
                 }
             } else {
