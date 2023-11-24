@@ -121,6 +121,7 @@ public class Util {
                     fileSourceConfiguration.getFileReadWaitTimeout());
             properties.put(Constants.MODE, mode);
             properties.put(Constants.HEADER_PRESENT, fileSourceConfiguration.getHeaderPresent());
+            properties.put(Constants.HEADER_LINE_COUNT, Integer.toString(fileSourceConfiguration.getHeaderLineCount()));
             properties.put(Constants.READ_ONLY_HEADER, fileSourceConfiguration.getReadOnlyHeader());
             properties.put(Constants.READ_ONLY_TRAILER, fileSourceConfiguration.getReadOnlyTrailer());
             properties.put(Constants.SKIP_TRAILER, fileSourceConfiguration.getSkipTrailer());

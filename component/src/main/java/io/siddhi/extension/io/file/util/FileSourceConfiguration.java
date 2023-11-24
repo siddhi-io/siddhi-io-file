@@ -43,6 +43,7 @@ public class FileSourceConfiguration {
     private String protocolForMoveAfterProcess = null;
     private long timeout = 5000;
     private String headerPresent = "false";
+    private int headerLineCount = 1;
     private String readOnlyHeader = "false";
     private String readOnlyTrailer = "false";
     private String skipTrailer = "false";
@@ -262,6 +263,14 @@ public class FileSourceConfiguration {
 
     public void setHeaderPresent(String headerPresent) {
         this.headerPresent = headerPresent;
+    }
+
+    public int getHeaderLineCount() {
+        return headerLineCount;
+    }
+
+    public void setHeaderLineCount(int headerLineCount) {
+        this.headerLineCount = headerLineCount;
     }
 
     public String getCurrentlyReadingFileURI() {

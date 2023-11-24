@@ -1118,6 +1118,43 @@ public class FileSourceLineModeTestCase {
         siddhiAppRuntime.shutdown();
     }
 
+    @Test
+    public void siddhiIoFileTestForSkipMultilineHeader() throws InterruptedException {
+        log.info("test SiddhiIoFile header.line.count parameter Test");
+        String streams = "" +
+                "@App:name('TestSiddhiApp')" +
+                "@source(type='file', mode='line'," +
+                "file.uri='file:" + newRoot + "/line/header/test.txt', " +
+                "header.present='true'," +
+                "header.line.count='3'," +
+                "action.after.process='delete', " +
+                "tailing='false', " +
+                "@map( type='csv', delimiter='|', " +
+                "@attributes(code = '0', serialNo = '1', amount = '2', fileName = 'trp:file.path', " +
+                "eof = 'trp:eof')))\n" +
+                "define stream FileReaderStream (code string, serialNo string, amount double, " +
+                "fileName string, eof string); " +
+                "define stream FileResultStream (code string, serialNo string, amount double, " +
+                "fileName string, eof string); ";
+        String query = "" +
+                "from FileReaderStream " +
+                "select * " +
+                "insert into FileResultStream; ";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        siddhiAppRuntime.addCallback("FileResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                count.incrementAndGet();
+            }
+        });
+        siddhiAppRuntime.start();
+        Thread.sleep(10000);
+        AssertJUnit.assertEquals("Number of events", 4, count.get());
+        siddhiAppRuntime.shutdown();
+    }
+
     @Test// (dependsOnMethods = "siddhiIoFileTestForKeepAfterProcess")
     public void siddhiIoFileTestForKeepAfterProcess() throws InterruptedException {
         log.info("test SiddhiIoFile for keep after process");
