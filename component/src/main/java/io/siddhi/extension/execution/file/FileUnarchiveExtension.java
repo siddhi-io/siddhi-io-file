@@ -195,12 +195,20 @@ public class FileUnarchiveExtension extends StreamFunctionProcessor {
                             log.debug("Decompressing: " + newFile.getAbsolutePath());
                         }
                         createParentDirectory(newFile, filePathUri);
-                        fos = new FileOutputStream(newFile);
-                        int len;
-                        while ((len = zis.read(buffer)) > 0) {
-                            fos.write(buffer, 0, len);
+                        if (ze.isDirectory()) {
+                            boolean directoryCreationResult = newFile.mkdirs();
+                            if (!directoryCreationResult) {
+                                throw new SiddhiAppRuntimeException("Failed to create directory: " +
+                                        newFile.getAbsolutePath());
+                            }
+                        } else {
+                            fos = new FileOutputStream(newFile);
+                            int len;
+                            while ((len = zis.read(buffer)) > 0) {
+                                fos.write(buffer, 0, len);
+                            }
+                            fos.close();
                         }
-                        fos.close();
                     }
                     //Closes the current ZIP entry and positions the stream for reading the next entry
                     zis.closeEntry();
