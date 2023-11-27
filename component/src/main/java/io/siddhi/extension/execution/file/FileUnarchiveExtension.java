@@ -36,6 +36,7 @@ import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
@@ -228,7 +229,15 @@ public class FileUnarchiveExtension extends StreamFunctionProcessor {
                     }
                 }
             } else if (sourceFileExtension.compareToIgnoreCase(Constant.GZ_FILE_EXTENSION) == 0) {
-                String fileOutputPath = destinationDirUri + File.separator + destinationDirFile.getName().getBaseName();
+                // Gzip works with files, or directories archived as 'tar'.
+                // Therefore, target file name will always be equal to source file name (without the 'gz' extension).
+                String fileName = FilenameUtils.getBaseName(filePathUri);
+                String fileOutputPath = destinationDirUri + File.separator + fileName;
+                File newFile = new File(fileOutputPath);
+                if (log.isDebugEnabled()) {
+                    log.debug("Decompressing: " + newFile.getAbsolutePath());
+                }
+                createParentDirectory(newFile, filePathUri);
                 try (GZIPInputStream gzipInputStream = new GZIPInputStream(new FileInputStream(filePathUri));
                      FileOutputStream fileOutputStream = new FileOutputStream(fileOutputPath)) {
                     int length;
