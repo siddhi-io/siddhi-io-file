@@ -573,6 +573,45 @@ public class FileFunctionsTestCase {
         archiveFileStream.send(new Object[]{"TarArchiveFileStream"});
         Thread.sleep(100);
         siddhiAppRuntime1.shutdown();
+        AssertJUnit.assertTrue(isFileExist(destination + "/archive.zip", false));
+
+        File unzipLocation = new File(destination.getAbsolutePath() + "/decompressed");
+        try {
+            FileUtils.forceMkdir(unzipLocation);
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        count.set(0);
+        app = "" +
+                "@App:name('TestSiddhiApp')" +
+                "define stream UnArchiveFileStream(sample string);\n" +
+                "from UnArchiveFileStream#" +
+                "file:unarchive('" + destination + "/archive.zip', '" + unzipLocation.getAbsolutePath() + "')\n" +
+                "select *\n" +
+                "insert into ResultStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime2 = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler unArchiveFileStream = siddhiAppRuntime2.getInputHandler("UnArchiveFileStream");
+        siddhiAppRuntime2.addCallback("ResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.getAndIncrement();
+                for (Event event : events) {
+                    if (n == 0) {
+                        AssertJUnit.assertEquals("WSO2", event.getData(0));
+                    } else {
+                        AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime2.start();
+        unArchiveFileStream.send(new Object[]{"WSO2"});
+        Thread.sleep(100);
+        siddhiAppRuntime2.shutdown();
+        AssertJUnit.assertTrue(isFileExist(unzipLocation.getAbsolutePath() + "/archive/", true));
     }
 
     @Test
