@@ -38,9 +38,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -747,6 +751,104 @@ public class FileFunctionsTestCase {
     }
 
     @Test
+    public void testUnarchiveGzipWithRootDir() throws InterruptedException {
+        log.info("Test Siddhi IO unarchive function to unarchive a GZIP file with exclude.root.dir=false");
+        String fileName = "sample-file-for-gzip.txt";
+        String sourceFilePath = Paths.get(sourceRoot.getPath() , "unarchive", "source", fileName + ".gz").toString();
+        String destinationDirectoryPath = Paths.get(sourceRoot.getPath(), "unarchive", "destination").toString();
+        log.info("Source File Path: " + sourceFilePath);
+        AssertJUnit.assertTrue(isFileExist(sourceFilePath, false));
+        String app = "@App:name('TestSiddhiApp')" +
+                "define stream UnarchiveGzFileStream(sample string);\n" +
+                "from UnarchiveGzFileStream#file:unarchive('" +
+                sourceFilePath + "', '" + destinationDirectoryPath + "', false)\n" +
+                "select *\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime1 = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler unarchiveGzFileStream = siddhiAppRuntime1.getInputHandler("UnarchiveGzFileStream");
+        siddhiAppRuntime1.addCallback("ResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.getAndIncrement();
+                for (Event event : events) {
+                    if (n == 0) {
+                        AssertJUnit.assertEquals("UnarchiveGzFileStream", event.getData(0));
+                    } else {
+                        AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime1.start();
+        unarchiveGzFileStream.send(new Object[]{"UnarchiveGzFileStream"});
+        Thread.sleep(100);
+        siddhiAppRuntime1.shutdown();
+
+        // The unarchived file will be in a directory with the same name as the file name
+        String unarchivedFilePath = Paths.get(destinationDirectoryPath, fileName, fileName).toString();
+        log.info("Unarchived File Path: " + unarchivedFilePath);
+        AssertJUnit.assertTrue(isFileExist(unarchivedFilePath, false));
+        List<String> expectedLines = new ArrayList<>(Arrays.asList("one", "two", "three", "four"));
+        List<String> actualLines = getLineWiseFileContent(unarchivedFilePath);
+        AssertJUnit.assertArrayEquals(expectedLines.toArray(), actualLines.toArray());
+
+        File cleanupDirectory = Paths.get(destinationDirectoryPath, fileName).toFile();
+        log.info("Cleaning up directory: " + cleanupDirectory.getPath());
+        FileUtils.deleteQuietly(cleanupDirectory);
+    }
+
+    @Test
+    public void testUnarchiveGzipExcludingRootDir() throws InterruptedException {
+        log.info("Test Siddhi IO unarchive function to unarchive a GZIP file with exclude.root.dir=true");
+        String fileName = "sample-file-for-gzip.txt";
+        String sourceFilePath = Paths.get(sourceRoot.getPath() , "unarchive", "source", fileName + ".gz").toString();
+        String destinationDirectoryPath = Paths.get(sourceRoot.getPath(), "unarchive", "destination").toString();
+        log.info("Source File Path: " + sourceFilePath);
+        AssertJUnit.assertTrue(isFileExist(sourceFilePath, false));
+        String app = "@App:name('TestSiddhiApp')" +
+                "define stream UnarchiveGzFileStream(sample string);\n" +
+                "from UnarchiveGzFileStream#file:unarchive('" +
+                sourceFilePath + "', '" + destinationDirectoryPath + "', true)\n" +
+                "select *\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime1 = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler unarchiveGzFileStream = siddhiAppRuntime1.getInputHandler("UnarchiveGzFileStream");
+        siddhiAppRuntime1.addCallback("ResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.getAndIncrement();
+                for (Event event : events) {
+                    if (n == 0) {
+                        AssertJUnit.assertEquals("UnarchiveGzFileStream", event.getData(0));
+                        // Read unzipped file content
+                    } else {
+                        AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime1.start();
+        unarchiveGzFileStream.send(new Object[]{"UnarchiveGzFileStream"});
+        Thread.sleep(100);
+        siddhiAppRuntime1.shutdown();
+
+        String unarchivedFilePath = Paths.get(destinationDirectoryPath, fileName).toString();
+        log.info("Unarchived File Path: " + unarchivedFilePath);
+        AssertJUnit.assertTrue(isFileExist(unarchivedFilePath, false));
+        List<String> expectedLines = new ArrayList<>(Arrays.asList("one", "two", "three", "four"));
+        List<String> actualLines = getLineWiseFileContent(unarchivedFilePath);
+        AssertJUnit.assertArrayEquals(expectedLines.toArray(), actualLines.toArray());
+
+        File cleanupFile = Paths.get(unarchivedFilePath).toFile();
+        log.info("Cleaning up file: " + cleanupFile.getAbsolutePath());
+        FileUtils.deleteQuietly(cleanupFile);
+    }
+
+    @Test
     public void folderMoveFunction() throws InterruptedException, IOException {
         FileUtils.copyDirectory(sourceRoot, tempSource);
         log.info("test Siddhi Io File Function for move()");
@@ -1335,5 +1437,20 @@ public class FileFunctionsTestCase {
             throw new SiddhiAppRuntimeException("Exception occurred when checking existence for path: " +
                     filePathUri, e);
         }
+    }
+
+    private List<String> getLineWiseFileContent(String filePath) {
+        List<String> lines = new ArrayList<>();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(filePath));
+            String line;
+            while ((line = br.readLine()) != null) {
+                lines.add(line);
+            }
+            br.close();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+        return lines;
     }
 }
