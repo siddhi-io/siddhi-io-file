@@ -65,7 +65,7 @@ import static io.siddhi.extension.io.file.util.Constants.BUFFER_SIZE;
         parameters = {
                 @Parameter(
                         name = "uri",
-                        description = "Absolute path of the file to be decompressed in the format of zip or tar.",
+                        description = "Absolute path of the file to be decompressed in the format of zip, tar, or gz.",
                         type = DataType.STRING,
                         dynamic = true
                 ),
@@ -113,6 +113,10 @@ import static io.siddhi.extension.io.file.util.Constants.BUFFER_SIZE;
                 @Example(
                         syntax = "file:unarchive('/User/wso2/source/test.tar', '/User/wso2/destination')",
                         description = "Unarchive a tar file in a given path to a given destination."
+                ),
+                @Example(
+                        syntax = "file:unarchive('/User/wso2/source/test.txt.gz', '/User/wso2/destination')",
+                        description = "Unarchive a gz file in a given path to a given destination."
                 ),
                 @Example(
                         syntax = "file:unarchive('/User/wso2/source/test.tar', '/User/wso2/destination', true)",
