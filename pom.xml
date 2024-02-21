@@ -24,7 +24,7 @@
     <parent>
         <artifactId>wso2</artifactId>
         <groupId>org.wso2</groupId>
-        <version>5</version>
+        <version>5.1</version>
     </parent>
 
     <packaging>pom</packaging>
