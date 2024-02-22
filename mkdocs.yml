@@ -38,6 +38,7 @@ pages:
 - Welcome: index.md
 - API Docs:
   - latest: api/latest.md
+  - 2.0.22: api/2.0.22.md
   - 2.0.20: api/2.0.20.md
   - 2.0.19: api/2.0.19.md
   - 2.0.18: api/2.0.18.md
