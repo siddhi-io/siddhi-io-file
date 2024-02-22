@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2024, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
+  ~
+  ~ WSO2 Inc. licenses this file to you under the Apache License,
+  ~ Version 2.0 (the "License"); you may not use this file except
+  ~ in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied. See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<FindBugsFilter>
+
+    <Match>
+        <Class name="io.siddhi.extension.io.file.processors.FileProcessor"/>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.util.Util"/>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.listeners.FileSystemListener"/>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.FileSource"/>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.FileSink"/>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+
+    <Match>
+        <Class name="io.siddhi.extension.util.Utils"/>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileUnarchiveExtension"/>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.FileHandler"/>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.util.FileSourceConfiguration"/>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.listeners.FileCronExecutor"/>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileArchiveExtension"/>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileSearchInArchiveExtension"/>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.util.Util"/>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileArchiveExtension"/>
+        <Bug pattern="PATH_TRAVERSAL_OUT"/>
+    </Match>
+
+    <Match>
+        <Class name="io.siddhi.extension.util.Utils"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.FileSourcePoller"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileArchiveExtension"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.FileAlterationImpl"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.listeners.FileSystemListener"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.util.VFSClientConnectorCallback"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.processors.FileProcessor"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.listeners.FileSystemListener$FileServerExecutor"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.FileHandler"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.listeners.FileCronExecutor"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileSearchInArchiveExtension"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileRenameExtension"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileSearchExtension"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileUnarchiveExtension"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.util.Util"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.util.Util"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.FileSource"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileCopyExtension"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileMoveExtension"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+
+    <Match>
+        <Class name="io.siddhi.extension.io.file.util.Util"/>
+        <Bug pattern="WEAK_FILENAMEUTILS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.file.listeners.FileSystemListener"/>
+        <Bug pattern="WEAK_FILENAMEUTILS"/>
+    </Match>
+
+    <Match>
+        <Class name="io.siddhi.extension.io.file.FileSource"/>
+        <Bug pattern="FORMAT_STRING_MANIPULATION"/>
+    </Match>
+
+
+</FindBugsFilter>

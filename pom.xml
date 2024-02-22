@@ -315,6 +315,7 @@
         <jackrabbit.webdav.version>2.14.9</jackrabbit.webdav.version>
         <commons.codec.version>1.2</commons.codec.version>
         <bouncy.castle.version>1.68</bouncy.castle.version>
+        <maven.findbugsplugin.version.exclude>findbugs-exclude.xml</maven.findbugsplugin.version.exclude>
     </properties>
 
     <build>
@@ -357,6 +358,14 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <source>1.8</source>
                     <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>${maven.findbugsplugin.version}</version>
+                <configuration>
+                    <excludeFilterFile>${maven.findbugsplugin.version.exclude}</excludeFilterFile>
                 </configuration>
             </plugin>
         </plugins>
