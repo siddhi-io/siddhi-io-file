@@ -24,7 +24,7 @@
     <parent>
         <artifactId>wso2</artifactId>
         <groupId>org.wso2</groupId>
-        <version>5.1</version>
+        <version>5.3</version>
     </parent>
 
     <packaging>pom</packaging>
@@ -360,13 +360,12 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <version>${maven.findbugsplugin.version}</version>
-                <configuration>
-                    <excludeFilterFile>${maven.findbugsplugin.version.exclude}</excludeFilterFile>
-                </configuration>
+           <plugin>
+               <groupId>com.github.spotbugs</groupId>
+               <artifactId>spotbugs-maven-plugin</artifactId>
+               <configuration>
+                   <excludeFilterFile>${maven.findbugsplugin.version.exclude}</excludeFilterFile>
+               </configuration>
             </plugin>
         </plugins>
 

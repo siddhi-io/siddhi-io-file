@@ -36,7 +36,6 @@ import org.wso2.transport.remotefilesystem.server.util.FileTransportUtils;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.Reader;
 import java.net.URI;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
@@ -168,8 +167,7 @@ public class Utils {
         }
         CharsetDecoder dec = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.IGNORE);
         Path path = Paths.get(URI.create("file:///" + uri).normalize());
-        try (Reader r = Channels.newReader(FileChannel.open(path), dec, -1);
-             BufferedReader br = new BufferedReader(r)) {
+        try (BufferedReader br = new BufferedReader(Channels.newReader(FileChannel.open(path), dec, -1))) {
             return br.lines()
                     .filter(line -> line.length() != 0).count();
         }
