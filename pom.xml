@@ -293,19 +293,19 @@
         <wso2.transport.file.version>6.1.6</wso2.transport.file.version>
         <org.apache.commons-compress.version>1.19</org.apache.commons-compress.version>
         <testng.version>6.8</testng.version>
-        <siddhi.map.json.version>5.2.2</siddhi.map.json.version>
+        <siddhi.map.json.version>5.2.5</siddhi.map.json.version>
         <siddhi.map.xml.version>5.2.2</siddhi.map.xml.version>
-        <siddhi.map.text.version>2.0.4</siddhi.map.text.version>
-        <siddhi.map.csv.version>2.1.1</siddhi.map.csv.version>
+        <siddhi.map.text.version>2.1.1</siddhi.map.text.version>
+        <siddhi.map.csv.version>2.1.3</siddhi.map.csv.version>
         <siddhi.map.binary.version>2.1.1</siddhi.map.binary.version>
         <siddhi.map.binarypassthrough.version>1.0.0</siddhi.map.binarypassthrough.version>
-        <siddhi.execution.list>1.0.0</siddhi.execution.list>
+        <siddhi.execution.list>1.0.2</siddhi.execution.list>
         <jacoco.version>0.7.9</jacoco.version>
         <commons.io.version>2.6</commons.io.version>
         <commons-net.version>3.6</commons-net.version>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <carbon.analytics.version>3.0.36</carbon.analytics.version>
+        <carbon.analytics.version>3.0.69</carbon.analytics.version>
         <commons-vfs2.wso2.version>2.2-wso2v11</commons-vfs2.wso2.version>
         <com.jcraft.version>0.1.54</com.jcraft.version>
         <jcifs.version>2.1.26</jcifs.version>
