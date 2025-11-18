@@ -77,6 +77,10 @@
         <Class name="io.siddhi.extension.execution.file.FileArchiveExtension"/>
         <Bug pattern="PATH_TRAVERSAL_OUT"/>
     </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileUnarchiveExtension"/>
+        <Bug pattern="PATH_TRAVERSAL_OUT"/>
+    </Match>
 
     <Match>
         <Class name="io.siddhi.extension.util.Utils"/>
@@ -161,6 +165,10 @@
     </Match>
     <Match>
         <Class name="io.siddhi.extension.io.file.listeners.FileSystemListener"/>
+        <Bug pattern="WEAK_FILENAMEUTILS"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.execution.file.FileUnarchiveExtension"/>
         <Bug pattern="WEAK_FILENAMEUTILS"/>
     </Match>
 
