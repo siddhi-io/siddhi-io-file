@@ -36,6 +36,7 @@ import io.siddhi.query.api.definition.AbstractDefinition;
 import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
@@ -48,6 +49,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -63,7 +65,7 @@ import static io.siddhi.extension.io.file.util.Constants.BUFFER_SIZE;
         parameters = {
                 @Parameter(
                         name = "uri",
-                        description = "Absolute path of the file to be decompressed in the format of zip or tar.",
+                        description = "Absolute path of the file to be decompressed in the format of zip, tar, or gz.",
                         type = DataType.STRING,
                         dynamic = true
                 ),
@@ -111,6 +113,10 @@ import static io.siddhi.extension.io.file.util.Constants.BUFFER_SIZE;
                 @Example(
                         syntax = "file:unarchive('/User/wso2/source/test.tar', '/User/wso2/destination')",
                         description = "Unarchive a tar file in a given path to a given destination."
+                ),
+                @Example(
+                        syntax = "file:unarchive('/User/wso2/source/test.txt.gz', '/User/wso2/destination')",
+                        description = "Unarchive a gz file in a given path to a given destination."
                 ),
                 @Example(
                         syntax = "file:unarchive('/User/wso2/source/test.tar', '/User/wso2/destination', true)",
@@ -224,6 +230,23 @@ public class FileUnarchiveExtension extends StreamFunctionProcessor {
                         File curfile = new File(destinationDirFile.getName().getPath(), entry.getName());
                         createParentDirectory(curfile, filePathUri);
                         IOUtils.copy(fin, new FileOutputStream(curfile));
+                    }
+                }
+            } else if (sourceFileExtension.compareToIgnoreCase(Constant.GZ_FILE_EXTENSION) == 0) {
+                // Gzip works with files, or directories archived as 'tar'.
+                // Therefore, target file name will always be equal to source file name (without the 'gz' extension).
+                String fileName = FilenameUtils.getBaseName(filePathUri);
+                String fileOutputPath = destinationDirUri + File.separator + fileName;
+                File newFile = new File(fileOutputPath);
+                if (log.isDebugEnabled()) {
+                    log.debug("Decompressing: " + newFile.getAbsolutePath());
+                }
+                createParentDirectory(newFile, filePathUri);
+                try (GZIPInputStream gzipInputStream = new GZIPInputStream(new FileInputStream(filePathUri));
+                     FileOutputStream fileOutputStream = new FileOutputStream(fileOutputPath)) {
+                    int length;
+                    while ((length = gzipInputStream.read(buffer)) > 0) {
+                        fileOutputStream.write(buffer, 0, length);
                     }
                 }
             } else {
