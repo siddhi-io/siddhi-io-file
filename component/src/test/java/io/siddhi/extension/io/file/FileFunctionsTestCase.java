@@ -849,6 +849,104 @@ public class FileFunctionsTestCase {
     }
 
     @Test
+    public void testUnarchiveBz2WithRootDir() throws InterruptedException {
+        log.info("Test Siddhi IO unarchive function to unarchive a BZ2 file with exclude.root.dir=false");
+        String fileName = "test-file-for-bz2.txt";
+        String sourceFilePath = Paths.get(sourceRoot.getPath() , "unarchive", "source", fileName + ".bz2").toString();
+        String destinationDirectoryPath = Paths.get(sourceRoot.getPath(), "unarchive", "destination").toString();
+        log.info("Source File Path: " + sourceFilePath);
+        AssertJUnit.assertTrue(isFileExist(sourceFilePath, false));
+        String app = "@App:name('TestBz2App')" +
+                "define stream unarchiveBz2FileStream(sample string);\n" +
+                "from unarchiveBz2FileStream#file:unarchive('" +
+                sourceFilePath + "', '" + destinationDirectoryPath + "', false)\n" +
+                "select *\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime1 = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler unarchiveBz2FileStream = siddhiAppRuntime1.getInputHandler("unarchiveBz2FileStream");
+        siddhiAppRuntime1.addCallback("ResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.getAndIncrement();
+                for (Event event : events) {
+                    if (n == 0) {
+                        AssertJUnit.assertEquals("unarchiveBz2FileStream", event.getData(0));
+                    } else {
+                        AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime1.start();
+        unarchiveBz2FileStream.send(new Object[]{"unarchiveBz2FileStream"});
+        Thread.sleep(100);
+        siddhiAppRuntime1.shutdown();
+
+        // The unarchived file will be in a directory with the same name as the file name
+        String unarchivedFilePath = Paths.get(destinationDirectoryPath, fileName, fileName).toString();
+        log.info("Unarchived File Path: " + unarchivedFilePath);
+        AssertJUnit.assertTrue(isFileExist(unarchivedFilePath, false));
+        List<String> expectedLines = new ArrayList<>(Arrays.asList("apple", "orange", "mango"));
+        List<String> actualLines = getLineWiseFileContent(unarchivedFilePath);
+        AssertJUnit.assertArrayEquals(expectedLines.toArray(), actualLines.toArray());
+
+        File cleanupDirectory = Paths.get(destinationDirectoryPath, fileName).toFile();
+        log.info("Cleaning up directory: " + cleanupDirectory.getPath());
+        FileUtils.deleteQuietly(cleanupDirectory);
+    }
+
+    @Test
+    public void testUnarchiveBz2ExcludingRootDir() throws InterruptedException {
+        log.info("Test Siddhi IO unarchive function to unarchive a Bz2 file with exclude.root.dir=true");
+        String fileName = "test-file-for-bz2.txt";
+        String sourceFilePath = Paths.get(sourceRoot.getPath() , "unarchive", "source", fileName + ".bz2").toString();
+        String destinationDirectoryPath = Paths.get(sourceRoot.getPath(), "unarchive", "destination").toString();
+        log.info("Source File Path: " + sourceFilePath);
+        AssertJUnit.assertTrue(isFileExist(sourceFilePath, false));
+        String app = "@App:name('TestBz2App')" +
+                "define stream unarchiveBz2FileStream(sample string);\n" +
+                "from unarchiveBz2FileStream#file:unarchive('" +
+                sourceFilePath + "', '" + destinationDirectoryPath + "', true)\n" +
+                "select *\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime1 = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler unarchiveBz2FileStream = siddhiAppRuntime1.getInputHandler("unarchiveBz2FileStream");
+        siddhiAppRuntime1.addCallback("ResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                EventPrinter.print(events);
+                int n = count.getAndIncrement();
+                for (Event event : events) {
+                    if (n == 0) {
+                        AssertJUnit.assertEquals("unarchiveBz2FileStream", event.getData(0));
+                        // Read unzipped file content
+                    } else {
+                        AssertJUnit.fail("More events received than expected.");
+                    }
+                }
+            }
+        });
+        siddhiAppRuntime1.start();
+        unarchiveBz2FileStream.send(new Object[]{"unarchiveBz2FileStream"});
+        Thread.sleep(100);
+        siddhiAppRuntime1.shutdown();
+
+        String unarchivedFilePath = Paths.get(destinationDirectoryPath, fileName).toString();
+        log.info("Unarchived File Path: " + unarchivedFilePath);
+        AssertJUnit.assertTrue(isFileExist(unarchivedFilePath, false));
+        List<String> expectedLines = new ArrayList<>(Arrays.asList("apple", "orange", "mango"));
+        List<String> actualLines = getLineWiseFileContent(unarchivedFilePath);
+        AssertJUnit.assertArrayEquals(expectedLines.toArray(), actualLines.toArray());
+
+        File cleanupFile = Paths.get(unarchivedFilePath).toFile();
+        log.info("Cleaning up file: " + cleanupFile.getAbsolutePath());
+        FileUtils.deleteQuietly(cleanupFile);
+    }
+
+    @Test
     public void folderMoveFunction() throws InterruptedException, IOException {
         FileUtils.copyDirectory(sourceRoot, tempSource);
         log.info("test Siddhi Io File Function for move()");
