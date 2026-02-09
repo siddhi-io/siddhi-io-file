@@ -36,7 +36,7 @@
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -83,7 +83,7 @@ file:isDirectory(filePath) as isDirectory
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -137,7 +137,7 @@ file:isExist('/User/wso2/source/') as exists
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -193,7 +193,7 @@ file:isFile(filePath) as isFile
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -247,7 +247,7 @@ file:lastModifiedTime(filePath, dd/MM/yyyy HH:mm:ss) as lastModifiedTime
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -329,7 +329,7 @@ file:archive(<STRING> uri, <STRING> destination.dir.uri, <STRING> archive.type, 
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -423,7 +423,7 @@ file:copy(<STRING> uri, <STRING> destination.dir.uri, <STRING> include.by.regexp
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -513,7 +513,7 @@ file:create(<STRING> uri, <BOOL> is.directory, <STRING> file.system.options)
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -567,7 +567,7 @@ file:delete(<STRING> uri, <STRING> file.system.options)
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -647,7 +647,7 @@ file:move(<STRING> path, <STRING> destination.dir.path, <STRING> include.by.rege
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -733,14 +733,6 @@ file:rename(<STRING> uri, <STRING> new.destination.name)
         <td style="vertical-align: top">No</td>
         <td style="vertical-align: top">Yes</td>
     </tr>
-    <tr>
-        <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:&lt;Realative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
-        <td style="vertical-align: top"><Empty_String></td>
-        <td style="vertical-align: top">STRING</td>
-        <td style="vertical-align: top">Yes</td>
-        <td style="vertical-align: top">No</td>
-    </tr>
 </table>
 <span id="extra-return-attributes" class="md-typeset" style="display: block; font-weight: bold;">Extra Return Attributes</span>
 <table>
@@ -820,7 +812,7 @@ file:search(<STRING> uri, <STRING> include.by.regexp, <BOOL> exclude.subdirector
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -903,7 +895,7 @@ file:searchInArchive(<STRING> uri, <STRING> include.by.regexp, <STRING> file.sys
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -987,7 +979,7 @@ file:unarchive(<STRING> uri, <STRING> destination.dir.uri, <BOOL> exclude.root.d
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -1065,7 +1057,7 @@ file:unarchive('/User/wso2/source/test.tar', '/User/wso2/destination', true)
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -1289,7 +1281,7 @@ file:unarchive('/User/wso2/source/test.tar', '/User/wso2/destination', true)
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
@@ -1385,7 +1377,7 @@ define stream FooStream (symbol string, price float, volume long);
     </tr>
     <tr>
         <td style="vertical-align: top">file.system.options</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">The file options in key:value pairs separated by commas. <br>eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true,IDENTITY:Relative path from '&lt;Product_Home&gt;/wso2/server/' directory&gt;<br>Note: when IDENTITY is used, use a RSA PRIVATE KEY</p></td>
         <td style="vertical-align: top"><Empty_String></td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
