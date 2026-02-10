@@ -106,7 +106,8 @@ import static io.siddhi.extension.util.Constant.ZIP_FILE_EXTENSION;
                         name = "file.system.options",
                         description = "The file options in key:value pairs separated by commas. \n" +
                                 "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true," +
-                                "IDENTITY:file://demo/.ssh/id_rsa,IDENTITY_PASS_PHRASE:wso2carbon'\n" +
+                                "IDENTITY:<Relative path from '<Product_Home>/wso2/server/' directory>" +
+                                ",IDENTITY_PASS_PHRASE:wso2carbon'\n" +
                                 "Note: when IDENTITY is used, use a RSA PRIVATE KEY",
                         type = DataType.STRING,
                         optional = true,
