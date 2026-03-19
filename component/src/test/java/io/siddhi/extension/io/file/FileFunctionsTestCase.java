@@ -1520,6 +1520,153 @@ public class FileFunctionsTestCase {
         siddhiAppRuntime.shutdown();
     }
 
+    @Test
+    public void testFileSearchExcludeSubdirectories() throws InterruptedException {
+        log.info("test file:search with exclude.subdirectories=true returns only root-level files");
+        String searchPath = sourceRoot + "/search";
+        String app = "@App:name('TestSiddhiApp')" +
+                "define stream ListFileStream(sample string);\n" +
+                "from ListFileStream#file:search('" + searchPath + "', '', true)\n" +
+                "select fileNameList\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler listFileStream = siddhiAppRuntime.getInputHandler("ListFileStream");
+        List<String> resultList = new ArrayList<>();
+        siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                for (Event event : events) {
+                    resultList.addAll((List<String>) event.getData(0));
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        listFileStream.send(new Object[]{"test"});
+        Thread.sleep(200);
+        siddhiAppRuntime.shutdown();
+        AssertJUnit.assertEquals(2, resultList.size());
+        List<String> baseNames = new ArrayList<>();
+        for (String path : resultList) {
+            baseNames.add(Paths.get(path).getFileName().toString());
+        }
+        AssertJUnit.assertTrue(baseNames.contains("root1.txt"));
+        AssertJUnit.assertTrue(baseNames.contains("root2.csv"));
+        AssertJUnit.assertFalse(baseNames.contains("sub1_file1.txt"));
+        AssertJUnit.assertFalse(baseNames.contains("sub1_file2.csv"));
+        AssertJUnit.assertFalse(baseNames.contains("deep_file.txt"));
+    }
+
+    @Test
+    public void testFileSearchExcludeSubdirectoriesFalse() throws InterruptedException {
+        log.info("test file:search with exclude.subdirectories=false returns all files recursively");
+        String searchPath = sourceRoot + "/search";
+        String app = "@App:name('TestSiddhiApp')" +
+                "define stream ListFileStream(sample string);\n" +
+                "from ListFileStream#file:search('" + searchPath + "', '', false)\n" +
+                "select fileNameList\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler listFileStream = siddhiAppRuntime.getInputHandler("ListFileStream");
+        List<String> resultList = new ArrayList<>();
+        siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                for (Event event : events) {
+                    resultList.addAll((List<String>) event.getData(0));
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        listFileStream.send(new Object[]{"test"});
+        Thread.sleep(200);
+        siddhiAppRuntime.shutdown();
+        List<String> baseNames = new ArrayList<>();
+        for (String path : resultList) {
+            baseNames.add(Paths.get(path).getFileName().toString());
+        }
+        AssertJUnit.assertTrue(baseNames.contains("root1.txt"));
+        AssertJUnit.assertTrue(baseNames.contains("root2.csv"));
+        AssertJUnit.assertTrue(baseNames.contains("sub1_file1.txt"));
+        AssertJUnit.assertTrue(baseNames.contains("sub1_file2.csv"));
+        AssertJUnit.assertTrue(baseNames.contains("deep_file.txt"));
+        AssertJUnit.assertEquals(5, resultList.size());
+    }
+
+    @Test
+    public void testFileSearchDepthZero() throws InterruptedException {
+        log.info("test file:search with subdirectory.depth=0 returns only root-level files");
+        String searchPath = sourceRoot + "/search";
+        String app = "@App:name('TestSiddhiApp')" +
+                "define stream ListFileStream(sample string);\n" +
+                "from ListFileStream#file:search('" + searchPath + "', '', 0)\n" +
+                "select fileNameList\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler listFileStream = siddhiAppRuntime.getInputHandler("ListFileStream");
+        List<String> resultList = new ArrayList<>();
+        siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                for (Event event : events) {
+                    resultList.addAll((List<String>) event.getData(0));
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        listFileStream.send(new Object[]{"test"});
+        Thread.sleep(200);
+        siddhiAppRuntime.shutdown();
+        AssertJUnit.assertEquals(2, resultList.size());
+        List<String> baseNames = new ArrayList<>();
+        for (String path : resultList) {
+            baseNames.add(Paths.get(path).getFileName().toString());
+        }
+        AssertJUnit.assertTrue(baseNames.contains("root1.txt"));
+        AssertJUnit.assertTrue(baseNames.contains("root2.csv"));
+        AssertJUnit.assertFalse(baseNames.contains("sub1_file1.txt"));
+        AssertJUnit.assertFalse(baseNames.contains("deep_file.txt"));
+    }
+
+    @Test
+    public void testFileSearchDepthOne() throws InterruptedException {
+        log.info("test file:search with subdirectory.depth=1 returns root files and immediate subdirectory files");
+        String searchPath = sourceRoot + "/search";
+        String app = "@App:name('TestSiddhiApp')" +
+                "define stream ListFileStream(sample string);\n" +
+                "from ListFileStream#file:search('" + searchPath + "', '', 1)\n" +
+                "select fileNameList\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler listFileStream = siddhiAppRuntime.getInputHandler("ListFileStream");
+        List<String> resultList = new ArrayList<>();
+        siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                for (Event event : events) {
+                    resultList.addAll((List<String>) event.getData(0));
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        listFileStream.send(new Object[]{"test"});
+        Thread.sleep(200);
+        siddhiAppRuntime.shutdown();
+        AssertJUnit.assertEquals(4, resultList.size());
+        List<String> baseNames = new ArrayList<>();
+        for (String path : resultList) {
+            baseNames.add(Paths.get(path).getFileName().toString());
+        }
+        AssertJUnit.assertTrue(baseNames.contains("root1.txt"));
+        AssertJUnit.assertTrue(baseNames.contains("root2.csv"));
+        AssertJUnit.assertTrue(baseNames.contains("sub1_file1.txt"));
+        AssertJUnit.assertTrue(baseNames.contains("sub1_file2.csv"));
+        AssertJUnit.assertFalse(baseNames.contains("deep_file.txt"));
+    }
+
     private boolean isFileExist(String filePathUri, boolean isDirectory) {
         FileSystemOptions opts = new FileSystemOptions();
         FileSystemManager fsManager;

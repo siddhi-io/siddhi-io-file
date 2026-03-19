@@ -81,6 +81,16 @@ import java.util.regex.Pattern;
                         defaultValue = "false"
                 ),
                 @Parameter(
+                        name = "subdirectory.depth",
+                        description = "The depth of subdirectories to include when searching. " +
+                                "0 includes only the root directory, 1 includes the root and its immediate " +
+                                "subdirectories, and so on. Use this parameter as an alternative to " +
+                                "`exclude.subdirectories` for finer-grained control.",
+                        type = DataType.INT,
+                        optional = true,
+                        defaultValue = "-1"
+                ),
+                @Parameter(
                         name = "file.system.options",
                         description = "The file options in key:value pairs separated by commas. \n" +
                                 "eg:'USER_DIR_IS_ROOT:false,PASSIVE_MODE:true,AVOID_PERMISSION_CHECK:true," +
@@ -104,6 +114,12 @@ import java.util.regex.Pattern;
                 ),
                 @ParameterOverload(
                         parameterNames = {"uri", "include.by.regexp", "exclude.subdirectories", "file.system.options"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "include.by.regexp", "subdirectory.depth"}
+                ),
+                @ParameterOverload(
+                        parameterNames = {"uri", "include.by.regexp", "subdirectory.depth", "file.system.options"}
                 )
         },
         returnAttributes = {
@@ -125,6 +141,11 @@ import java.util.regex.Pattern;
                         syntax = "ListFileStream#file:search(filePath, '.*test3.txt$', true)",
                         description = "This will list all the files excluding the files in sub-folders which adheres " +
                                 "to a given regex file pattern in a given path."
+                ),
+                @Example(
+                        syntax = "ListFileStream#file:search(filePath, '.*test3.txt$', 1)",
+                        description = "This will list all the files in the root directory and one level of " +
+                                "subdirectories which adheres to a given regex file pattern in a given path."
                 )
         }
 )
@@ -133,6 +154,8 @@ public class FileSearchExtension extends StreamFunctionProcessor {
     private Pattern pattern = null;
     private int inputExecutorLength;
     private boolean excludeSubdirectories = false;
+    private int subdirectoryDepth = -1;
+    private boolean useDepthMode = false;
     private String fileSystemOptions = null;
 
     @Override
@@ -144,6 +167,16 @@ public class FileSearchExtension extends StreamFunctionProcessor {
                 attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
             pattern = Pattern.compile(((ConstantExpressionExecutor)
                     attributeExpressionExecutors[1]).getValue().toString());
+        }
+        if (inputExecutorLength >= 3 &&
+                attributeExpressionExecutors[2] instanceof ConstantExpressionExecutor) {
+            Object val = ((ConstantExpressionExecutor) attributeExpressionExecutors[2]).getValue();
+            if (val instanceof Boolean) {
+                excludeSubdirectories = (Boolean) val;
+            } else if (val instanceof Integer) {
+                subdirectoryDepth = (Integer) val;
+                useDepthMode = true;
+            }
         }
         if (inputExecutorLength == 4 &&
                 attributeExpressionExecutors[3] instanceof ConstantExpressionExecutor) {
@@ -197,32 +230,21 @@ public class FileSearchExtension extends StreamFunctionProcessor {
             pattern = Pattern.compile(regex);
         }
         if (inputExecutorLength == 3) {
-            excludeSubdirectories = (Boolean) data[2];
+            Object thirdParam = data[2];
+            if (thirdParam instanceof Boolean) {
+                excludeSubdirectories = (Boolean) thirdParam;
+            } else if (thirdParam instanceof Integer) {
+                subdirectoryDepth = (Integer) thirdParam;
+                useDepthMode = true;
+            }
         }
         try {
             FileObject fileObj = Utils.getFileObject(sourceFileUri, fileSystemOptions);
             if (fileObj.exists()) {
-                FileObject[] children = fileObj.getChildren();
-                for (FileObject child : children) {
-                    try {
-                        if (child.getType() == FileType.FILE && (pattern.matcher(child.getName().
-                                getBaseName()).lookingAt() || pattern.toString().isEmpty())) {
-                            fileList.add(getFilePath(child.getName()));
-                        } else if (child.getType() == FileType.FOLDER) {
-                            searchSubFolders(child, fileList);
-                        }
-                    } catch (IOException e) {
-                        throw new SiddhiAppRuntimeException("Unable to search a file with pattern" +
-                                pattern.toString() + " in " + sourceFileUri, e);
-                    } finally {
-                        try {
-                            if (child != null) {
-                                child.close();
-                            }
-                        } catch (IOException e) {
-                            log.error("Error while closing Directory: " + e.getMessage(), e);
-                        }
-                    }
+                if (useDepthMode) {
+                    searchWithDepth(fileObj, fileList, subdirectoryDepth);
+                } else {
+                    searchFiles(fileObj, fileList);
                 }
             }
         } catch (FileSystemException e) {
@@ -253,6 +275,43 @@ public class FileSearchExtension extends StreamFunctionProcessor {
     }
 
     /**
+     * Search files in the root directory, optionally recursing into subdirectories
+     * unless {@code excludeSubdirectories} is true.
+     *
+     * @param dir      root directory to search
+     * @param fileList accumulator for matched file paths
+     */
+    private void searchFiles(FileObject dir, List<String> fileList) {
+        try {
+            FileObject[] children = dir.getChildren();
+            for (FileObject child : children) {
+                try {
+                    if (child.getType() == FileType.FILE && (pattern.matcher(child.getName().
+                            getBaseName()).lookingAt() || pattern.toString().isEmpty())) {
+                        fileList.add(getFilePath(child.getName()));
+                    } else if (child.getType() == FileType.FOLDER && !excludeSubdirectories) {
+                        searchSubFolders(child, fileList);
+                    }
+                } catch (IOException e) {
+                    throw new SiddhiAppRuntimeException("Unable to search a file with pattern" +
+                            pattern.toString() + " in " + dir.getName().getPath(), e);
+                } finally {
+                    try {
+                        if (child != null) {
+                            child.close();
+                        }
+                    } catch (IOException e) {
+                        log.error("Error while closing Directory: " + e.getMessage(), e);
+                    }
+                }
+            }
+        } catch (FileSystemException e) {
+            throw new SiddhiAppRuntimeException("Exception occurred when getting the searching files in path " +
+                    dir.getName().getPath(), e);
+        }
+    }
+
+    /**
      * @param child            sub folder
      */
     private void searchSubFolders(FileObject child, List<String> fileList) {
@@ -276,6 +335,42 @@ public class FileSearchExtension extends StreamFunctionProcessor {
             } catch (IOException e) {
                 log.error("Error while closing Directory: " + e.getMessage(), e);
             }
+        }
+    }
+
+    /**
+     * Search files up to a given depth. remainingDepth=0 means only files in dir itself, not subdirectories.
+     *
+     * @param dir            directory to search
+     * @param fileList       accumulator for matched file paths
+     * @param remainingDepth how many more levels of subdirectories to descend
+     */
+    private void searchWithDepth(FileObject dir, List<String> fileList, int remainingDepth) {
+        try {
+            FileObject[] children = dir.getChildren();
+            for (FileObject child : children) {
+                try {
+                    if (child.getType() == FileType.FILE &&
+                            (pattern.matcher(child.getName().getBaseName()).lookingAt()
+                                    || pattern.toString().isEmpty())) {
+                        fileList.add(getFilePath(child.getName()));
+                    } else if (child.getType() == FileType.FOLDER && remainingDepth > 0) {
+                        searchWithDepth(child, fileList, remainingDepth - 1);
+                    }
+                } catch (IOException e) {
+                    throw new SiddhiAppRuntimeException("Unable to search file with pattern " +
+                            pattern + " in " + dir.getName().getPath(), e);
+                } finally {
+                    try {
+                        child.close();
+                    } catch (IOException e) {
+                        log.error("Error closing file: " + e.getMessage(), e);
+                    }
+                }
+            }
+        } catch (FileSystemException e) {
+            throw new SiddhiAppRuntimeException("Exception searching files in path " +
+                    dir.getName().getPath(), e);
         }
     }
 
