@@ -299,7 +299,7 @@
         <siddhi.map.binary.version>2.1.1</siddhi.map.binary.version>
         <siddhi.map.binarypassthrough.version>1.0.0</siddhi.map.binarypassthrough.version>
         <siddhi.execution.list>1.0.2</siddhi.execution.list>
-        <jacoco.version>0.7.9</jacoco.version>
+        <jacoco.version>0.8.12</jacoco.version>
         <commons.io.version>2.16.1</commons.io.version>
         <commons-net.version>3.6</commons-net.version>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
