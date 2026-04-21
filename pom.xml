@@ -57,6 +57,16 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.transport.file</groupId>
                 <artifactId>org.wso2.transport.file</artifactId>
                 <version>${wso2.transport.file.version}</version>
@@ -119,9 +129,9 @@
                 <version>${siddhi.map.csv.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.wso2.org.apache.commons</groupId>
+                <groupId>org.apache.commons</groupId>
                 <artifactId>commons-vfs2</artifactId>
-                <version>${commons-vfs2.wso2.version}</version>
+                <version>${commons-vfs2.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jcraft</groupId>
@@ -196,9 +206,9 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.wso2.org.apache.commons</groupId>
+                <groupId>org.apache.commons</groupId>
                 <artifactId>commons-vfs2-sandbox</artifactId>
-                <version>${commons-vfs2.wso2.version}</version>
+                <version>${commons-vfs2.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>log4j</groupId>
@@ -241,17 +251,6 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>commons-httpclient</groupId>
-                <artifactId>commons-httpclient</artifactId>
-                <version>${org.apache.httpclinet.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>log4j</groupId>
-                        <artifactId>log4j</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.jackrabbit</groupId>
                 <artifactId>jackrabbit-webdav</artifactId>
                 <version>${jackrabbit.webdav.version}</version>
@@ -275,7 +274,7 @@
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk15on</artifactId>
+                <artifactId>bcprov-jdk18on</artifactId>
                 <version>${bouncy.castle.version}</version>
                 <exclusions>
                     <exclusion>
@@ -288,10 +287,10 @@
     </dependencyManagement>
 
     <properties>
-        <siddhi.version>5.1.26</siddhi.version>
+        <siddhi.version>5.1.32</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
         <wso2.transport.file.version>6.1.6</wso2.transport.file.version>
-        <org.apache.commons-compress.version>1.19</org.apache.commons-compress.version>
+        <org.apache.commons-compress.version>1.27.1</org.apache.commons-compress.version>
         <testng.version>6.8</testng.version>
         <siddhi.map.json.version>5.2.5</siddhi.map.json.version>
         <siddhi.map.xml.version>5.2.2</siddhi.map.xml.version>
@@ -301,12 +300,12 @@
         <siddhi.map.binarypassthrough.version>1.0.0</siddhi.map.binarypassthrough.version>
         <siddhi.execution.list>1.0.2</siddhi.execution.list>
         <jacoco.version>0.7.9</jacoco.version>
-        <commons.io.version>2.6</commons.io.version>
+        <commons.io.version>2.16.1</commons.io.version>
         <commons-net.version>3.6</commons-net.version>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <carbon.analytics.version>3.0.69</carbon.analytics.version>
-        <commons-vfs2.wso2.version>2.2-wso2v11</commons-vfs2.wso2.version>
+        <commons-vfs2.version>2.10.0</commons-vfs2.version>
         <com.jcraft.version>0.1.54</com.jcraft.version>
         <jcifs.version>2.1.26</jcifs.version>
         <com.hierynomus.version>0.11.1</com.hierynomus.version>
@@ -314,7 +313,8 @@
         <org.apache.httpclinet.version>3.1</org.apache.httpclinet.version>
         <jackrabbit.webdav.version>2.14.9</jackrabbit.webdav.version>
         <commons.codec.version>1.2</commons.codec.version>
-        <bouncy.castle.version>1.68</bouncy.castle.version>
+        <bouncy.castle.version>1.78.1</bouncy.castle.version>
+        <log4j.version>2.25.4</log4j.version>
         <maven.findbugsplugin.version.exclude>findbugs-exclude.xml</maven.findbugsplugin.version.exclude>
     </properties>
 

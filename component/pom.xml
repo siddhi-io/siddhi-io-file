@@ -35,10 +35,22 @@
         <dependency>
             <groupId>com.hierynomus</groupId>
             <artifactId>smbj</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk15on</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.codelibs</groupId>
             <artifactId>jcifs</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk15on</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>net.engio</groupId>
@@ -51,6 +63,12 @@
         <dependency>
             <groupId>org.wso2.transport.file</groupId>
             <artifactId>org.wso2.transport.remote-file-system</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io.wso2</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.siddhi</groupId>
@@ -90,20 +108,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.wso2.org.apache.commons</groupId>
+            <groupId>org.apache.commons</groupId>
             <artifactId>commons-vfs2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.org.apache.commons</groupId>
-            <artifactId>commons-vfs2-sandbox</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
@@ -123,7 +133,7 @@
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
+            <artifactId>bcprov-jdk18on</artifactId>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -138,6 +148,16 @@
         <dependency>
             <groupId>org.wso2.carbon.analytics</groupId>
             <artifactId>org.wso2.carbon.si.metrics.core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io.wso2</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk15on</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>
@@ -192,7 +212,7 @@
                             org.wso2.carbon.connector.framework.server.polling.*,
                             org.wso2.transport.remotefilesystem.*,
                             org.wso2.carbon.messaging.*,
-                            org.apache.commons.vfs2.*,version="${commons-vfs2.wso2.version}",
+                            org.apache.commons.vfs2.*,version="${commons-vfs2.version}",
                             org.apache.commons.compress.*,
                             org.wso2.transport.file.*,
                             org.apache.commons.net.*,
@@ -203,7 +223,6 @@
                             jcifs.*,
                             org.apache.jackrabbit.*,
                             org.apache.commons.codec.*,
-                            org.apache.commons.httpclient.*,
                             org.bouncycastle.*
                         </Private-Package>
                         <Export-Package>
@@ -222,7 +241,6 @@
                             !org.apache.jackrabbit.*,
                             !org.apache.commons.codec.*,
                             !org.bouncycastle.*,
-                            !org.apache.commons.httpclient.*
                         </Export-Package>
                         <Import-Package>
                             !org.wso2.carbon.messaging.*,
@@ -233,7 +251,6 @@
                             !com.jcraft.jsch.*,
                             !org.apache.jackrabbit.*,
                             !org.bouncycastle.*,
-                            !org.apache.commons.httpclient.*,
                             io.siddhi.core.*;version="${siddhi.version.range}",
                             io.siddhi.annotation.*;version="${siddhi.version.range}",
                             io.siddhi.query.compiler.*;version="${siddhi.version.range}",
