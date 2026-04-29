@@ -163,6 +163,11 @@
         <Class name="io.siddhi.extension.io.file.util.Util"/>
         <Bug pattern="WEAK_FILENAMEUTILS"/>
     </Match>
+
+    <Match>
+        <Class name="io.siddhi.extension.io.file.util.Util"/>
+        <Bug pattern="VO_VOLATILE_REFERENCE_TO_ARRAY"/>
+    </Match>
     <Match>
         <Class name="io.siddhi.extension.io.file.listeners.FileSystemListener"/>
         <Bug pattern="WEAK_FILENAMEUTILS"/>
