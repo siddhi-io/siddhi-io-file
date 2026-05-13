@@ -16,13 +16,4 @@
  ~ under the License.
  -->
 <providers>
-
-	<provider class-name="org.apache.commons.vfs2.provider.mime.MimeFileProvider">
-		<scheme name="mime"/>
-		<if-available class-name="javax.mail.internet.MimeMultipart"/>
-	</provider>
-
-	<extension-map extension="mime" scheme="mime"/>
-	<mime-type-map mime-type="message/rfc822" scheme="mime"/>
-
 </providers>
