@@ -118,6 +118,7 @@ import java.util.regex.Pattern;
 public class FileSearchExtension extends StreamFunctionProcessor {
     private static final Logger log = Logger.getLogger(FileSearchExtension.class);
     private Pattern pattern = null;
+    private boolean isRegexConstant = false;
     private int inputExecutorLength;
     private boolean excludeSubdirectories = false;
 
@@ -130,6 +131,7 @@ public class FileSearchExtension extends StreamFunctionProcessor {
                 attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
             pattern = Pattern.compile(((ConstantExpressionExecutor)
                     attributeExpressionExecutors[1]).getValue().toString());
+            isRegexConstant = true;
         }
         return null;
     }
@@ -175,7 +177,7 @@ public class FileSearchExtension extends StreamFunctionProcessor {
         if (inputExecutorLength >= 2) {
             regex = (String) data[1];
         }
-        if (pattern == null) {
+        if (pattern == null || !isRegexConstant) {
             pattern = Pattern.compile(regex);
         }
         if (inputExecutorLength == 3) {
