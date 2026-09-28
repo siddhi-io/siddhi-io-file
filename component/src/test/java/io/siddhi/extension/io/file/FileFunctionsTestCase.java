@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -1665,6 +1666,67 @@ public class FileFunctionsTestCase {
         AssertJUnit.assertTrue(baseNames.contains("sub1_file1.txt"));
         AssertJUnit.assertTrue(baseNames.contains("sub1_file2.csv"));
         AssertJUnit.assertFalse(baseNames.contains("deep_file.txt"));
+    }
+
+    @Test
+    public void testFileSearchWithDynamicRegexExcludingSubdirectories() throws InterruptedException {
+        log.info("test file:search uses each event's regex with exclude.subdirectories=true");
+        List<List<String>> results = searchWithDynamicRegex(", true", "root1\\.txt", "no-match\\.csv");
+        AssertJUnit.assertEquals(2, results.size());
+        AssertJUnit.assertEquals(Collections.singletonList("root1.txt"), results.get(0));
+        AssertJUnit.assertTrue(results.get(1).isEmpty());
+    }
+
+    @Test
+    public void testFileSearchWithDynamicRegexIncludingSubdirectories() throws InterruptedException {
+        log.info("test file:search uses each event's regex with exclude.subdirectories=false");
+        List<List<String>> results = searchWithDynamicRegex(", false", "deep_file\\.txt", "sub1_file2\\.csv");
+        AssertJUnit.assertEquals(2, results.size());
+        AssertJUnit.assertEquals(Collections.singletonList("deep_file.txt"), results.get(0));
+        AssertJUnit.assertEquals(Collections.singletonList("sub1_file2.csv"), results.get(1));
+    }
+
+    @Test
+    public void testFileSearchWithDynamicRegexAndDepth() throws InterruptedException {
+        log.info("test file:search uses each event's regex with subdirectory.depth=1");
+        List<List<String>> results = searchWithDynamicRegex(", 1", "sub1_file1\\.txt", "root2\\.csv",
+                "deep_file\\.txt");
+        AssertJUnit.assertEquals(3, results.size());
+        AssertJUnit.assertEquals(Collections.singletonList("sub1_file1.txt"), results.get(0));
+        AssertJUnit.assertEquals(Collections.singletonList("root2.csv"), results.get(1));
+        AssertJUnit.assertTrue(results.get(2).isEmpty());
+    }
+
+    private List<List<String>> searchWithDynamicRegex(String extraArgs, String... regexes)
+            throws InterruptedException {
+        String app = "@App:name('TestSiddhiApp')" +
+                "define stream ListFileStream(regex string);\n" +
+                "from ListFileStream#file:search('" + sourceRoot + "/search', regex" + extraArgs + ")\n" +
+                "select fileNameList\n" +
+                "insert into ResultStream;";
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(app);
+        InputHandler listFileStream = siddhiAppRuntime.getInputHandler("ListFileStream");
+        List<List<String>> results = new ArrayList<>();
+        siddhiAppRuntime.addCallback("ResultStream", new StreamCallback() {
+            @Override
+            public void receive(Event[] events) {
+                for (Event event : events) {
+                    List<String> baseNames = new ArrayList<>();
+                    for (String path : (List<String>) event.getData(0)) {
+                        baseNames.add(Paths.get(path).getFileName().toString());
+                    }
+                    results.add(baseNames);
+                }
+            }
+        });
+        siddhiAppRuntime.start();
+        for (String regex : regexes) {
+            listFileStream.send(new Object[]{regex});
+        }
+        Thread.sleep(200);
+        siddhiAppRuntime.shutdown();
+        return results;
     }
 
     private boolean isFileExist(String filePathUri, boolean isDirectory) {
