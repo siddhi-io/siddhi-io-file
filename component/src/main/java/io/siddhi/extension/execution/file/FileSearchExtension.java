@@ -152,7 +152,6 @@ import java.util.regex.Pattern;
 public class FileSearchExtension extends StreamFunctionProcessor {
     private static final Logger log = LogManager.getLogger(FileSearchExtension.class);
     private Pattern pattern = null;
-    private int inputExecutorLength;
     private boolean excludeSubdirectories = false;
     private int subdirectoryDepth = -1;
     private boolean useDepthMode = false;
@@ -162,9 +161,10 @@ public class FileSearchExtension extends StreamFunctionProcessor {
     protected StateFactory init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
                                 ConfigReader configReader, boolean outputExpectsExpiredEvents,
                                 SiddhiQueryContext siddhiQueryContext) {
-        inputExecutorLength = attributeExpressionExecutors.length;
-        if (inputExecutorLength >= 2 &&
-                attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
+        int inputExecutorLength = attributeExpressionExecutors.length;
+        if (inputExecutorLength < 2) {
+            pattern = Pattern.compile("");
+        } else if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
             pattern = Pattern.compile(((ConstantExpressionExecutor)
                     attributeExpressionExecutors[1]).getValue().toString());
         }
@@ -222,29 +222,14 @@ public class FileSearchExtension extends StreamFunctionProcessor {
     protected Object[] process(Object[] data) {
         List<String> fileList = new ArrayList<>();
         String sourceFileUri = (String) data[0];
-        String regex = "";
-        if (inputExecutorLength >= 2) {
-            regex = (String) data[1];
-        }
-        if (pattern == null) {
-            pattern = Pattern.compile(regex);
-        }
-        if (inputExecutorLength == 3) {
-            Object thirdParam = data[2];
-            if (thirdParam instanceof Boolean) {
-                excludeSubdirectories = (Boolean) thirdParam;
-            } else if (thirdParam instanceof Integer) {
-                subdirectoryDepth = (Integer) thirdParam;
-                useDepthMode = true;
-            }
-        }
+        Pattern eventPattern = pattern != null ? pattern : Pattern.compile((String) data[1]);
         try {
             FileObject fileObj = Utils.getFileObject(sourceFileUri, fileSystemOptions);
             if (fileObj.exists()) {
                 if (useDepthMode) {
-                    searchWithDepth(fileObj, fileList, subdirectoryDepth);
+                    searchWithDepth(fileObj, fileList, subdirectoryDepth, eventPattern);
                 } else {
-                    searchFiles(fileObj, fileList);
+                    searchFiles(fileObj, fileList, eventPattern);
                 }
             }
         } catch (FileSystemException e) {
@@ -281,20 +266,20 @@ public class FileSearchExtension extends StreamFunctionProcessor {
      * @param dir      root directory to search
      * @param fileList accumulator for matched file paths
      */
-    private void searchFiles(FileObject dir, List<String> fileList) {
+    private void searchFiles(FileObject dir, List<String> fileList, Pattern eventPattern) {
         try {
             FileObject[] children = dir.getChildren();
             for (FileObject child : children) {
                 try {
-                    if (child.getType() == FileType.FILE && (pattern.matcher(child.getName().
-                            getBaseName()).lookingAt() || pattern.toString().isEmpty())) {
+                    if (child.getType() == FileType.FILE && (eventPattern.matcher(child.getName().
+                            getBaseName()).lookingAt() || eventPattern.toString().isEmpty())) {
                         fileList.add(getFilePath(child.getName()));
                     } else if (child.getType() == FileType.FOLDER && !excludeSubdirectories) {
-                        searchSubFolders(child, fileList);
+                        searchSubFolders(child, fileList, eventPattern);
                     }
                 } catch (IOException e) {
                     throw new SiddhiAppRuntimeException("Unable to search a file with pattern" +
-                            pattern.toString() + " in " + dir.getName().getPath(), e);
+                            eventPattern.toString() + " in " + dir.getName().getPath(), e);
                 } finally {
                     try {
                         if (child != null) {
@@ -314,21 +299,22 @@ public class FileSearchExtension extends StreamFunctionProcessor {
     /**
      * @param child            sub folder
      */
-    private void searchSubFolders(FileObject child, List<String> fileList) {
+    private void searchSubFolders(FileObject child, List<String> fileList, Pattern eventPattern) {
         List<FileObject> fileObjectList = new ArrayList<FileObject>();
         getAllFiles(child, fileObjectList);
         try {
             for (FileObject file : fileObjectList) {
-                if (file.getType() == FileType.FILE && (pattern.matcher(file.getName().
-                        getBaseName().toLowerCase(Locale.ENGLISH)).lookingAt() || pattern.toString().isEmpty())) {
+                if (file.getType() == FileType.FILE && (eventPattern.matcher(file.getName().
+                        getBaseName().toLowerCase(Locale.ENGLISH)).lookingAt()
+                        || eventPattern.toString().isEmpty())) {
                     fileList.add(getFilePath(file.getName()));
                 } else if (file.getType() == FileType.FOLDER && !excludeSubdirectories) {
-                    searchSubFolders(file, fileList);
+                    searchSubFolders(file, fileList, eventPattern);
                 }
             }
         } catch (IOException e) {
             throw new SiddhiAppRuntimeException("Unable to search a file with pattern" +
-                    pattern.toString() + " in " + child.getName().getPath() + ". " + e.getMessage(), e);
+                    eventPattern.toString() + " in " + child.getName().getPath() + ". " + e.getMessage(), e);
         } finally {
             try {
                 child.close();
@@ -345,21 +331,22 @@ public class FileSearchExtension extends StreamFunctionProcessor {
      * @param fileList       accumulator for matched file paths
      * @param remainingDepth how many more levels of subdirectories to descend
      */
-    private void searchWithDepth(FileObject dir, List<String> fileList, int remainingDepth) {
+    private void searchWithDepth(FileObject dir, List<String> fileList, int remainingDepth,
+                                 Pattern eventPattern) {
         try {
             FileObject[] children = dir.getChildren();
             for (FileObject child : children) {
                 try {
                     if (child.getType() == FileType.FILE &&
-                            (pattern.matcher(child.getName().getBaseName()).lookingAt()
-                                    || pattern.toString().isEmpty())) {
+                            (eventPattern.matcher(child.getName().getBaseName()).lookingAt()
+                                    || eventPattern.toString().isEmpty())) {
                         fileList.add(getFilePath(child.getName()));
                     } else if (child.getType() == FileType.FOLDER && remainingDepth > 0) {
-                        searchWithDepth(child, fileList, remainingDepth - 1);
+                        searchWithDepth(child, fileList, remainingDepth - 1, eventPattern);
                     }
                 } catch (IOException e) {
                     throw new SiddhiAppRuntimeException("Unable to search file with pattern " +
-                            pattern + " in " + dir.getName().getPath(), e);
+                            eventPattern + " in " + dir.getName().getPath(), e);
                 } finally {
                     try {
                         child.close();
