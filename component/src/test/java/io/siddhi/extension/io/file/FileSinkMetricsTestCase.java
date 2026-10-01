@@ -345,11 +345,13 @@ public class FileSinkMetricsTestCase {
     @Test(dependsOnMethods = "testFileSizeMetric")
     public void testElapsedTime() throws InterruptedException, NoSuchFieldException,
             IllegalAccessException {
+        String elapsedTimeAppName = "ElapsedTimeMetricTestApp";
+        String elapsedTimeFilePath = dirUri + "/elapsed-time.json";
         String streams = "" +
-                "@App:name('TestSiddhiApp')" +
+                "@App:name('" + elapsedTimeAppName + "')" +
                 "define stream FooStream (symbol string, price float, volume long); " +
                 "@sink(type='file', @map(type='json'), append='true', " +
-                "file.uri='" + dirUri + "/apache.json') " +
+                "file.uri='" + elapsedTimeFilePath + "') " +
                 "define stream BarStream (symbol string, price float, volume long); ";
 
         String query = "" +
@@ -369,7 +371,7 @@ public class FileSinkMetricsTestCase {
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
         siddhiAppRuntime.getSinks().forEach(sinks -> {
             try {
-                SinkMetrics sinkMetrics = new SinkMetrics(siddhiAppName, "Json", "BarStream");
+                SinkMetrics sinkMetrics = new SinkMetrics(elapsedTimeAppName, "Json", "BarStream");
                 Field metrics = sinks.get(0).getClass().getDeclaredField("metrics");
                 metrics.setAccessible(true);
                 metrics.set(sinks.get(0), sinkMetrics);
@@ -384,23 +386,39 @@ public class FileSinkMetricsTestCase {
         stockStream.send(new Object[]{"IBM", 57.678f, 100L});
         stockStream.send(new Object[]{"GOOGLE", 50f, 100L});
         stockStream.send(new Object[]{"REDHAT", 50f, 100L});
-        Thread.sleep(100);
-        File file = new File(dirUri + "/apache.json");
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
-            while ((bufferedReader.readLine()) != null) {
-                count.incrementAndGet();
+        File file = new File(elapsedTimeFilePath);
+        long fileWriteTimeout = System.currentTimeMillis() + 5000;
+        while (count.intValue() < 4 && System.currentTimeMillis() < fileWriteTimeout) {
+            count.set(0);
+            try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+                while ((bufferedReader.readLine()) != null) {
+                    count.incrementAndGet();
+                }
+            } catch (FileNotFoundException ignored) {
+                // The asynchronous file sink has not created the output file yet.
+            } catch (IOException e) {
+                AssertJUnit.fail("Error occurred during reading the file '" + file.getAbsolutePath());
             }
-        } catch (FileNotFoundException e) {
-            AssertJUnit.fail(e.getMessage());
-        } catch (IOException e) {
-            AssertJUnit.fail("Error occurred during reading the file '" + file.getAbsolutePath());
+            if (count.intValue() < 4) {
+                Thread.sleep(50);
+            }
         }
-        AssertJUnit.assertEquals(5, count.intValue());
-        String shortenedFilePath = Utils.getShortFilePath(dirUri + "/apache.json");
+        AssertJUnit.assertEquals(4, count.intValue());
+        String shortenedFilePath = Utils.getShortFilePath(elapsedTimeFilePath);
         String elapsedTime = String.format("io.siddhi.SiddhiApps.%s.Siddhi.File.Sinks.%s.%s",
-                siddhiAppName, "elapsed_time", shortenedFilePath);
-        Assert.assertTrue((long) metricRegistry.getGauges().get(elapsedTime).getValue() <
+                elapsedTimeAppName, "elapsed_time", shortenedFilePath);
+        long timeout = System.currentTimeMillis() + 5000;
+        long elapsedTimeValue = 0;
+        while (elapsedTimeValue == 0 && System.currentTimeMillis() < timeout) {
+            if (metricRegistry.getGauges().containsKey(elapsedTime)) {
+                elapsedTimeValue = (long) metricRegistry.getGauges().get(elapsedTime).getValue();
+            }
+            if (elapsedTimeValue == 0) {
+                Thread.sleep(50);
+            }
+        }
+        Assert.assertTrue(elapsedTimeValue > 0);
+        Assert.assertTrue(elapsedTimeValue <
                 (System.currentTimeMillis() - startedTime));
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
