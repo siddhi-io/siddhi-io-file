@@ -29,6 +29,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Util Class.
@@ -65,9 +66,15 @@ public class Util {
         return null;
     }
 
+    private static final Pattern SMB_SCHEME = Pattern.compile("^(?i)smb2?:");
+
+    public static String replaceSmbScheme(String uri) {
+        return uri == null ? null : SMB_SCHEME.matcher(uri).replaceFirst("ftp:");
+    }
+
     public static String getFileName(String uri, String protocol) {
         try {
-            URL url = new URL(String.format("%s%s%s", protocol, File.separator, uri));
+            URL url = new URL(String.format("%s%s%s", replaceSmbScheme(protocol), File.separator, uri));
             return FilenameUtils.getName(url.getPath());
         } catch (MalformedURLException e) {
             log.error(String.format("Failed to extract file name from the uri '%s '.", uri), e);

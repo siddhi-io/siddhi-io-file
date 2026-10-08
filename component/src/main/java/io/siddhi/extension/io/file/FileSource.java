@@ -40,11 +40,11 @@ import io.siddhi.extension.io.file.processors.FileProcessor;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
+import io.siddhi.extension.io.file.util.Util;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.annotation.Annotation;
 import io.siddhi.query.api.annotation.Element;
-import org.apache.commons.vfs2.FileObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.JobKey;
@@ -54,6 +54,7 @@ import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.si.metrics.core.internal.MetricsDataHolder;
+import org.wso2.org.apache.commons.vfs2.FileObject;
 import org.wso2.transport.file.connector.sender.VFSClientConnector;
 import org.wso2.transport.file.connector.server.FileServerConnector;
 import org.wso2.transport.file.connector.server.FileServerConnectorProvider;
@@ -1052,7 +1053,7 @@ public class FileSource extends Source<FileSource.FileSourceState> {
                             "URI: " + initialUri);
                 }
                 if (initialUri.startsWith(Constants.TYPE_SMB)) {
-                    uri = initialUri.replaceFirst(Constants.TYPE_SMB, "ftp");
+                    uri = Util.replaceSmbScheme(initialUri);
                 } else {
                     uri = initialUri.replaceFirst(Constants.TYPE_WEBDAV, "http");
                 }

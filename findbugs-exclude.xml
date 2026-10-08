@@ -183,4 +183,9 @@
     </Match>
 
 
+    <Match>
+        <Class name="io.siddhi.extension.util.vfs.smb.SmbFileObject"/>
+        <Method name="doListChildren"/>
+        <Bug pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS"/>
+    </Match>
 </FindBugsFilter>

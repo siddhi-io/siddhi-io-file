@@ -39,10 +39,10 @@ import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
-import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.FileSystemException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.wso2.org.apache.commons.vfs2.FileObject;
+import org.wso2.org.apache.commons.vfs2.FileSystemException;
 
 import java.io.File;
 import java.net.MalformedURLException;
