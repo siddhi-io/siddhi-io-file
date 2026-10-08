@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Modifications copyright (c) 2026, WSO2 LLC. (http://www.wso2.org): ported from the
+ * Modifications copyright (c) 2026 WSO2 LLC. (http://www.wso2.com): ported from the
  * Apache Commons VFS sandbox (rel/commons-vfs-2.10.0) to jcifs-ng (org.codelibs:jcifs).
  */
 
