@@ -35,22 +35,10 @@
         <dependency>
             <groupId>com.hierynomus</groupId>
             <artifactId>smbj</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.bouncycastle</groupId>
-                    <artifactId>bcprov-jdk15on</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.codelibs</groupId>
             <artifactId>jcifs</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.bouncycastle</groupId>
-                    <artifactId>bcprov-jdk15on</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>net.engio</groupId>
@@ -63,12 +51,6 @@
         <dependency>
             <groupId>org.wso2.transport.file</groupId>
             <artifactId>org.wso2.transport.remote-file-system</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-io.wso2</groupId>
-                    <artifactId>commons-io</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.siddhi</groupId>
@@ -108,11 +90,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
+            <groupId>org.wso2.org.apache.commons</groupId>
             <artifactId>commons-vfs2</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.jcraft</groupId>
+            <groupId>org.wso2.org.apache.commons</groupId>
+            <artifactId>commons-vfs2-sandbox</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
         </dependency>
         <dependency>
@@ -157,6 +143,10 @@
                     <groupId>org.bouncycastle</groupId>
                     <artifactId>bcprov-jdk15on</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcpkix-jdk15on</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -198,7 +188,38 @@
                         <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
                     <argLine>${surefireArgLine} -ea -Xmx512m</argLine>
+                    <classpathDependencyExcludes>
+                        <classpathDependencyExclude>org.wso2.org.apache.commons:commons-vfs2-sandbox</classpathDependencyExclude>
+                    </classpathDependencyExcludes>
+                    <additionalClasspathElements>
+                        <additionalClasspathElement>${project.build.directory}/vfs2-sandbox</additionalClasspathElement>
+                    </additionalClasspathElements>
                 </configuration>
+            </plugin>
+            <!-- The sandbox registers its own jcifs 1.3.17 smb provider, which clashes with ours. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-vfs2-sandbox</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.wso2.org.apache.commons</groupId>
+                                    <artifactId>commons-vfs2-sandbox</artifactId>
+                                    <version>${commons-vfs2.version}</version>
+                                    <outputDirectory>${project.build.directory}/vfs2-sandbox</outputDirectory>
+                                    <excludes>META-INF/vfs-providers.xml,org/wso2/org/apache/commons/vfs2/provider/smb/**</excludes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -212,7 +233,8 @@
                             org.wso2.carbon.connector.framework.server.polling.*,
                             org.wso2.transport.remotefilesystem.*,
                             org.wso2.carbon.messaging.*,
-                            org.apache.commons.vfs2.*,version="${commons-vfs2.version}",
+                            !org.wso2.org.apache.commons.vfs2.provider.smb,
+                            org.wso2.org.apache.commons.vfs2.*,
                             org.apache.commons.compress.*,
                             org.wso2.transport.file.*,
                             org.apache.commons.net.*,
@@ -221,6 +243,7 @@
                             com.jcraft.jsch.*,
                             com.hierynomus.*,
                             jcifs.*,
+                            net.engio.mbassy.*,
                             org.apache.jackrabbit.*,
                             org.apache.commons.codec.*,
                             org.bouncycastle.*
@@ -231,7 +254,7 @@
                             !org.wso2.carbon.connector.framework.*,
                             !org.wso2.transport.remotefilesystem.*,
                             !org.wso2.carbon.messaging.*,
-                            !org.apache.commons.vfs2.*,
+                            !org.wso2.org.apache.commons.vfs2.*,
                             !org.apache.commons.compress.*,
                             !org.wso2.transport.file.*,
                             !org.apache.commons.net.*,
@@ -245,7 +268,7 @@
                         <Import-Package>
                             !org.wso2.carbon.messaging.*,
                             !org.wso2.transport.remotefilesystem.*,
-                            !org.apache.commons.vfs2.*,
+                            !org.wso2.org.apache.commons.vfs2.*,
                             !org.wso2.transport.file.*,
                             !org.apache.commons.net.*,
                             !com.jcraft.jsch.*,
@@ -254,11 +277,11 @@
                             io.siddhi.core.*;version="${siddhi.version.range}",
                             io.siddhi.annotation.*;version="${siddhi.version.range}",
                             io.siddhi.query.compiler.*;version="${siddhi.version.range}",
+                            org.apache.commons.io.*;version="[2.16,3)",
                             *;resolution:=optional
                         </Import-Package>
                         <Include-Resource>
-                            META-INF=target/classes/META-INF,
-                            META-INF/vfs-providers.xml=../resources/vfs-providers.xml
+                            META-INF=target/classes/META-INF
                         </Include-Resource>
                     </instructions>
                 </configuration>

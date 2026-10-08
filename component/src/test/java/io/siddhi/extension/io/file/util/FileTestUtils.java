@@ -19,11 +19,11 @@
 package io.siddhi.extension.io.file.util;
 
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
-import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.FileSystemOptions;
-import org.apache.commons.vfs2.VFS;
+import org.wso2.org.apache.commons.vfs2.FileObject;
+import org.wso2.org.apache.commons.vfs2.FileSystemException;
+import org.wso2.org.apache.commons.vfs2.FileSystemManager;
+import org.wso2.org.apache.commons.vfs2.FileSystemOptions;
+import org.wso2.org.apache.commons.vfs2.VFS;
 
 public class FileTestUtils {
     public static boolean isFileExist(String filePathUri, boolean isDirectory) {

@@ -25,6 +25,7 @@ import io.siddhi.extension.io.file.processors.FileProcessor;
 import io.siddhi.extension.io.file.util.Constants;
 import io.siddhi.extension.io.file.util.FileSourceConfiguration;
 import io.siddhi.extension.io.file.util.FileSourceServiceProvider;
+import io.siddhi.extension.io.file.util.Util;
 import io.siddhi.extension.io.file.util.VFSClientConnectorCallback;
 import io.siddhi.extension.util.Utils;
 import org.apache.commons.io.FilenameUtils;
@@ -314,10 +315,7 @@ public class FileSystemListener implements RemoteFileSystemListener {
 
     private String getFileName(String uri, String protocol) {
         try {
-            if ("smb:".equalsIgnoreCase(protocol)) {
-                protocol = "ftp:";
-            }
-            URL url = new URL(String.format("%s%s%s", protocol, File.separator, uri));
+            URL url = new URL(String.format("%s%s%s", Util.replaceSmbScheme(protocol), File.separator, uri));
             return FilenameUtils.getName(url.getPath());
         } catch (MalformedURLException e) {
             log.error(String.format("Failed to extract file name from the uri '%s'.", uri), e);

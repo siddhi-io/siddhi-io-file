@@ -34,8 +34,8 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.extension.util.Utils;
 import io.siddhi.query.api.definition.Attribute;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.FileSystemException;
+import org.wso2.org.apache.commons.vfs2.FileObject;
+import org.wso2.org.apache.commons.vfs2.FileSystemException;
 
 import static io.siddhi.query.api.definition.Attribute.Type.LONG;
 import static io.siddhi.query.api.definition.Attribute.Type.STRING;

@@ -26,255 +26,117 @@ import io.siddhi.core.stream.output.StreamCallback;
 import io.siddhi.core.util.EventPrinter;
 import io.siddhi.core.util.SiddhiTestHelper;
 import io.siddhi.extension.util.Utils;
-import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.Selectors;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.testng.AssertJUnit;
+import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.wso2.org.apache.commons.vfs2.FileObject;
+import org.wso2.org.apache.commons.vfs2.FileSystemException;
+import org.wso2.org.apache.commons.vfs2.Selectors;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SMBFileSourceSinkTestCase {
-    private static final Logger log = LogManager.getLogger(SMBFileSourceSinkTestCase.class);
-    private AtomicInteger count = new AtomicInteger();
-    private FileObject tempSMBSource;
-    private int waitTime = 10000;
-    private int timeout = 30000;
+    private static final String HOST = System.getProperty("smb.test.host");
+    private static final String PORT = System.getProperty("smb.test.port", "445");
+    private static final String USER = System.getProperty("smb.test.user", "ubuntu");
+    private static final String PASSWORD = System.getProperty("smb.test.password", "admin");
+    private static final String SHARE = System.getProperty("smb.test.share", "sambashare");
+    private static final int WAIT_TIME = 10000;
+    private static final int TIMEOUT = 30000;
+    private final AtomicInteger count = new AtomicInteger();
 
     @BeforeClass
     public void init() {
-        tempSMBSource = Utils.getFileObject(
-                "smb://ubuntu:admin@212.47.250.24/sambashare/source/", "PASSIVE_MODE:true");
-    }
-
-    @BeforeMethod
-    public void doBeforeMethod() throws InterruptedException, FileSystemException {
-        count.set(0);
-        try {
-            tempSMBSource.delete(Selectors.SELECT_ALL);
-            tempSMBSource.createFolder();
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
+        if (HOST == null || HOST.isEmpty()) {
+            throw new SkipException("Set -Dsmb.test.host to run the SMB tests against a Samba server");
         }
     }
 
-    @Test
-    public void fileSinkSourceTest1() throws InterruptedException {
-        log.info("test SiddhiIoFile SMB Sink 1");
-
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='json'), append='true', " +
-                "file.uri='smb://ubuntu:admin@212.47.250.24/sambashare/source/published.json') " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
-
-        siddhiAppRuntime.start();
-
-        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
-        stockStream.send(new Object[]{"IBM", 57.678f, 200L});
-
-        Thread.sleep(1000);
-        siddhiAppRuntime.shutdown();
-
-        streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file', mode='line'," +
-                "file.uri='smb://ubuntu:admin@212.47.250.24/sambashare/source/published.json', " +
-                "action.after.process='keep', " +
-                "tailing='false', " +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        siddhiManager = new SiddhiManager();
-        siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-                int n = count.getAndIncrement() % 5;
-                for (Event event : events) {
-                    switch (n) {
-                        case 0:
-                            AssertJUnit.assertEquals(100L, event.getData(2));
-                            break;
-                        case 1:
-                            AssertJUnit.assertEquals(200L, event.getData(2));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
-                }
-            }
-        });
-        siddhiAppRuntime.start();
-        SiddhiTestHelper.waitForEvents(waitTime, 2, count, timeout);
-        //assert event count
-        AssertJUnit.assertEquals("Number of events", 2, count.get());
-        siddhiAppRuntime.shutdown();
+    @DataProvider(name = "schemes")
+    public Object[][] schemes() {
+        return new Object[][]{{"smb"}, {"smb2"}};
     }
 
-    @Test
-    public void fileSinkSourceTest2() throws InterruptedException {
-        log.info("test SiddhiIoFile SMB Sink 2");
-
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "@sink(type='file', @map(type='json'), append='false', " +
-                "file.uri='smb://ubuntu:admin@212.47.250.24/sambashare/source/published.json') " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
-
-        siddhiAppRuntime.start();
-
-        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
-        stockStream.send(new Object[]{"IBM", 57.678f, 200L});
-
-        Thread.sleep(100);
-
-        ArrayList<String> symbolNames = new ArrayList<>();
-        symbolNames.add("WSO2.json");
-        symbolNames.add("IBM.json");
-        symbolNames.add("GOOGLE.json");
-        symbolNames.add("REDHAT.json");
-
-        Thread.sleep(1000);
-        siddhiAppRuntime.shutdown();
-
-        streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file', mode='line'," +
-                "file.uri='smb://ubuntu:admin@212.47.250.24/sambashare/source/published.json', " +
-                "action.after.process='keep', " +
-                "tailing='false', " +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, volume long); " +
-                "define stream BarStream (symbol string, price float, volume long); ";
-
-        query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        siddhiManager = new SiddhiManager();
-        siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
-            @Override
-            public void receive(Event[] events) {
-                EventPrinter.print(events);
-                int n = count.getAndIncrement() % 5;
-                for (Event event : events) {
-                    switch (n) {
-                        case 0:
-                            AssertJUnit.assertEquals(200L, event.getData(2));
-                            break;
-                        default:
-                            AssertJUnit.fail("More events received than expected.");
-                    }
-                }
-            }
-        });
-        siddhiAppRuntime.start();
-        SiddhiTestHelper.waitForEvents(waitTime, 1, count, timeout);
-        //assert event count
-        AssertJUnit.assertEquals("Number of events", 1, count.get());
-        siddhiAppRuntime.shutdown();
+    @BeforeMethod
+    public void resetCount() {
+        count.set(0);
     }
 
-    @Test
-    public void fileDynamicSinkDirectorySourceTest() throws InterruptedException {
-        log.info("test SiddhiIoFile SMB Sink for dynamic paths and reading from a directory");
+    private static String sourceDir(String scheme) {
+        return scheme + "://" + USER + ":" + PASSWORD + "@" + HOST + ":" + PORT + "/" + SHARE + "/" + scheme
+                + "-source/";
+    }
 
-        String streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "define stream FooStream (symbol string, price float, fileName string); " +
-                "@sink(type='file', @map(type='json'), append='true', " +
-                "file.uri='smb://ubuntu:admin@212.47.250.24/sambashare/source/{{fileName}}.json') " +
-                "define stream BarStream (symbol string, price float, fileName string); ";
+    private static void resetSourceDir(String scheme) throws FileSystemException {
+        FileObject dir = Utils.getFileObject(sourceDir(scheme), null);
+        dir.delete(Selectors.SELECT_ALL);
+        dir.createFolder();
+    }
 
-        String query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
+    private static void writeEvents(String sinkUri, String append, Object[][] events)
+            throws InterruptedException {
         SiddhiManager siddhiManager = new SiddhiManager();
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        InputHandler stockStream = siddhiAppRuntime.getInputHandler("FooStream");
-
-        siddhiAppRuntime.start();
-
-        stockStream.send(new Object[]{"WSO2", 55.6f, "file1"});
-        stockStream.send(new Object[]{"WSO4", 55.7f, "file1"});
-        stockStream.send(new Object[]{"IBM", 57.678f, "file2"});
-        stockStream.send(new Object[]{"IBM2", 57.123f, "file2"});
-
-        Thread.sleep(100);
-
+        SiddhiAppRuntime runtime = siddhiManager.createSiddhiAppRuntime(
+                "@App:name('SmbSinkApp')" +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "@sink(type='file', @map(type='json'), append='" + append + "', file.uri='" + sinkUri + "') " +
+                "define stream BarStream (symbol string, price float, volume long); " +
+                "from FooStream select * insert into BarStream; ");
+        InputHandler input = runtime.getInputHandler("FooStream");
+        runtime.start();
+        for (Object[] event : events) {
+            input.send(event);
+        }
         Thread.sleep(1000);
-        siddhiAppRuntime.shutdown();
+        siddhiManager.shutdown();
+    }
 
-        streams = "" +
-                "@App:name('TestSiddhiApp')" +
-                "@source(type='file', mode='line'," +
-                "dir.uri='smb://ubuntu:admin@212.47.250.24/sambashare/source/', " +
-                "file.system.options='PASSIVE_MODE:true', " +
-                "action.after.process='keep', " +
-                "tailing='false', " +
-                "@map(type='json'))" +
-                "define stream FooStream (symbol string, price float, fileName string); " +
-                "define stream BarStream (symbol string, price float, fileName string); ";
-
-        query = "" +
-                "from FooStream " +
-                "select * " +
-                "insert into BarStream; ";
-
-        siddhiManager = new SiddhiManager();
-        siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        siddhiAppRuntime.addCallback("BarStream", new StreamCallback() {
-
+    private void readEvents(String sourceOption, int expected) throws InterruptedException {
+        SiddhiManager siddhiManager = new SiddhiManager();
+        SiddhiAppRuntime runtime = siddhiManager.createSiddhiAppRuntime(
+                "@App:name('SmbSourceApp')" +
+                "@source(type='file', mode='line', " + sourceOption + ", action.after.process='keep', " +
+                "tailing='false', @map(type='json')) " +
+                "define stream FooStream (symbol string, price float, volume long); " +
+                "define stream BarStream (symbol string, price float, volume long); " +
+                "from FooStream select * insert into BarStream; ");
+        runtime.addCallback("BarStream", new StreamCallback() {
             @Override
             public void receive(Event[] events) {
                 EventPrinter.print(events);
-                count.getAndIncrement();
+                count.addAndGet(events.length);
             }
         });
-        siddhiAppRuntime.start();
-        SiddhiTestHelper.waitForEvents(waitTime, 4, count, timeout);
-        //assert event count
-        AssertJUnit.assertEquals("Number of events", 4, count.get());
-        siddhiAppRuntime.shutdown();
+        runtime.start();
+        SiddhiTestHelper.waitForEvents(WAIT_TIME, expected, count, TIMEOUT);
+        siddhiManager.shutdown();
+        AssertJUnit.assertEquals("Number of events", expected, count.get());
+    }
+
+    @Test(dataProvider = "schemes")
+    public void testAppendingSinkThenFileSource(String scheme) throws Exception {
+        resetSourceDir(scheme);
+        String file = sourceDir(scheme) + "published.json";
+        writeEvents(file, "true", new Object[][]{{"WSO2", 55.6f, 100L}, {"IBM", 57.678f, 200L}});
+        readEvents("file.uri='" + file + "'", 2);
+    }
+
+    @Test(dataProvider = "schemes")
+    public void testOverwritingSinkThenFileSource(String scheme) throws Exception {
+        resetSourceDir(scheme);
+        String file = sourceDir(scheme) + "published.json";
+        writeEvents(file, "false", new Object[][]{{"WSO2", 55.6f, 100L}, {"IBM", 57.678f, 200L}});
+        readEvents("file.uri='" + file + "'", 1);
+    }
+
+    @Test(dataProvider = "schemes")
+    public void testDynamicSinkThenDirectorySource(String scheme) throws Exception {
+        resetSourceDir(scheme);
+        writeEvents(sourceDir(scheme) + "{{symbol}}.json", "true",
+                new Object[][]{{"WSO2", 55.6f, 1L}, {"WSO2", 55.7f, 2L}, {"IBM", 57.6f, 3L}, {"IBM", 57.1f, 4L}});
+        readEvents("dir.uri='" + sourceDir(scheme) + "'", 4);
     }
 }

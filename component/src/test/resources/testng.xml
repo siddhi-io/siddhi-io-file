@@ -32,6 +32,8 @@
             <class name="io.siddhi.extension.io.file.FileSourceMoveIfExistsTestcase"/>
             <class name="io.siddhi.extension.io.file.FileSourceBinaryChunkedModeTestCase"/>
             <class name="io.siddhi.extension.io.file.FileSinkMetricsTestCase"/>
+            <class name="io.siddhi.extension.io.file.SmbProviderTestCase"/>
+            <class name="io.siddhi.extension.io.file.SMBFileSourceSinkTestCase"/>
         </classes>
     </test>
 </suite>
